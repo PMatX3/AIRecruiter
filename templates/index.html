@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recruiter AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            position: relative;
+            /* Ensure the body is positioned to contain absolute elements */
+        }
+
+        h1 {
+            color: #5a5a5a;
+        }
+
+        input[type="file"] {
+            border: 2px solid #ddd;
+            padding: 8px;
+            width: calc(100% - 22px);
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin-top: 10px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            /* Black background with opacity */
+            display: none;
+            /* Hidden by default */
+            z-index: 10;
+            /* Ensures it's above other content but below the loader */
+        }
+
+        .loader {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 10px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 10px solid #3498db;
+            width: 50px;
+            height: 50px;
+            animation: spin 2s linear infinite;
+            display: none;
+            /* Hidden by default */
+            z-index: 11;
+            /* Ensures loader is above the overlay */
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        #result {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            max-height: 50vh;
+            overflow: scroll;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Recruiter AI</h1>
+    <div>
+        <input type="file" id="audioInput" accept="audio/*">
+        <button onclick="uploadAudio()">Upload Audio</button>
+    </div>
+    <div>
+        <input type="file" id="pdfInput" accept=".pdf,.txt">
+        <button onclick="uploadPDF()">Upload PDF/TXT</button>
+    </div>
+    <div>
+        <button id="recordButton" onclick="toggleRecording()">Record Audio</button>
+        <button id="stopButton" onclick="stopRecording()" style="display:none;">Stop Recording</button>
+        <button id="resumeButton" onclick="resumeRecording()" style="display:none;">Resume Recording</button>
+        <button id="cancelButton" onclick="cancelRecording()" style="display:none;">Cancel Recording</button>
+        <button id="doneButton" onclick="uploadRecordedAudio()" style="display:none;">Done</button>
+        <div id="recordingStatus" style="display: none;">Recording...</div>
+    </div>
+    <div class="overlay" id="overlay"></div> <!-- Overlay element -->
+    <div class="loader" id="loader"></div>
+    <div id="result">Result Text showing here...</div>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script>
+        let mediaRecorder;
+        let audioChunks = [];
+        let isRecording = false;
+        let audioBlob;
+
+        function toggleRecording() {
+            if (!isRecording) {
+                startRecording();
+            } else {
+                stopRecording();
+            }
+        }
+
+        function startRecording() {
+            navigator.mediaDevices.getUserMedia({ audio: true })
+                .then(stream => {
+                    mediaRecorder = new MediaRecorder(stream);
+                    mediaRecorder.start();
+                    isRecording = true;
+                    $('#recordingStatus').show();
+                    $('#recordButton').hide();
+                    $('#stopButton').show();
+                    $('#cancelButton').show();
+
+                    mediaRecorder.ondataavailable = function (event) {
+                        audioChunks.push(event.data);
+                    };
+                })
+                .catch(error => {
+                    console.error("Error accessing media devices.", error);
+                });
+        }
+
+        function stopRecording() {
+            mediaRecorder.stop();
+            isRecording = false;
+            $('#recordingStatus').hide();
+            $('#stopButton').hide();
+            $('#resumeButton').show();
+            $('#doneButton').show();
+        }
+
+        function resumeRecording() {
+            if (mediaRecorder && mediaRecorder.state === "paused") {
+                mediaRecorder.resume();
+            } else {
+                startRecording();
+            }
+            isRecording = true;
+            $('#recordingStatus').show();
+            $('#resumeButton').hide();
+            $('#stopButton').show();
+        }
+
+        function cancelRecording() {
+            mediaRecorder.stop();
+            audioChunks = [];
+            isRecording = false;
+            $('#recordingStatus').hide();
+            $('#stopButton').hide();
+            $('#resumeButton').hide();
+            $('#cancelButton').hide();
+            $('#recordButton').show();
+            $('#doneButton').hide();
+        }
+
+        function uploadRecordedAudio() {
+            if (audioChunks.length > 0) {
+                // Create a Blob from the audio chunks
+                audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+
+                // Create a new FormData object
+                var formData = new FormData();
+
+                // Append the Blob as a file-like object, providing a filename
+                formData.append('file', audioBlob, 'recording.webm');
+
+                // Send the FormData to the server
+                ajaxCall('/audio-to-text', formData);
+            } else {
+                console.log("No audio recorded.");
+            }
+
+            // Reset recording setup
+            cancelRecording();
+        }
+
+        function uploadAudio() {
+            var file = document.getElementById('audioInput').files[0];
+            if (!file) {
+                $('#result').html('Please choose a file first.');
+                return;
+            }
+            var formData = new FormData();
+            formData.append('file', file);
+            ajaxCall('/audio-to-text', formData);
+        }
+
+        function uploadPDF() {
+            var file = document.getElementById('pdfInput').files[0];
+            if (!file) {
+                $('#result').html('Please choose a file first.');
+                return;
+            }
+            var formData = new FormData();
+            formData.append('file', file);
+            ajaxCall('/pdf-to-text', formData);
+        }
+
+        function ajaxCall(url, formData) {
+            $('#overlay').show(); // Show the overlay
+            $('#loader').show(); // Show the loader
+            $.ajax({
+                url: url,
+                type: 'POST',
+                data: formData,
+                contentType: false,
+                processData: false,
+                success: function (data) {
+                    $('#result').html(data.text);
+                    $('#loader').hide(); // Hide the loader
+                    $('#overlay').hide(); // Hide the overlay
+                },
+                error: function () {
+                    $('#result').html('Error in conversion');
+                    $('#loader').hide(); // Hide the loader
+                    $('#overlay').hide(); // Hide the overlay
+                }
+            });
+        }
+    </script>
+</body>
+
+</html>
