@@ -1,12 +1,12 @@
 from flask import Flask, request, jsonify, render_template
 import speech_recognition as sr
-from PyPDF2 import PdfReader
 from pydub import AudioSegment
 import openai
 from openai import OpenAI
 import json
 import os, time
 import requests
+from utils import extract_text_from_pdf, save_resumes_embedding, get_results
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -101,13 +101,22 @@ def pdf_to_text():
     if file.filename == '':
         return jsonify({'error': 'No selected file'})
     if file:
-        pdf_reader = PdfReader(file)
-        text = ''
-        for page in pdf_reader.pages:
-            text += page.extract_text()
+        text = extract_text_from_pdf(file)
         job_info = extract_job_info(text)
         job_info_json = json.dumps(job_info)
         return jsonify({'text': job_info_json})
+
+@app.route('/save-resumes-embedding', methods=['GET'])
+def save_resumes():
+    save_resumes_embedding()
+    return jsonify({'message': 'Resumes embedding saved.'})
+
+@app.route('/get-resumes', methods=['GET'])
+def get_resumes():
+    query = request.args.get('query')
+    resumes = get_results(query)
+
+    return resumes
 
 if __name__ == '__main__':
     app.run(debug=True)
