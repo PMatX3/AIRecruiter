@@ -7,15 +7,14 @@ import chromadb
 from chromadb.utils import embedding_functions
 from dotenv import load_dotenv
 import uuid
-from markdown_it import MarkdownIt
-from mdit_py_plugins.front_matter import front_matter_plugin
-from mdit_py_plugins.footnote import footnote_plugin
+import google.generativeai as genai
 
 # Load environment variables
 load_dotenv()
 
 mongo_client = get_mongo_client()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 openai_ef = embedding_functions.OpenAIEmbeddingFunction(
                 api_key=OPENAI_API_KEY,
                 model_name="text-embedding-3-small"
@@ -24,12 +23,9 @@ client = chromadb.Client()
 collection = client.get_or_create_collection("resumes",embedding_function=openai_ef)
 openai_client = OpenAI(api_key=OPENAI_API_KEY)
 
-md = (
-    MarkdownIt('commonmark' ,{'breaks':True,'html':True})
-    .use(front_matter_plugin)
-    .use(footnote_plugin)
-    .enable('table')
-)
+model = genai.GenerativeModel('gemini-1.5-flash')
+
+genai.configure(api_key=GEMINI_API_KEY) 
 
 def generate_embedding(text, temp=False):
     response = openai_client.embeddings.create(model="text-embedding-3-small", input=text)
@@ -59,30 +55,24 @@ def save_resumes_embedding():
             embedding = generate_embedding(text)
             print(f"Embedding for {filename} saved.")
 
-def get_results(query):
+def get_results(query, job_info_json):
     embedding = generate_embedding('give me top 10 candidates', temp=True)
+    
     resumes = collection.query(query_embeddings=embedding, n_results=10000, include=["documents"])
-    print(resumes['documents'][0])
     prompt = f"""
+    Here are the job description:
+    {job_info_json}
     Here are the resumes:
-    {resumes['documents'][0]} answer the {query} based on resumes and return the emails of the resumes only
+    {resumes['documents'][0]} based on above data answer the question clearly and answer in a structured way
     """
 
     messages = [
-        {"role": "system", "content": "Welcome to Recruiter AI Bot! I'm here to assist you by providing structured answers to your questions, ensuring there are no repetitions and it is beautifully formatted. Let's get started! If you have any questions, feel free to ask."},
-        {"role": "user", "content": prompt}
+        # {"role": "model", "parts": "Welcome to Recruiter AI Bot! I'm here to assist you by providing structured answers to your questions based on the job descriptions and query , ensuring there are no repetitions and it is beautifully formatted. I'll make sure that the answer matches the query and If I don't know the answer, I'll never give you the wrong answer. Let's get started! If you have any questions, feel free to ask."},
+        {"role": "model", "parts": f"Recruiters are like treasure hunters, but instead of finding gold, they find the best people to work in a company. They talk to a lot of people, look at their skills, and decide who would be the best fit for different jobs. It's like picking the best players for a team to make sure everyone has fun and does a great job! {prompt}"},
+        {"role": "user", "parts": query}
     ]
-    
-    # Start streaming        
-    print('Using chat completions for general query.')
-    response = openai_client.chat.completions.create(
-        model="gpt-3.5-turbo",
-        messages=messages,
-        temperature=0.1
-    )
 
-    res = response.choices[0].message.content
+    response = model.generate_content(messages, stream=True)
 
-    rendered_response = md.render(res)
-
-    return rendered_response
+    for chunk in response:
+        yield chunk.text

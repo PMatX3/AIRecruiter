@@ -7,41 +7,178 @@
     <title>Recruiter AI</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
     <style>
+        /* General Styles */
         body {
-            font-family: 'Roboto', sans-serif;
-            background-color: #f4f4f9;
-            color: #333;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(to right, #00bfff, #00ced1);
+            color: #fff;
             margin: 0;
-            padding: 20px;
-            position: relative;
-            /* Ensure the body is positioned to contain absolute elements */
+            padding: 0;
+        }
+
+        /* Navbar Styles */
+        .navbar {
+            background-color: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .navbar h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+
+        .navbar .logout-button {
+            background-color: rgba(0, 0, 0, 0.7);
+            color: #fff;
+            border: none;
+            padding: 8px 16px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 14px;
+            text-decoration: none;
+            transition: background-color 0.3s ease;
+        }
+
+        .navbar .logout-button:hover {
+            background-color: rgba(0, 0, 0, 0.8);
         }
 
         h1 {
-            color: #5a5a5a;
-        }
-
-        input[type="file"] {
-            border: 2px solid #ddd;
-            padding: 8px;
-            width: calc(100% - 22px);
+            color: #fff;
+            text-align: center;
+            margin: 20px 0;
         }
 
         button {
-            background-color: #4CAF50;
-            color: white;
+            width: 100%;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.7);
             border: none;
-            padding: 10px 20px;
-            margin-top: 10px;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 16px;
             cursor: pointer;
-            border-radius: 5px;
-            transition: background-color 0.3s;
+            transition: background-color 0.3s, transform 0.3s;
+            margin-top: 10px;
         }
 
         button:hover {
-            background-color: #45a049;
+            background-color: rgba(0, 0, 0, 0.8);
         }
 
+        button:active {
+            transform: scale(0.98);
+        }
+
+        input[type="file"] {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+
+        /* Upload Data Section */
+        #uploadData {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            margin: 20px auto;
+            max-width: 600px;
+        }
+
+        /* Chat Container */
+        #chat-container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            margin: 20px auto;
+            max-width: 600px;
+        }
+
+        #chat-messages {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+        }
+
+        .user-message,
+        .bot-message {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 8px;
+            max-width: 80%;
+        }
+
+        .user-message {
+            background-color: rgba(0, 0, 0, 0.5);
+            align-self: flex-end;
+            margin-left: auto;
+        }
+
+        .bot-message {
+            background-color: rgba(255, 255, 255, 0.2);
+            align-self: flex-start;
+        }
+
+        #user-input {
+            width: calc(100% - 24px);
+            padding: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            margin-bottom: 10px;
+        }
+
+        /* Floating Message */
+        .floating-message {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            animation: floatAway 3s forwards;
+        }
+
+        @keyframes floatAway {
+            0% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+
+            90% {
+                opacity: 1;
+            }
+
+            100% {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+        }
+
+        /* Overlay */
         .overlay {
             position: fixed;
             top: 0;
@@ -49,79 +186,218 @@
             width: 100%;
             height: 100%;
             background-color: rgba(0, 0, 0, 0.5);
-            /* Black background with opacity */
+            z-index: 999;
             display: none;
-            /* Hidden by default */
-            z-index: 10;
-            /* Ensures it's above other content but below the loader */
         }
 
+        /* Loader */
         .loader {
             position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            border: 10px solid #f3f3f3;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #00bfff;
             border-radius: 50%;
-            border-top: 10px solid #3498db;
             width: 50px;
             height: 50px;
-            animation: spin 2s linear infinite;
+            animation: spin 1s linear infinite;
+            z-index: 1000;
             display: none;
-            /* Hidden by default */
-            z-index: 11;
-            /* Ensures loader is above the overlay */
         }
 
         @keyframes spin {
             0% {
-                transform: rotate(0deg);
+                transform: translate(-50%, -50%) rotate(0deg);
             }
 
             100% {
-                transform: rotate(360deg);
+                transform: translate(-50%, -50%) rotate(360deg);
             }
         }
 
-        #result {
+        /* Voicebot */
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            text-align: center;
+            margin: 20px auto;
+            max-width: 600px;
+        }
+
+        .question {
+            font-size: 18px;
             margin-top: 20px;
-            padding: 10px;
-            background-color: #fff;
-            border: 1px solid #ddd;
-            max-height: 50vh;
-            overflow: scroll;
+            color: #fff;
+        }
+
+        .answer {
+            font-size: 16px;
+            margin-bottom: 20px;
+            color: #fff;
+        }
+
+        #cancelButton {
+            background-color: #fa3e3e;
+        }
+
+        #cancelButton:hover {
+            background-color: #e62e2e;
+        }
+
+        #videoPopup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.9);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.7);
+            width: 80%;
+            max-width: 800px;
+        }
+
+        #videoPopup video {
+            width: 100%;
+            height: auto;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        #instructions {
+            background-color: rgba(255, 255, 255, 0.2);
+            color: #fff;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+
+        #cancelButtonVideo {
+            background-color: #fa3e3e;
+            margin-top: 15px;
+            padding: 12px 24px;
+            font-size: 16px;
+            border-radius: 8px;
+        }
+
+        #cancelButtonVideo:hover {
+            background-color: #e62e2e;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+
+            .navbar,
+            #uploadData,
+            #chat-container,
+            .container {
+                width: 90%;
+                padding: 20px;
+            }
+
+            input[type="file"],
+            #user-input {
+                width: calc(100% - 20px);
+            }
+
+            #videoPopup {
+                width: 95%;
+                padding: 20px;
+            }
         }
     </style>
 </head>
 
 <body>
-    <h1>Recruiter AI</h1>
-    <div>
-        <input type="file" id="audioInput" accept="audio/*">
-        <button onclick="uploadAudio()">Upload Audio</button>
+    <nav class="navbar">
+        <h1>Recruiter AI</h1>
+        <a href="/logout" class="logout-button">Logout</a>
+    </nav>
+
+    <div id="uploadData">
+        <div>
+            <input type="file" id="audioInput" accept="audio/*">
+            <button onclick="uploadAudio()">Process Audio</button>
+        </div>
+        <div>
+            <input type="file" id="pdfInput" accept=".pdf,.txt">
+            <button onclick="uploadPDF()">Process PDF/TXT</button>
+        </div>
+        <div>
+            <div>
+                <div class="question" id="question">Voice Input</div>
+                <div class="answer" id="answer"></div>
+                <button id="startButton">Start</button>
+            </div>
+            <div id="videoPopup">
+                <video id="questionVideo">
+                    <source src="../static/Untitled_Video.mp4" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+                <div id="instructions">
+                    Say "skip" to skip the question, "repeat" to repeat the question
+                </div>
+                <button id="cancelButtonVideo" onclick="closeVideoPopupAndRedirect()">Cancel</button>
+            </div>
+        </div>
     </div>
-    <div>
-        <input type="file" id="pdfInput" accept=".pdf,.txt">
-        <button onclick="uploadPDF()">Upload PDF/TXT</button>
-    </div>
-    <div>
-        <button id="recordButton" onclick="toggleRecording()">Record Audio</button>
-        <button id="stopButton" onclick="stopRecording()" style="display:none;">Stop Recording</button>
-        <button id="resumeButton" onclick="resumeRecording()" style="display:none;">Resume Recording</button>
-        <button id="cancelButton" onclick="cancelRecording()" style="display:none;">Cancel Recording</button>
-        <button id="doneButton" onclick="uploadRecordedAudio()" style="display:none;">Done</button>
-        <div id="recordingStatus" style="display: none;">Recording...</div>
-    </div>
-    <div class="overlay" id="overlay"></div> <!-- Overlay element -->
+    <div class="overlay" id="overlay"></div>
     <div class="loader" id="loader"></div>
-    <div id="result">Result Text showing here...</div>
+    <div id="chat-container" style="display: none;">
+        <div id="chat-messages"></div>
+        <input type="text" id="user-input" placeholder="Type your question...">
+        <button id="send-button">Send</button>
+    </div>
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"
+        integrity="sha384-2huaZvOR9iDzHqslqwpR87isEmrfxqyWOF7hr7BY6KG0+hVKLoEXMPUJw3ynWuhO"
+        crossorigin="anonymous"></script>
     <script>
         let mediaRecorder;
         let audioChunks = [];
         let isRecording = false;
         let audioBlob;
+
+        const socket = io();
+
+        socket.on('bot_response', function (data) {
+            updateBotMessage(data.message);
+        });
+
+        document.getElementById('send-button').addEventListener('click', function () {
+            const userQuestion = document.getElementById('user-input').value;
+            displayUserMessage(userQuestion);
+            socket.emit('user_question', { query: userQuestion });
+            document.getElementById('user-input').value = '';
+        });
+
+        function displayUserMessage(message) {
+            const chatMessages = document.getElementById('chat-messages');
+            chatMessages.innerHTML += `<div class="user-message">${message}</div>`;
+            chatMessages.scrollTop = chatMessages.scrollHeight; // Auto-scroll to the bottom
+        }
+
+        function updateBotMessage(message) {
+            const chatMessages = document.getElementById('chat-messages');
+            let lastBotMessage = chatMessages.querySelector('.bot-message:last-child');
+
+            if (lastBotMessage) {
+                lastBotMessage.innerHTML = message; // Update the last bot message
+            } else {
+                chatMessages.innerHTML += `<div class="bot-message">${message}</div>`; // Append a new bot message if none exists
+            }
+            chatMessages.scrollTop = chatMessages.scrollHeight; // Auto-scroll to the bottom
+        }
 
         function toggleRecording() {
             if (!isRecording) {
@@ -219,7 +495,7 @@
         function uploadPDF() {
             var file = document.getElementById('pdfInput').files[0];
             if (!file) {
-                $('#result').html('Please choose a file first.');
+                showFloatingMessage('Please choose a file first.');
                 return;
             }
             var formData = new FormData();
@@ -236,18 +512,198 @@
                 data: formData,
                 contentType: false,
                 processData: false,
-                success: function (data) {
-                    $('#result').html(data.text);
-                    $('#loader').hide(); // Hide the loader
-                    $('#overlay').hide(); // Hide the overlay
+                success: function (data, textStatus, xhr) { // Include additional parameters to access the response object
+                    if (xhr.status === 200) {
+                        $('#result').html(data.text);
+                        $('#loader').hide(); // Hide the loader
+                        $('#overlay').hide(); // Hide the overlay
+                        $('#uploadData').hide(); // Hide the upload data div
+                        $('#chat-container').show(); // Show the chat container
+                        // Show floating message
+                        showFloatingMessage("Applications processing...");
+
+                        // Call new AJAX request to /save-resumes-embedding
+                        $.ajax({
+                            url: '/save-resumes-embedding',
+                            type: 'GET',
+                            data: { /* Add any data you need to send */ },
+                            success: function (response) {
+                                // Handle the response if needed
+                            },
+                            error: function () {
+                                // Handle errors if the request fails
+                            }
+                        });
+                    } else {
+                        $('#result').html('Error in conversion with status code: ' + xhr.status);
+                        $('#loader').hide(); // Hide the loader
+                        $('#overlay').hide(); // Hide the overlay
+                    }
                 },
-                error: function () {
+                error: function (xhr) { // Include xhr parameter to access the response object
                     $('#result').html('Error in conversion');
+                    showFloatingMessage('Error in conversion')
                     $('#loader').hide(); // Hide the loader
                     $('#overlay').hide(); // Hide the overlay
                 }
             });
         }
+
+        function showFloatingMessage(message) {
+            // Create a floating message element
+            const floatingMessage = $('<div class="floating-message"></div>').text(message);
+
+            // Append the message to the body
+            $('body').append(floatingMessage);
+
+            // Set a timeout to remove the message after a certain duration
+            setTimeout(function () {
+                floatingMessage.remove();
+            }, 3000); // Adjust the duration as needed
+        }
+
+        //voicebot
+        const questions = [
+            { text: "What is the name of your company?", start: 0, end: 2 },
+            { text: "What is your company's mission statement?", start: 2, end: 5 },
+            { text: "What are the core values of your company?", start: 5, end: 8 },
+            { text: "What is the job title?", start: 8, end: 10.5 },
+            { text: "What is the department the role belongs to?", start: 10.5, end: 14 },
+            { text: "What are the key responsibilities of the role? Be specific and list out the main tasks and duties.", start: 14, end: 21 }
+        ];
+        let currentQuestionIndex = 0;
+        let recognition;
+        let qaPairs = [];
+
+        document.getElementById('startButton').addEventListener('click', function () {
+            askQuestion();
+        });
+
+        document.getElementById('cancelButton').addEventListener('click', function () {
+            if (recognition) {
+                closeVideoPopupAndRedirect()
+                recognition.stop();
+            }
+            document.getElementById('question').innerText = 'Conversation cancelled.';
+            document.getElementById('answer').innerText = '';
+            currentQuestionIndex = 0;
+        });
+
+        function askQuestion() {
+            if (currentQuestionIndex < questions.length) {
+                const question = questions[currentQuestionIndex];
+
+                // Show video popup and play the video for the question duration
+                const videoPopup = document.getElementById('videoPopup');
+                const questionVideo = document.getElementById('questionVideo');
+                videoPopup.style.display = 'block';
+                questionVideo.currentTime = question.start;
+                questionVideo.play();
+
+                questionVideo.ontimeupdate = function () {
+                    if (questionVideo.currentTime >= question.end) {
+                        questionVideo.pause();
+                        document.getElementById('question').innerText = 'Listening...';
+                        startListening(question.text);
+                    }
+                };
+            } else {
+                document.getElementById('answer').innerText = '';
+                saveText();
+            }
+        }
+
+        function startListening(question) {
+            if (recognition) {
+                recognition.stop();
+            }
+            recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+            recognition.lang = 'en-US';
+            recognition.start();
+
+            recognition.onresult = function (event) {
+                const answer = event.results[0][0].transcript.toLowerCase();
+                if (answer === 'skip') {
+                    document.getElementById('answer').innerText = 'Question skipped.';
+                    currentQuestionIndex++;
+                    setTimeout(askQuestion, 2000);
+                } else if (answer === 'repeat') {
+                    document.getElementById('answer').innerText = 'Repeating question...';
+                    setTimeout(askQuestion, 2000);
+                } else {
+                    qaPairs.push(`Question: ${question}\nAnswer: ${answer}`);
+                    currentQuestionIndex++;
+                    setTimeout(askQuestion, 2000);
+                }
+            };
+
+            recognition.onerror = function (event) {
+                console.error('Speech recognition error:', event.error);
+                document.getElementById('answer').innerText = 'Sorry, I could not understand the audio. Please try again.';
+                setTimeout(askQuestion, 2000); // Add a delay of 2 seconds before calling askQuestion again
+            };
+
+            recognition.onspeechend = function () {
+                recognition.stop();
+            };
+
+            recognition.onnomatch = function (event) {
+                document.getElementById('answer').innerText = 'I did not recognize that. Please try again.';
+                askQuestion();
+            };
+        }
+
+        function saveText() {
+            const text = qaPairs.join('\n\n');
+            fetch('/save-text', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ text: text })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    $('#uploadData').hide(); // Hide the upload data div
+                    $('#chat-container').show(); // Show the chat container
+                    // Show floating message
+                    showFloatingMessage("Applications processing...");
+
+                    // Call new AJAX request to /save-resumes-embedding
+                    $.ajax({
+                        url: '/save-resumes-embedding',
+                        type: 'GET',
+                        data: { /* Add any data you need to send */ },
+                        success: function (response) {
+                            // Handle the response if needed
+                        },
+                        error: function () {
+                            // Handle errors if the request fails
+                        }
+                    });
+                    console.log('Success:', data);
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
+                });
+        }
+
+        function closeVideoPopupAndRedirect() {
+            const videoPopup = document.getElementById('videoPopup');
+            videoPopup.style.display = 'none';
+            window.location.href = '/';
+        }
+
+        // Handle the runtime.lastError
+        chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+            if (chrome.runtime.lastError) {
+                console.error('runtime.lastError:', chrome.runtime.lastError.message);
+                sendResponse({ success: false, error: chrome.runtime.lastError.message });
+                return true; // Indicate an asynchronous response
+            }
+            sendResponse({ success: true });
+            return true; // Indicate an asynchronous response
+        });
     </script>
 </body>
 
