@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, render_template, session, redirect, url_for
+from flask import Flask, request, jsonify, render_template, session, redirect, url_for, Response, send_from_directory
 import speech_recognition as sr
 from pydub import AudioSegment
 import openai
@@ -38,7 +38,9 @@ users_collection = db.get_collection('users')
 openai_client = openai.Client(api_key=os.getenv("OPENAI_API_KEY"))
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
-socketio = SocketIO(app)
+socketio = SocketIO(app, ping_timeout=240, ping_interval=120)
+
+socketio.init_app(app, cors_allowed_origins="*")
 
 def to_markdown(text):
   text = text.replace('•', '  *')
@@ -50,6 +52,15 @@ md = (
     .use(footnote_plugin)
     .enable('table')
 )
+
+# Simulated process status
+process_status = {
+    "Creating Job description": "not_started",
+    "Job posting": "not_started",
+    "Getting resumes from portal": "not_started",
+    "Matching resumes with job description": "not_started",
+    "Sending resumes to your email": "not_started"
+}
 
 def extract_job_info(text):
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key={GEMINI_API_KEY}"
@@ -210,20 +221,92 @@ def get_resumes():
 
     return resumes
 
-@socketio.on('user_question')
-def handle_user_question(data):
-    query = data['query']
-    entire_response = ''
-    with open('extracted_text.txt', 'r', encoding='utf-8') as file:
-        job_info_json = file.read()
-    for message in get_results(query, job_info_json):
-        entire_response += message
-        rendered_response = md.render(entire_response)
-        emit('bot_response', {'message': rendered_response})
+# @socketio.on('user_question')
+# def handle_user_question(data):
+#     query = data['query']
+#     entire_response = ''
+#     with open('extracted_text.txt', 'r', encoding='utf-8') as file:
+#         job_info_json = file.read()
+#     for message in get_results(query, job_info_json):
+#         entire_response += message
+#         rendered_response = md.render(entire_response)
+#         emit('bot_response', {'message': rendered_response})
 
-@app.route('/demo')
+@app.route('/chat', methods=['POST'])
+def chat():
+    query = request.json['query']
+    
+    def generate():
+        entire_response = ''
+        with open('extracted_text.txt', 'r', encoding='utf-8') as file:
+            job_info_json = file.read()
+        for message in get_results(query, job_info_json):
+            # entire_response += message
+            # rendered_response = md.render(entire_response)
+            yield message
+
+    return Response(generate(), mimetype='text/event-stream')
+
+def update_job_description():
+    global process_status
+    process_status["Creating Job description"] = "in_progress"
+    time.sleep(5)
+    process_status["Creating Job description"] = "done"
+
+def update_job_posting():
+    global process_status
+    process_status["Job posting"] = "in_progress"
+    time.sleep(5)
+    process_status["Job posting"] = "done"
+
+def update_getting_resumes():
+    global process_status
+    process_status["Getting resumes from portal"] = "in_progress"
+    time.sleep(5)
+    process_status["Getting resumes from portal"] = "done"
+
+def update_matching_resumes():
+    global process_status
+    process_status["Matching resumes with job description"] = "in_progress"
+    time.sleep(5)
+    process_status["Matching resumes with job description"] = "done"
+
+def update_sending_resumes():
+    global process_status
+    process_status["Sending resumes to your email"] = "in_progress"
+    time.sleep(5)
+    process_status["Sending resumes to your email"] = "done"
+
+def start_process_updates():
+    update_job_description()
+    update_job_posting()
+    update_getting_resumes()
+    update_matching_resumes()
+    update_sending_resumes()
+
+def reset_process_status():
+    global process_status
+    process_status = {
+        "Creating Job description": "not_started",
+        "Job posting": "not_started",
+        "Getting resumes from portal": "not_started",
+        "Matching resumes with job description": "not_started",
+        "Sending resumes to your email": "not_started"
+    }
+
+@app.route('/process')
 def demo():
-    return render_template('demo.html')
+    return render_template('process.html')
+
+@app.route('/start-process')
+def start_process():
+    reset_process_status()
+    start_process_updates()
+    return jsonify({'message': 'Process started.'})
+
+@app.route('/status')
+def get_status():
+    return jsonify(process_status)
 
 @app.route('/save-text', methods=['POST'])
 def save_text():
@@ -252,4 +335,5 @@ def upload_file():
 
 
 if __name__ == '__main__':
-    socketio.run(app, debug=True)
+    app.run(debug=True, host="0.0.0.0", port=8000)
+    #socketio.run(app, debug=True)

@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Process Display</title>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+            color: #333;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+        }
+
+        .accordion {
+            background: #f9f9f9;
+            color: #333;
+            cursor: pointer;
+            padding: 18px 20px;
+            width: 100%;
+            text-align: left;
+            border: none;
+            outline: none;
+            transition: all 0.3s ease;
+            margin-bottom: 10px;
+            font-size: 16px;
+            font-weight: 500;
+            border-radius: 8px;
+            position: relative;
+        }
+
+        .accordion:hover {
+            background: #f0f0f0;
+        }
+
+        .accordion.active {
+            background: #e6e6e6;
+        }
+
+        .accordion.completed {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .accordion.running {
+            background: #e3f2fd;
+            color: #1565c0;
+            animation: pulse 2s infinite;
+        }
+
+        .accordion.running::before {
+            content: "▶";
+            margin-right: 10px;
+            color: #1565c0;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(21, 101, 192, 0.7);
+            }
+
+            70% {
+                box-shadow: 0 0 0 10px rgba(21, 101, 192, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(21, 101, 192, 0);
+            }
+        }
+
+        .panel {
+            padding: 0 20px;
+            background: #ffffff;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out, padding 0.3s ease;
+            font-size: 14px;
+            color: #666;
+            border-radius: 0 0 8px 8px;
+        }
+
+        .panel.active {
+            padding: 20px;
+            max-height: 200px;
+        }
+
+        .back-link {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            text-decoration: none;
+            color: #333;
+            font-size: 18px;
+            margin-bottom: 20px;
+            display: inline-block;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <a href="/" class="back-link">
+            <span style="margin-right: 5px;">&#8592;</span> Back to Home
+        </a>
+        <h1 style="text-align: center; color: #333;">Recruitment Process</h1>
+        <button class="accordion" data-step="Creating Job description">Step 1: Creating Job description</button>
+        <div class="panel">
+            <p>Develop a comprehensive job description outlining the role, responsibilities, and qualifications.</p>
+        </div>
+        <button class="accordion" data-step="Job posting">Step 2: Job posting</button>
+        <div class="panel">
+            <p>Publish the job posting on relevant platforms and job boards to attract potential candidates.</p>
+        </div>
+        <button class="accordion" data-step="Getting resumes from portal">Step 3: Getting candidate applications from
+            portal</button>
+        <div class="panel">
+            <p>Collect and organize resumes submitted by applicants through the designated portal.</p>
+        </div>
+        <button class="accordion" data-step="Matching resumes with job description">Step 4: Matching resumes with job
+            description</button>
+        <div class="panel">
+            <p>Analyze and compare received resumes against the job description to identify suitable candidates.</p>
+        </div>
+        <button class="accordion" data-step="Sending resumes to your email">Step 5: Sending the list of best candidates
+            to your
+            email</button>
+        <div class="panel">
+            <p>Forward selected resumes to the designated email address for further review and action.</p>
+        </div>
+    </div>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script>
+        // Run fetchStatus function after 5 seconds of page load
+        window.addEventListener('load', function () {
+            const accordions = document.getElementsByClassName("accordion");
+            const panels = document.getElementsByClassName("panel");
+
+            function openAccordion(accordion, panel) {
+                accordion.classList.add("active");
+                panel.style.maxHeight = panel.scrollHeight + "px";
+            }
+
+            function closeAccordion(accordion, panel) {
+                accordion.classList.remove("active");
+                panel.style.maxHeight = null;
+            }
+
+            function updateAccordionStatus(accordion, status) {
+                accordion.classList.remove("running", "completed");
+                if (status === "in_progress") {
+                    accordion.classList.add("running");
+                    openAccordion(accordion, accordion.nextElementSibling);
+                } else if (status === "done") {
+                    accordion.classList.add("completed");
+                    closeAccordion(accordion, accordion.nextElementSibling);
+                }
+            }
+
+            function fetchStatus() {
+                $.ajax({
+                    url: '/status',
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function (data) {
+                        for (let accordion of accordions) {
+                            const step = accordion.getAttribute('data-step');
+                            updateAccordionStatus(accordion, data[step]);
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        console.error('Error:', error);
+                    },
+                    complete: function () {
+                        setTimeout(fetchStatus, 5000); // Poll every 5 seconds
+                    }
+                });
+            }
+
+
+            setTimeout(fetchStatus, 5000);
+            // Initialize accordions
+            for (let i = 0; i < accordions.length; i++) {
+                accordions[i].addEventListener("click", function () {
+                    this.classList.toggle("active");
+                    var panel = this.nextElementSibling;
+                    if (panel.style.maxHeight) {
+                        panel.style.maxHeight = null;
+                    } else {
+                        panel.style.maxHeight = panel.scrollHeight + "px";
+                    }
+                });
+            }
+
+            // Call /start-process when the page loads
+            $(document).ready(function () {
+                $.ajax({
+                    url: '/start-process',
+                    type: 'GET',
+                    success: function (response) {
+                        console.log('Process started:', response.message);
+                    },
+                    error: function (xhr, status, error) {
+                        console.error('Error starting process:', error);
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>

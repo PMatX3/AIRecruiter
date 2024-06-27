@@ -6,22 +6,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Recruiter AI</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         /* General Styles */
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(to right, #00bfff, #00ced1);
-            color: #fff;
+            font-family: 'Roboto', sans-serif;
+            background: #f5f5f5;
+            color: #333;
             margin: 0;
             padding: 0;
+            line-height: 1.6;
         }
 
         /* Navbar Styles */
         .navbar {
-            background-color: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            color: white;
+            position: sticky;
+            top: 0;
+            left: 0;
+            right: 0;
+            background-color: #fff;
+            color: #333;
             padding: 15px 30px;
             display: flex;
             justify-content: space-between;
@@ -32,45 +36,47 @@
         .navbar h1 {
             margin: 0;
             font-size: 24px;
+            font-weight: 500;
         }
 
         .navbar .logout-button {
-            background-color: rgba(0, 0, 0, 0.7);
+            background-color: #f44336;
             color: #fff;
             border: none;
             padding: 8px 16px;
             cursor: pointer;
-            border-radius: 5px;
+            border-radius: 4px;
             font-size: 14px;
             text-decoration: none;
             transition: background-color 0.3s ease;
         }
 
         .navbar .logout-button:hover {
-            background-color: rgba(0, 0, 0, 0.8);
+            background-color: #d32f2f;
         }
 
         h1 {
-            color: #fff;
+            color: #333;
             text-align: center;
-            margin: 20px 0;
+            margin: 30px 0;
+            font-weight: 500;
         }
 
         button {
             width: 100%;
             padding: 12px;
-            background: rgba(0, 0, 0, 0.7);
+            background: #2196f3;
             border: none;
-            border-radius: 8px;
+            border-radius: 4px;
             color: #fff;
             font-size: 16px;
             cursor: pointer;
             transition: background-color 0.3s, transform 0.3s;
-            margin-top: 10px;
+            margin-top: 15px;
         }
 
         button:hover {
-            background-color: rgba(0, 0, 0, 0.8);
+            background-color: #1976d2;
         }
 
         button:active {
@@ -80,35 +86,29 @@
         input[type="file"] {
             width: 100%;
             padding: 10px;
-            margin-top: 10px;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 5px;
-            background: rgba(255, 255, 255, 0.1);
-            color: #fff;
+            margin-top: 15px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            background: #fff;
+            color: #333;
         }
 
         /* Upload Data Section */
         #uploadData {
-            background: rgba(255, 255, 255, 0.1);
+            background: #fff;
             padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             margin: 20px auto;
             max-width: 600px;
         }
 
         /* Chat Container */
         #chat-container {
-            background: rgba(255, 255, 255, 0.1);
+            background: #fff;
             padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             margin: 20px auto;
             max-width: 600px;
         }
@@ -128,23 +128,23 @@
         }
 
         .user-message {
-            background-color: rgba(0, 0, 0, 0.5);
+            background-color: #e3f2fd;
             align-self: flex-end;
             margin-left: auto;
         }
 
         .bot-message {
-            background-color: rgba(255, 255, 255, 0.2);
+            background-color: #f5f5f5;
             align-self: flex-start;
         }
 
         #user-input {
             width: calc(100% - 24px);
             padding: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 8px;
-            background: rgba(255, 255, 255, 0.1);
-            color: #fff;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            background: #fff;
+            color: #333;
             margin-bottom: 10px;
         }
 
@@ -153,11 +153,11 @@
             position: fixed;
             bottom: 20px;
             right: 20px;
-            background-color: rgba(0, 0, 0, 0.7);
+            background-color: #333;
             color: white;
             padding: 15px 25px;
-            border-radius: 8px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            border-radius: 4px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             z-index: 1000;
             animation: floatAway 3s forwards;
         }
@@ -196,11 +196,11 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            border: 5px solid #f3f3f3;
-            border-top: 5px solid #00bfff;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #2196f3;
             border-radius: 50%;
-            width: 50px;
-            height: 50px;
+            width: 40px;
+            height: 40px;
             animation: spin 1s linear infinite;
             z-index: 1000;
             display: none;
@@ -218,13 +218,10 @@
 
         /* Voicebot */
         .container {
-            background: rgba(255, 255, 255, 0.1);
+            background: #fff;
             padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             text-align: center;
             margin: 20px auto;
             max-width: 600px;
@@ -233,21 +230,22 @@
         .question {
             font-size: 18px;
             margin-top: 20px;
-            color: #fff;
+            color: #333;
+            font-weight: 500;
         }
 
         .answer {
             font-size: 16px;
             margin-bottom: 20px;
-            color: #fff;
+            color: #666;
         }
 
         #cancelButton {
-            background-color: #fa3e3e;
+            background-color: #f44336;
         }
 
         #cancelButton:hover {
-            background-color: #e62e2e;
+            background-color: #d32f2f;
         }
 
         #videoPopup {
@@ -256,41 +254,41 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background-color: rgba(0, 0, 0, 0.9);
+            background-color: #fff;
             padding: 30px;
-            border-radius: 20px;
-            box-shadow: 0 0 30px rgba(0, 0, 0, 0.7);
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             width: 80%;
-            max-width: 800px;
+            max-width: 600px;
         }
 
         #videoPopup video {
             width: 100%;
             height: auto;
-            border-radius: 12px;
+            border-radius: 8px;
             margin-bottom: 20px;
         }
 
         #instructions {
-            background-color: rgba(255, 255, 255, 0.2);
-            color: #fff;
+            background-color: #f5f5f5;
+            color: #333;
             padding: 15px;
-            border-radius: 10px;
+            border-radius: 4px;
             margin-bottom: 20px;
             font-size: 16px;
             line-height: 1.5;
         }
 
         #cancelButtonVideo {
-            background-color: #fa3e3e;
+            background-color: #f44336;
             margin-top: 15px;
             padding: 12px 24px;
             font-size: 16px;
-            border-radius: 8px;
+            border-radius: 4px;
         }
 
         #cancelButtonVideo:hover {
-            background-color: #e62e2e;
+            background-color: #d32f2f;
         }
 
         /* Responsive Design */
@@ -324,17 +322,25 @@
     </nav>
 
     <div id="uploadData">
+        <h2>Upload Your Job Description</h2>
+        <p>You can upload your job description in three ways:</p>
+
         <div>
+            <h3>1. Audio Input</h3>
             <input type="file" id="audioInput" accept="audio/*">
             <button onclick="uploadAudio()">Process Audio</button>
         </div>
+
         <div>
+            <h3>2. Text Input</h3>
             <input type="file" id="pdfInput" accept=".pdf,.txt">
             <button onclick="uploadPDF()">Process PDF/TXT</button>
         </div>
+
         <div>
+            <h3>3. Voice Input</h3>
             <div>
-                <div class="question" id="question">Voice Input</div>
+                <div class="question" id="question">Talk to an avatar</div>
                 <div class="answer" id="answer"></div>
                 <button id="startButton">Start</button>
             </div>
@@ -352,139 +358,124 @@
     </div>
     <div class="overlay" id="overlay"></div>
     <div class="loader" id="loader"></div>
-    <div id="chat-container" style="display: none;">
+    <!-- <div id="chat-container" style="display: none;">
         <div id="chat-messages"></div>
         <input type="text" id="user-input" placeholder="Type your question...">
         <button id="send-button">Send</button>
-    </div>
+    </div> -->
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"
         integrity="sha384-2huaZvOR9iDzHqslqwpR87isEmrfxqyWOF7hr7BY6KG0+hVKLoEXMPUJw3ynWuhO"
         crossorigin="anonymous"></script>
     <script>
-        let mediaRecorder;
-        let audioChunks = [];
-        let isRecording = false;
-        let audioBlob;
+        // document.getElementById('send-button').addEventListener('click', function () {
+        //     const userQuestion = document.getElementById('user-input').value;
+        //     displayUserMessage(userQuestion);
+        //     fetchBotResponse(userQuestion);
+        //     document.getElementById('user-input').value = '';
+        // });
 
-        const socket = io();
+        // function displayUserMessage(message) {
+        //     const chatMessages = document.getElementById('chat-messages');
+        //     chatMessages.innerHTML += `<div class="user-message">${escapeHtml(message)}</div>`;
+        //     chatMessages.scrollTop = chatMessages.scrollHeight;
+        // }
 
-        socket.on('bot_response', function (data) {
-            updateBotMessage(data.message);
+        // function updateBotMessage(message) {
+        //     const chatMessages = document.getElementById('chat-messages');
+        //     let lastBotMessage = chatMessages.querySelector('.bot-message:last-child');
+
+        //     if (lastBotMessage) {
+        //         // Accumulate the message content
+        //         lastBotMessage.dataset.content = (lastBotMessage.dataset.content || '') + message;
+        //         // Parse the entire accumulated content
+        //         lastBotMessage.innerHTML = marked.parse(lastBotMessage.dataset.content);
+        //     } else {
+        //         // Create a new bot message div
+        //         const newBotMessage = document.createElement('div');
+        //         newBotMessage.className = 'bot-message';
+        //         newBotMessage.dataset.content = message;
+        //         newBotMessage.innerHTML = marked.parse(message);
+        //         chatMessages.appendChild(newBotMessage);
+        //     }
+        //     chatMessages.scrollTop = chatMessages.scrollHeight;
+        // }
+
+        // async function fetchBotResponse(question) {
+        //     try {
+        //         const response = await fetch('/chat', {
+        //             method: 'POST',
+        //             headers: {
+        //                 'Content-Type': 'application/json',
+        //             },
+        //             body: JSON.stringify({ query: question }),
+        //         });
+
+        //         if (!response.ok) {
+        //             throw new Error(`HTTP error! status: ${response.status}`);
+        //         }
+
+        //         const reader = response.body.getReader();
+        //         const decoder = new TextDecoder();
+        //         let aiResponse = '';
+
+        //         function readStream() {
+        //             reader.read().then(({ done, value }) => {
+        //                 if (done) {
+        //                     return;
+        //                 }
+        //                 const chunk = decoder.decode(value);
+        //                 aiResponse += chunk;
+        //                 updateBotMessage(aiResponse);
+        //                 readStream();
+        //             });
+        //         }
+
+        //         readStream();
+        //     } catch (error) {
+        //         console.error('Error:', error);
+        //         updateBotMessage('An error occurred while fetching the response.');
+        //     }
+        // }
+
+        // Global variables
+        const questions = [
+            { text: "What is the name of your company?", start: 0, end: 2 },
+            { text: "What is your company's mission statement?", start: 2, end: 5 },
+            { text: "What are the core values of your company?", start: 5, end: 8 },
+            { text: "What is the job title?", start: 8, end: 10.5 },
+            { text: "What is the department the role belongs to?", start: 10.5, end: 14 },
+            { text: "What are the key responsibilities of the role? Be specific and list out the main tasks and duties.", start: 14, end: 21 }
+        ];
+        let currentQuestionIndex = 0;
+        let recognition;
+        let qaPairs = [];
+        let silenceTimer;
+        const SILENCE_THRESHOLD = 5000; // 10 seconds in milliseconds
+        let questionRepeatCount = 0;
+        const MAX_REPEATS = 1;
+
+        // Event Listeners
+        document.getElementById('startButton').addEventListener('click', function () {
+            askQuestion();
         });
 
-        document.getElementById('send-button').addEventListener('click', function () {
-            const userQuestion = document.getElementById('user-input').value;
-            displayUserMessage(userQuestion);
-            socket.emit('user_question', { query: userQuestion });
-            document.getElementById('user-input').value = '';
+        document.getElementById('cancelButton').addEventListener('click', function () {
+            if (recognition) {
+                closeVideoPopupAndRedirect();
+                recognition.stop();
+            }
+            document.getElementById('question').innerText = 'Conversation cancelled.';
+            document.getElementById('answer').innerText = '';
+            currentQuestionIndex = 0;
         });
 
-        function displayUserMessage(message) {
-            const chatMessages = document.getElementById('chat-messages');
-            chatMessages.innerHTML += `<div class="user-message">${message}</div>`;
-            chatMessages.scrollTop = chatMessages.scrollHeight; // Auto-scroll to the bottom
-        }
-
-        function updateBotMessage(message) {
-            const chatMessages = document.getElementById('chat-messages');
-            let lastBotMessage = chatMessages.querySelector('.bot-message:last-child');
-
-            if (lastBotMessage) {
-                lastBotMessage.innerHTML = message; // Update the last bot message
-            } else {
-                chatMessages.innerHTML += `<div class="bot-message">${message}</div>`; // Append a new bot message if none exists
-            }
-            chatMessages.scrollTop = chatMessages.scrollHeight; // Auto-scroll to the bottom
-        }
-
-        function toggleRecording() {
-            if (!isRecording) {
-                startRecording();
-            } else {
-                stopRecording();
-            }
-        }
-
-        function startRecording() {
-            navigator.mediaDevices.getUserMedia({ audio: true })
-                .then(stream => {
-                    mediaRecorder = new MediaRecorder(stream);
-                    mediaRecorder.start();
-                    isRecording = true;
-                    $('#recordingStatus').show();
-                    $('#recordButton').hide();
-                    $('#stopButton').show();
-                    $('#cancelButton').show();
-
-                    mediaRecorder.ondataavailable = function (event) {
-                        audioChunks.push(event.data);
-                    };
-                })
-                .catch(error => {
-                    console.error("Error accessing media devices.", error);
-                });
-        }
-
-        function stopRecording() {
-            mediaRecorder.stop();
-            isRecording = false;
-            $('#recordingStatus').hide();
-            $('#stopButton').hide();
-            $('#resumeButton').show();
-            $('#doneButton').show();
-        }
-
-        function resumeRecording() {
-            if (mediaRecorder && mediaRecorder.state === "paused") {
-                mediaRecorder.resume();
-            } else {
-                startRecording();
-            }
-            isRecording = true;
-            $('#recordingStatus').show();
-            $('#resumeButton').hide();
-            $('#stopButton').show();
-        }
-
-        function cancelRecording() {
-            mediaRecorder.stop();
-            audioChunks = [];
-            isRecording = false;
-            $('#recordingStatus').hide();
-            $('#stopButton').hide();
-            $('#resumeButton').hide();
-            $('#cancelButton').hide();
-            $('#recordButton').show();
-            $('#doneButton').hide();
-        }
-
-        function uploadRecordedAudio() {
-            if (audioChunks.length > 0) {
-                // Create a Blob from the audio chunks
-                audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-
-                // Create a new FormData object
-                var formData = new FormData();
-
-                // Append the Blob as a file-like object, providing a filename
-                formData.append('file', audioBlob, 'recording.webm');
-
-                // Send the FormData to the server
-                ajaxCall('/audio-to-text', formData);
-            } else {
-                console.log("No audio recorded.");
-            }
-
-            // Reset recording setup
-            cancelRecording();
-        }
-
+        // File Upload Functions
         function uploadAudio() {
             var file = document.getElementById('audioInput').files[0];
             if (!file) {
-                $('#result').html('Please choose a file first.');
+                showFloatingMessage('Please choose a file first.');
                 return;
             }
             var formData = new FormData();
@@ -504,91 +495,52 @@
         }
 
         function ajaxCall(url, formData) {
-            $('#overlay').show(); // Show the overlay
-            $('#loader').show(); // Show the loader
+            $('#overlay').show();
+            $('#loader').show();
             $.ajax({
                 url: url,
                 type: 'POST',
                 data: formData,
                 contentType: false,
                 processData: false,
-                success: function (data, textStatus, xhr) { // Include additional parameters to access the response object
+                success: function (data, textStatus, xhr) {
                     if (xhr.status === 200) {
-                        $('#result').html(data.text);
-                        $('#loader').hide(); // Hide the loader
-                        $('#overlay').hide(); // Hide the overlay
-                        $('#uploadData').hide(); // Hide the upload data div
-                        $('#chat-container').show(); // Show the chat container
-                        // Show floating message
-                        showFloatingMessage("Applications processing...");
-
-                        // Call new AJAX request to /save-resumes-embedding
+                        $('#loader').hide();
+                        $('#overlay').hide();
+                        window.location.href = '/process';
                         $.ajax({
                             url: '/save-resumes-embedding',
                             type: 'GET',
-                            data: { /* Add any data you need to send */ },
                             success: function (response) {
-                                // Handle the response if needed
+                                // Handle success if needed
                             },
                             error: function () {
                                 // Handle errors if the request fails
                             }
                         });
                     } else {
-                        $('#result').html('Error in conversion with status code: ' + xhr.status);
-                        $('#loader').hide(); // Hide the loader
-                        $('#overlay').hide(); // Hide the overlay
+                        showFloatingMessage('Error in conversion with status code: ' + xhr.status);
+                        $('#loader').hide();
+                        $('#overlay').hide();
                     }
                 },
-                error: function (xhr) { // Include xhr parameter to access the response object
-                    $('#result').html('Error in conversion');
-                    showFloatingMessage('Error in conversion')
-                    $('#loader').hide(); // Hide the loader
-                    $('#overlay').hide(); // Hide the overlay
+                error: function (xhr) {
+                    showFloatingMessage('Error in conversion');
+                    $('#loader').hide();
+                    $('#overlay').hide();
                 }
             });
         }
 
         function showFloatingMessage(message) {
-            // Create a floating message element
             const floatingMessage = $('<div class="floating-message"></div>').text(message);
-
-            // Append the message to the body
             $('body').append(floatingMessage);
-
-            // Set a timeout to remove the message after a certain duration
             setTimeout(function () {
                 floatingMessage.remove();
-            }, 3000); // Adjust the duration as needed
+            }, 3000);
         }
 
-        //voicebot
-        const questions = [
-            { text: "What is the name of your company?", start: 0, end: 2 },
-            { text: "What is your company's mission statement?", start: 2, end: 5 },
-            { text: "What are the core values of your company?", start: 5, end: 8 },
-            { text: "What is the job title?", start: 8, end: 10.5 },
-            { text: "What is the department the role belongs to?", start: 10.5, end: 14 },
-            { text: "What are the key responsibilities of the role? Be specific and list out the main tasks and duties.", start: 14, end: 21 }
-        ];
-        let currentQuestionIndex = 0;
-        let recognition;
-        let qaPairs = [];
-
-        document.getElementById('startButton').addEventListener('click', function () {
-            askQuestion();
-        });
-
-        document.getElementById('cancelButton').addEventListener('click', function () {
-            if (recognition) {
-                closeVideoPopupAndRedirect()
-                recognition.stop();
-            }
-            document.getElementById('question').innerText = 'Conversation cancelled.';
-            document.getElementById('answer').innerText = '';
-            currentQuestionIndex = 0;
-        });
-
+        // Voice Input Functions
         function askQuestion() {
             if (currentQuestionIndex < questions.length) {
                 const question = questions[currentQuestionIndex];
@@ -619,15 +571,87 @@
             }
             recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
             recognition.lang = 'en-US';
+            recognition.interimResults = true;
+            recognition.continuous = true;
             recognition.start();
 
+            let finalTranscript = '';
+            let isListening = true;
+            let hasStartedSpeaking = false;
+
             recognition.onresult = function (event) {
-                const answer = event.results[0][0].transcript.toLowerCase();
-                if (answer === 'skip') {
-                    document.getElementById('answer').innerText = 'Question skipped.';
+                let interimTranscript = '';
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    if (event.results[i].isFinal) {
+                        finalTranscript += event.results[i][0].transcript;
+                    } else {
+                        interimTranscript += event.results[i][0].transcript;
+                    }
+                }
+
+                // Reset the silence timer whenever we get a result
+                resetSilenceTimer();
+
+                // Set flag to indicate user has started speaking
+                hasStartedSpeaking = true;
+            };
+
+            recognition.onend = function () {
+                if (isListening) {
+                    recognition.start();
+                }
+            };
+
+            recognition.onerror = function (event) {
+                console.error('Speech recognition error:', event.error);
+                document.getElementById('answer').innerText = 'Sorry, I could not understand the audio. Please try again.';
+                isListening = false;
+                processAnswer(finalTranscript);
+            };
+
+            function resetSilenceTimer() {
+                clearTimeout(silenceTimer);
+                silenceTimer = setTimeout(() => {
+                    isListening = false;
+                    recognition.stop();
+                    if (hasStartedSpeaking) {
+                        processAnswer(finalTranscript);
+                    } else {
+                        handleNoResponse();
+                    }
+                }, SILENCE_THRESHOLD);
+            }
+
+            resetSilenceTimer();
+
+            function handleNoResponse() {
+                if (questionRepeatCount < MAX_REPEATS) {
+                    questionRepeatCount++;
+                    document.getElementById('answer').innerText = 'No response detected. Repeating the question.';
+                    setTimeout(() => {
+                        askQuestion();
+                    }, 2000);
+                } else {
+                    document.getElementById('answer').innerText = 'No response detected. Moving to the next question.';
+                    questionRepeatCount = 0;
                     currentQuestionIndex++;
-                    setTimeout(askQuestion, 2000);
-                } else if (answer === 'repeat') {
+                    setTimeout(() => {
+                        askQuestion();
+                    }, 2000);
+                }
+            }
+
+            function processAnswer(answer) {
+                questionRepeatCount = 0; // Reset repeat count for next question
+                if (answer.toLowerCase().includes('skip')) {
+                    document.getElementById('answer').innerText = 'Question skipped.';
+                    if (currentQuestionIndex < questions.length - 1) {
+                        currentQuestionIndex++;
+                        setTimeout(askQuestion, 2000);
+                    } else {
+                        saveText();
+                    }
+                } else if (answer.toLowerCase().includes('repeat')) {
                     document.getElementById('answer').innerText = 'Repeating question...';
                     setTimeout(askQuestion, 2000);
                 } else {
@@ -635,22 +659,7 @@
                     currentQuestionIndex++;
                     setTimeout(askQuestion, 2000);
                 }
-            };
-
-            recognition.onerror = function (event) {
-                console.error('Speech recognition error:', event.error);
-                document.getElementById('answer').innerText = 'Sorry, I could not understand the audio. Please try again.';
-                setTimeout(askQuestion, 2000); // Add a delay of 2 seconds before calling askQuestion again
-            };
-
-            recognition.onspeechend = function () {
-                recognition.stop();
-            };
-
-            recognition.onnomatch = function (event) {
-                document.getElementById('answer').innerText = 'I did not recognize that. Please try again.';
-                askQuestion();
-            };
+            }
         }
 
         function saveText() {
@@ -664,16 +673,10 @@
             })
                 .then(response => response.json())
                 .then(data => {
-                    $('#uploadData').hide(); // Hide the upload data div
-                    $('#chat-container').show(); // Show the chat container
-                    // Show floating message
-                    showFloatingMessage("Applications processing...");
-
-                    // Call new AJAX request to /save-resumes-embedding
+                    window.location.href = '/process';
                     $.ajax({
                         url: '/save-resumes-embedding',
                         type: 'GET',
-                        data: { /* Add any data you need to send */ },
                         success: function (response) {
                             // Handle the response if needed
                         },
@@ -694,16 +697,18 @@
             window.location.href = '/';
         }
 
-        // Handle the runtime.lastError
-        chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-            if (chrome.runtime.lastError) {
-                console.error('runtime.lastError:', chrome.runtime.lastError.message);
-                sendResponse({ success: false, error: chrome.runtime.lastError.message });
+        // Handle the runtime.lastError (if using Chrome extensions)
+        if (typeof chrome !== 'undefined' && chrome.runtime) {
+            chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+                if (chrome.runtime.lastError) {
+                    console.error('runtime.lastError:', chrome.runtime.lastError.message);
+                    sendResponse({ success: false, error: chrome.runtime.lastError.message });
+                    return true; // Indicate an asynchronous response
+                }
+                sendResponse({ success: true });
                 return true; // Indicate an asynchronous response
-            }
-            sendResponse({ success: true });
-            return true; // Indicate an asynchronous response
-        });
+            });
+        }
     </script>
 </body>
 
