@@ -110,6 +110,74 @@
             margin-bottom: 20px;
             display: inline-block;
         }
+
+        .popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            max-width: 800px;
+            width: 90%;
+            text-align: center;
+        }
+
+        .popup h3 {
+            margin: 0 auto 20px;
+            color: #333;
+            font-size: 24px;
+        }
+
+        .popup textarea {
+            width: 100%;
+            height: 200px;
+            margin: 0 auto 20px;
+            padding: 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+            resize: vertical;
+            box-sizing: border-box;
+        }
+
+        .popup button {
+            padding: 12px 24px;
+            background: #2196f3;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 0 6px;
+            font-size: 16px;
+            transition: background-color 0.3s, transform 0.1s;
+            display: inline-block;
+        }
+
+        .popup button:hover {
+            background: #1976d2;
+        }
+
+        .popup button:active {
+            transform: scale(0.98);
+        }
+
+        /* Updated styles for job description */
+        #jobDescMarkdown {
+            text-align: left;
+            background-color: #f5f5f5;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            height: 300px;
+            overflow-y: auto;
+            font-size: 16px;
+            line-height: 1.6;
+        }
     </style>
 </head>
 
@@ -132,7 +200,7 @@
         <div class="panel">
             <p>Collect and organize resumes submitted by applicants through the designated portal.</p>
         </div>
-        <button class="accordion" data-step="Matching resumes with job description">Step 4: Matching resumes with job
+        <button class="accordion" data-step="Matching resumes with job description">Step 4: Matching candidates with job
             description</button>
         <div class="panel">
             <p>Analyze and compare received resumes against the job description to identify suitable candidates.</p>
@@ -144,12 +212,24 @@
             <p>Forward selected resumes to the designated email address for further review and action.</p>
         </div>
     </div>
+
+    <div id="jobDescPopup" class="popup">
+        <h3>Job Description</h3>
+        <div id="jobDescMarkdown"></div>
+        <button id="editSaveBtn">Edit</button>
+        <button id="doneBtn" style="display: none;">Done</button>
+    </div>
+
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script>
-        // Run fetchStatus function after 5 seconds of page load
         window.addEventListener('load', function () {
             const accordions = document.getElementsByClassName("accordion");
             const panels = document.getElementsByClassName("panel");
+            const jobDescPopup = document.getElementById('jobDescPopup');
+            const jobDescMarkdown = document.getElementById('jobDescMarkdown');
+            const editSaveBtn = document.getElementById('editSaveBtn');
+            const doneBtn = document.getElementById('doneBtn');
 
             function openAccordion(accordion, panel) {
                 accordion.classList.add("active");
@@ -192,8 +272,8 @@
                 });
             }
 
-
             setTimeout(fetchStatus, 5000);
+
             // Initialize accordions
             for (let i = 0; i < accordions.length; i++) {
                 accordions[i].addEventListener("click", function () {
@@ -209,6 +289,54 @@
 
             // Call /start-process when the page loads
             $(document).ready(function () {
+                // Fetch job description
+                $.ajax({
+                    url: '/get_jobdesc',
+                    type: 'GET',
+                    success: function (response) {
+                        jobDescMarkdown.innerHTML = response.description;
+                        if (response.edited) {
+                            jobDescPopup.style.display = 'none';
+                        }
+                        else{
+                            jobDescPopup.style.display = 'block';
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        console.error('Error fetching job description:', error);
+                    }
+                });
+            });
+
+            // Edit/Save button functionality
+            editSaveBtn.addEventListener('click', function () {
+                if (this.textContent === 'Edit') {
+                    this.textContent = 'Save';
+                    jobDescMarkdown.contentEditable = true;
+                    jobDescMarkdown.focus();
+                    doneBtn.style.display = 'inline-block';
+                } else {
+                    this.textContent = 'Edit';
+                    jobDescMarkdown.contentEditable = false;
+                    // Call /update_jobdesc with new description
+                    $.ajax({
+                        url: '/update_jobdesc',
+                        type: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify({ text: jobDescMarkdown.innerText }),
+                        success: function (response) {
+                            console.log('Job description updated:', response.message);
+                        },
+                        error: function (xhr, status, error) {
+                            console.error('Error updating job description:', error);
+                        }
+                    });
+                }
+            });
+
+            // Done button functionality
+            doneBtn.addEventListener('click', function () {
+                jobDescPopup.style.display = 'none';
                 $.ajax({
                     url: '/start-process',
                     type: 'GET',

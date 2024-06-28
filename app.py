@@ -8,6 +8,7 @@ import os, time
 import requests
 from flask_socketio import SocketIO, emit
 from utils import extract_text_from_pdf, save_resumes_embedding, get_results
+from mongo_connection import get_mongo_client
 from dotenv import load_dotenv
 from markdown_it import MarkdownIt
 from mdit_py_plugins.front_matter import front_matter_plugin
@@ -17,6 +18,7 @@ import textwrap
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 from pymongo import MongoClient
 from werkzeug.security import generate_password_hash, check_password_hash
+from bson.objectid import ObjectId
 
 # Load environment variables
 load_dotenv()
@@ -30,10 +32,13 @@ app.config['JWT_SECRET_KEY'] = os.getenv("JWT_SECRET_KEY")
 app.secret_key = os.getenv("SECRET_KEY")
 jwt = JWTManager(app)
 
-# MongoDB setup
-client = MongoClient(os.getenv("MONGO_URI"))
-db = client.get_database('your_database_name')
-users_collection = db.get_collection('users')
+mongo_client = MongoClient()
+db = mongo_client.get_database('recruiter')
+users_collection = db.get_collection('users') if db.get_collection('users') is not None else db.create_collection('users')
+text_data_collection = db.get_collection('text_data') if db.get_collection('text_data') is not None else db.create_collection('text_data')
+job_description_collection = db.get_collection('job_description') if db.get_collection('job_description') is not None else db.create_collection('job_description')
+process_collection = db.get_collection('process') if db.get_collection('process') is not None else db.create_collection('process')
+
 
 openai_client = openai.Client(api_key=os.getenv("OPENAI_API_KEY"))
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
@@ -66,39 +71,24 @@ def extract_job_info(text):
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key={GEMINI_API_KEY}"
 
     # Payload to be sent in the POST request
-    payload = {"contents":[{"parts":[{"text":f"""Extract job information from the following text: {text}. Please format the output as follows:
-            About the job
-            [Job Introduction]
+    payload = {"contents":[{"parts":[{"text":f"""Extract job information from the following text: {text}. Ensure to extract and include the following details, formatted in markdown:
 
-            Who We Are…
-            [Company Overview]
+    About the job: Provide the job introduction.
+    Who We Are: Offer a brief overview of the company.
+    Your New Role: Describe the job role.
+    Your Role Accountabilities: List the responsibilities and accountabilities.
+    Qualifications & Experience: Detail the required qualifications and experience.
+    Hybrid Working: Describe the working conditions.
+    How We Get Things Done: Summarize the company's guiding principles.
+    Championing Inclusion at [Company]: Include the company's diversity and inclusion statement.
+    For inquiries, include the contact email and mobile number if available.
+    Ensure the output includes:
 
-            Your New Role…
-            [Job Role Description]
-
-            Your Role Accountabilities…
-            [Responsibilities and Accountabilities]
-
-            Qualifications & Experience…
-            [Qualifications and Experience]
-
-            Hybrid Working
-            [Working Conditions]
-
-            How We Get Things Done…
-            [Company Guiding Principles]
-
-            Championing Inclusion at [Company]
-            [Diversity and Inclusion Statement]
-
-            For inquiries, contact [email] and [mobile].
-            Ensure to extract and include:
-
-            Job title (if available)
-            Description (including all specified sections)
-            Email (if available)
-            Mobile (if available)
-            If job description is not found in the text, please reply: 'Job description not found!' and If any of the point is not specified in the text just put 'Not specified!'. Extract job description in provided format only"""}]}]}
+    Job title (if available)
+    Complete description with all specified sections
+    Email (if available)
+    Mobile (if available)
+    If any of the sections are not specified in the text, indicate 'Not specified!' in the respective section. If the job description is not found in the text, respond with 'Job description not found!'. The generated job description must contain all the points mentioned above and be presented in proper markdown format."""}]}]}
     
     headers = {
         "Content-Type": "application/json"
@@ -106,6 +96,7 @@ def extract_job_info(text):
 
     res = requests.post(url, data=json.dumps(payload), headers=headers)
     all_items = res.json()['candidates'][0]['content']['parts'][0]['text']
+    print(all_items)
     return all_items
 
 @app.route('/register', methods=['GET','POST'])
@@ -177,6 +168,7 @@ def audio_to_text():
             audio_data = recognizer.record(source)
         try:
             text = recognizer.recognize_google(audio_data)
+            text_data_collection.insert_one({'user_id': session['user']['_id'], 'text': text})
         except sr.UnknownValueError:
             return jsonify({'text': 'Speech recognition could not understand audio'}), 400
         except sr.RequestError as e:
@@ -202,7 +194,14 @@ def pdf_to_text():
         return jsonify({'error': 'No selected file'})
     if file:
         text = extract_text_from_pdf(file)
+        text_data_collection.insert_one({'user_id': session['user']['_id'], 'text': text})
         job_info = extract_job_info(text)
+        # Check if a job description already exists for this user
+        existing_job_desc = job_description_collection.find_one({'user_id': session['user']['_id']})
+        if existing_job_desc:
+            # If it exists, delete it
+            job_description_collection.delete_many({'user_id': session['user']['_id']})
+        job_description_collection.insert_one({'user_id': session['user']['_id'], 'description': job_info, 'edited': False})
         with open('extracted_text.txt', 'w', encoding='utf-8') as file:
             file.write(job_info)
 
@@ -247,35 +246,47 @@ def chat():
 
     return Response(generate(), mimetype='text/event-stream')
 
+def get_process_status():
+    process_status = process_collection.find_one({'user_id': session['user']['_id']})['status']
+    return process_status
+
+def update_process_status(status, status_value):
+    process_status = get_process_status()
+    process_status[status] = status_value
+    process_collection.update_one({'user_id': session['user']['_id']}, {'$set': {'status': process_status}})
+
 def update_job_description():
-    global process_status
-    process_status["Creating Job description"] = "in_progress"
-    time.sleep(5)
-    process_status["Creating Job description"] = "done"
+    update_process_status("Creating Job description", "in_progress")
+    text = text_data_collection.find_one({'user_id': session['user']['_id']})['text']
+    if job_description_collection.find_one({'user_id': session['user']['_id']}):
+        job_info = job_description_collection.find_one({'user_id': session['user']['_id']})['description']
+    else:
+        job_info = extract_job_info(text)
+    # Now insert the new job description
+    job_description_collection.insert_one({'user_id': session['user']['_id'], 'description': job_info, 'edited': True})
+    update_process_status("Creating Job description", "done")
 
 def update_job_posting():
-    global process_status
-    process_status["Job posting"] = "in_progress"
+    update_process_status("Job posting", "in_progress")
     time.sleep(5)
-    process_status["Job posting"] = "done"
+    update_process_status("Job posting", "done")
 
 def update_getting_resumes():
-    global process_status
-    process_status["Getting resumes from portal"] = "in_progress"
-    time.sleep(5)
-    process_status["Getting resumes from portal"] = "done"
+    update_process_status("Getting resumes from portal", "in_progress")
+    # time.sleep(5)
+    # update_process_status("Getting resumes from portal", "done")
 
 def update_matching_resumes():
-    global process_status
-    process_status["Matching resumes with job description"] = "in_progress"
-    time.sleep(5)
-    process_status["Matching resumes with job description"] = "done"
+    # update_process_status("Matching resumes with job description", "in_progress")
+    # time.sleep(5)
+    # update_process_status("Matching resumes with job description", "done")
+    return "Matching resumes with job description"
 
 def update_sending_resumes():
-    global process_status
-    process_status["Sending resumes to your email"] = "in_progress"
-    time.sleep(5)
-    process_status["Sending resumes to your email"] = "done"
+    # update_process_status("Sending resumes to your email", "in_progress")
+    # time.sleep(5)
+    # update_process_status("Sending resumes to your email", "done")
+    return "Sending resumes to your email"
 
 def start_process_updates():
     update_job_description()
@@ -285,7 +296,6 @@ def start_process_updates():
     update_sending_resumes()
 
 def reset_process_status():
-    global process_status
     process_status = {
         "Creating Job description": "not_started",
         "Job posting": "not_started",
@@ -293,10 +303,27 @@ def reset_process_status():
         "Matching resumes with job description": "not_started",
         "Sending resumes to your email": "not_started"
     }
+    process_collection.insert_one({'user_id': session['user']['_id'], 'status': process_status})
 
 @app.route('/process')
 def demo():
     return render_template('process.html')
+
+@app.route('/get_jobdesc', methods=['GET'])
+def get_jobdesc():
+    job_desc = job_description_collection.find_one({'user_id': session['user']['_id']})
+    if job_desc:
+        print('this is jobdesc from db ==> ',job_desc)
+        return jsonify({'description': md.render(job_desc['description']), 'edited': job_desc['edited']})
+    else:
+        return jsonify({'error': 'Job description not found'}), 404
+
+@app.route('/update_jobdesc', methods=['POST'])
+def update_jobdesc():
+    data = request.get_json()
+    new_desc = data['text']
+    job_description_collection.update_one({'user_id': session['user']['_id']}, {'$set': {'description': new_desc, 'edited': True}})
+    return jsonify({'message': 'Job description updated.'})
 
 @app.route('/start-process')
 def start_process():
@@ -306,6 +333,7 @@ def start_process():
 
 @app.route('/status')
 def get_status():
+    process_status = get_process_status()
     return jsonify(process_status)
 
 @app.route('/save-text', methods=['POST'])

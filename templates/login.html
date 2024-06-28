@@ -129,8 +129,9 @@
                 <input type="password" id="password" name="password" required>
             </div>
             <button type="submit">Login</button>
-            <a href="/register">If you don’t have an account, Click here to create one</a>
+            <a href="/register">If you don't have an account, Click here to create one</a>
         </form>
+        <div id="messageContainer" class="message-container"></div>
     </div>
     <script>
         document.getElementById('loginForm').addEventListener('submit', function (event) {
@@ -151,15 +152,22 @@
                         window.location.href = '/';
                     } else {
                         return response.json().then(data => {
-                            alert('Login failed: ' + data.message);
+                            showMessage('Login failed: ' + data.message, 'error');
                         });
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    alert('An error occurred. Please try again.');
+                    showMessage('An error occurred. Please try again.', 'error');
                 });
         });
+
+        function showMessage(message, type) {
+            const messageContainer = document.getElementById('messageContainer');
+            messageContainer.textContent = message;
+            messageContainer.className = 'message-container ' + type;
+            messageContainer.style.display = 'block';
+        }
     </script>
 </body>
 
