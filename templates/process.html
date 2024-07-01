@@ -10,7 +10,7 @@
             font-family: 'Inter', sans-serif;
             background: #f5f5f5;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
             align-items: center;
             min-height: 100vh;
             margin: 0;
@@ -26,6 +26,8 @@
             border-radius: 12px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
             padding: 40px;
+            position: relative;
+            margin-top: 20px;
         }
 
         .accordion {
@@ -101,14 +103,14 @@
         }
 
         .back-link {
-            position: absolute;
-            top: 20px;
-            left: 20px;
             text-decoration: none;
             color: #333;
             font-size: 18px;
             margin-bottom: 20px;
             display: inline-block;
+            position: absolute;
+            left: 20px;
+            top: 20px;
         }
 
         .popup {
@@ -166,7 +168,6 @@
             transform: scale(0.98);
         }
 
-        /* Updated styles for job description */
         #jobDescMarkdown {
             text-align: left;
             background-color: #f5f5f5;
@@ -178,15 +179,121 @@
             font-size: 16px;
             line-height: 1.6;
         }
+
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        #jobSelect {
+            width: 250px;
+            padding: 12px;
+            font-size: 16px;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            position: absolute;
+            right: 20px;
+            top: 20px;
+            background-color: #ffffff;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-image: url('data:image/svg+xml;utf8,<svg fill="%23333" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/><path d="M0 0h24v24H0z" fill="none"/></svg>');
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        #jobSelect:hover {
+            border-color: #2196f3;
+        }
+
+        #jobSelect:focus {
+            outline: none;
+            border-color: #2196f3;
+            box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.2);
+        }
+
+        .loader-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 12px;
+            z-index: 10;
+        }
+
+        .loader {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #2196f3;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+            margin-top: 60px;
+        }
+
+        .select-job-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 12px;
+            z-index: 20;
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            text-align: center;
+        }
     </style>
 </head>
 
 <body>
+    <a href="/" class="back-link">
+        <span style="margin-right: 5px;">&#8592;</span> Back to Home
+    </a>
+    <h1>Recruitment Process</h1>
+    <select id="jobSelect">
+        <option value="">Select a job</option>
+    </select>
     <div class="container">
-        <a href="/" class="back-link">
-            <span style="margin-right: 5px;">&#8592;</span> Back to Home
-        </a>
-        <h1 style="text-align: center; color: #333;">Recruitment Process</h1>
+        <div id="loaderOverlay" class="loader-overlay" style="display: none;">
+            <div class="loader"></div>
+        </div>
+        <div id="selectJobOverlay" class="select-job-overlay">
+            Select a job to see the process
+        </div>
         <button class="accordion" data-step="Creating Job description">Step 1: Creating Job description</button>
         <div class="panel">
             <p>Develop a comprehensive job description outlining the role, responsibilities, and qualifications.</p>
@@ -214,6 +321,7 @@
     </div>
 
     <div id="jobDescPopup" class="popup">
+        <span class="close-btn">&times;</span>
         <h3>Job Description</h3>
         <div id="jobDescMarkdown"></div>
         <button id="editSaveBtn">Edit</button>
@@ -230,6 +338,10 @@
             const jobDescMarkdown = document.getElementById('jobDescMarkdown');
             const editSaveBtn = document.getElementById('editSaveBtn');
             const doneBtn = document.getElementById('doneBtn');
+            const closeBtn = document.querySelector('.close-btn');
+            const jobSelect = document.getElementById('jobSelect');
+            const loaderOverlay = document.getElementById('loaderOverlay');
+            const selectJobOverlay = document.getElementById('selectJobOverlay');
 
             function openAccordion(accordion, panel) {
                 accordion.classList.add("active");
@@ -252,12 +364,28 @@
                 }
             }
 
-            function fetchStatus() {
+            function fetchStatus(showLoader = false) {
+                const jobId = jobSelect.value;
+                if (!jobId) {
+                    selectJobOverlay.style.display = 'flex';
+                    return;
+                }
+
+                selectJobOverlay.style.display = 'none';
+
+                if (showLoader) {
+                    loaderOverlay.style.display = 'flex';
+                }
+
                 $.ajax({
-                    url: '/status',
+                    url: `/status/${jobId}`,
                     type: 'GET',
                     dataType: 'json',
                     success: function (data) {
+                        if (data.error) {
+                            console.error('Error:', data.error);
+                            return;
+                        }
                         for (let accordion of accordions) {
                             const step = accordion.getAttribute('data-step');
                             updateAccordionStatus(accordion, data[step]);
@@ -267,12 +395,15 @@
                         console.error('Error:', error);
                     },
                     complete: function () {
-                        setTimeout(fetchStatus, 5000); // Poll every 5 seconds
+                        if (showLoader) {
+                            loaderOverlay.style.display = 'none';
+                        }
+                        setTimeout(() => fetchStatus(false), 5000); // Poll every 5 seconds without showing loader
                     }
                 });
             }
 
-            setTimeout(fetchStatus, 5000);
+            setTimeout(() => fetchStatus(false), 5000);
 
             // Initialize accordions
             for (let i = 0; i < accordions.length; i++) {
@@ -289,16 +420,34 @@
 
             // Call /start-process when the page loads
             $(document).ready(function () {
-                // Fetch job description
+                // Fetch job list
                 $.ajax({
-                    url: '/get_jobdesc',
+                    url: '/jobs',
+                    type: 'GET',
+                    success: function (response) {
+                        response.forEach(job => {
+                            const option = document.createElement('option');
+                            option.value = job._id;
+                            option.textContent = job.job_title;
+                            jobSelect.appendChild(option);
+                        });
+                    },
+                    error: function (xhr, status, error) {
+                        console.error('Error fetching job list:', error);
+                    }
+                });
+            });
+
+            function fetchJobDescription(jobId) {
+                $.ajax({
+                    url: `/get_jobdesc/${jobId}`,
                     type: 'GET',
                     success: function (response) {
                         jobDescMarkdown.innerHTML = response.description;
                         if (response.edited) {
                             jobDescPopup.style.display = 'none';
                         }
-                        else{
+                        else {
                             jobDescPopup.style.display = 'block';
                         }
                     },
@@ -306,7 +455,22 @@
                         console.error('Error fetching job description:', error);
                     }
                 });
-            });
+            }
+
+            function updateJobDescription() {
+                $.ajax({
+                    url: '/update_jobdesc',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ text: jobDescMarkdown.innerText, job_id: jobSelect.value }),
+                    success: function (response) {
+                        console.log('Job description updated:', response.message);
+                    },
+                    error: function (xhr, status, error) {
+                        console.error('Error updating job description:', error);
+                    }
+                });
+            }
 
             // Edit/Save button functionality
             editSaveBtn.addEventListener('click', function () {
@@ -318,25 +482,35 @@
                 } else {
                     this.textContent = 'Edit';
                     jobDescMarkdown.contentEditable = false;
-                    // Call /update_jobdesc with new description
-                    $.ajax({
-                        url: '/update_jobdesc',
-                        type: 'POST',
-                        contentType: 'application/json',
-                        data: JSON.stringify({ text: jobDescMarkdown.innerText }),
-                        success: function (response) {
-                            console.log('Job description updated:', response.message);
-                        },
-                        error: function (xhr, status, error) {
-                            console.error('Error updating job description:', error);
-                        }
-                    });
+                    updateJobDescription();
                 }
             });
 
             // Done button functionality
             doneBtn.addEventListener('click', function () {
                 jobDescPopup.style.display = 'none';
+                startProcess();
+            });
+
+            // Close button functionality
+            closeBtn.addEventListener('click', function () {
+                jobDescPopup.style.display = 'none';
+                updateJobDescription();
+                startProcess();
+            });
+
+            // Job select functionality
+            jobSelect.addEventListener('change', function () {
+                if (this.value) {
+                    fetchJobDescription(this.value);
+                    fetchStatus(true); // Fetch status with loader when job selection changes
+                    selectJobOverlay.style.display = 'none';
+                } else {
+                    selectJobOverlay.style.display = 'flex';
+                }
+            });
+
+            function startProcess() {
                 $.ajax({
                     url: '/start-process',
                     type: 'GET',
@@ -347,7 +521,7 @@
                         console.error('Error starting process:', error);
                     }
                 });
-            });
+            }
         });
     </script>
 </body>

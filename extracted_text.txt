@@ -1,51 +1,11 @@
-## Python Developer at Demoa t
+Question: What is the name of your company?
+Answer: demo
 
-### About the job: 
-We are seeking a talented and motivated Python Developer to join our growing team. As a Python Developer at Demoa t, you will be responsible for the design, development, and maintenance of [mention specific applications or projects, e.g., web applications, data pipelines, machine learning models]. You will work closely with other developers, product managers, and stakeholders to ensure the timely delivery of high-quality software solutions.
+Question: What is your company's mission statement?
+Answer: the mission statement is to create software that work on the all the platform
 
-### Who We Are:
-Demoa t is a forward-thinking organization dedicated to fostering transparent and inclusive civic engagement. Its mission is to empower communities by facilitating open dialogue and creating platforms for collective decision-making. Demoa t values integrity, inclusivity, and innovation, striving to build trust and collaboration among diverse groups.
+Question: What is the department the role belongs to?
+Answer: nothing
 
-Distinguishing features of Demoa t include its state-of-the-art digital tools that simplify the process of community participation, making it accessible to all, regardless of technical proficiency. Additionally, Demoa t emphasizes data-driven insights to inform community decisions, ensuring that every voice is heard and every opinion counts. By integrating cutting-edge technology with a deep commitment to social equity, Demoa t stands out as a pioneer in the realm of civic engagement, continually working to bridge the gap between citizens and their governing bodies. We are a team of passionate and dedicated individuals who are committed to [mention key Demoa t goals or values]. We believe in [mention key aspects of Demoa t culture, e.g., collaborative work environment, innovation, continuous learning, and growth]. 
-
-### Your New Role:
-You will be responsible for the design, development, and maintenance of [mention specific applications or projects, e.g., web applications, data pipelines, machine learning models]. You will work closely with other developers, product managers, and stakeholders to ensure the timely delivery of high-quality software solutions. 
-
-### Your Role Accountabilities:
-* Design, develop, and maintain Python-based applications and services.
-* Write clean, well-documented, and testable code adhering to established coding standards and best practices.
-* Collaborate with other developers to implement and integrate new features, ensuring smooth integration with existing systems.
-* Participate in code reviews and provide constructive feedback, fostering a culture of continuous improvement.
-* Work with product managers and stakeholders to gather requirements, define technical specifications, and ensure alignment between development and business needs.
-* Troubleshoot and resolve technical issues, identifying root causes and implementing efficient solutions.
-* Stay up-to-date with the latest Python technologies and best practices, proactively exploring and adopting new technologies to enhance development efficiency and solution quality.
-* Contribute to a positive and collaborative team environment, fostering open communication and knowledge sharing.
-* Actively participate in knowledge sharing initiatives within the team, contributing to team growth and development.
-
-### Qualifications & Experience:
-* 3+ years of professional experience in Python development, demonstrating a strong understanding of Python programming principles, data structures, and algorithms.
-* Experience with web frameworks such as Django, Flask, or FastAPI, demonstrating proficiency in building scalable and maintainable web applications.
-* Experience with relational databases (e.g., PostgreSQL, MySQL) and/or NoSQL databases (e.g., MongoDB), showcasing a strong understanding of database design principles and query optimization techniques.
-* Familiarity with version control systems like Git, demonstrating proficiency in collaborating on codebases and managing code changes effectively.
-* Excellent communication and collaboration skills, enabling you to effectively communicate technical concepts to both technical and non-technical audiences.
-* Ability to work independently and as part of a team, demonstrating self-motivation and the ability to adapt to changing priorities.
-* Strong problem-solving skills, enabling you to identify and resolve complex technical challenges efficiently.
-
-### Hybrid Working:
-Not specified!
-
-### How We Get Things Done:
-Not specified!
-
-### Championing Inclusion at Demoa t:
-Demoa t is an equal opportunity employer and is committed to fostering a diverse and inclusive workplace. We believe that a diverse team leads to better ideas and outcomes. We are proud to be an equal opportunity employer and are committed to creating a work environment where everyone feels valued, respected, and empowered to do their best work.
-
-### Compensation & Benefits:
-* Competitive salary based on experience and qualifications.
-* Comprehensive benefits package including health, dental, vision, and life insurance.
-* Paid time off and holidays, fostering a healthy work-life balance.
-* Professional development opportunities, supporting your continuous learning and career growth.
-* Engaging work environment with a focus on collaboration, innovation, and employee well-being.
-
-### To Apply: 
-Please submit your resume and cover letter to demoa t@gmail.com for consideration. 
+Question: What are the key responsibilities of the role? Be specific and list out the main tasks and duties.
+Answer: I don't

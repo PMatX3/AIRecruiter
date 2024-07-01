@@ -19,6 +19,16 @@ from flask_jwt_extended import JWTManager, create_access_token, jwt_required, ge
 from pymongo import MongoClient
 from werkzeug.security import generate_password_hash, check_password_hash
 from bson.objectid import ObjectId
+from process import (
+    update_job_description,
+    update_job_posting,
+    update_getting_resumes,
+    update_matching_resumes,
+    update_sending_resumes,
+    update_process_status
+)
+from datetime import datetime
+import threading
 
 # Load environment variables
 load_dotenv()
@@ -32,13 +42,12 @@ app.config['JWT_SECRET_KEY'] = os.getenv("JWT_SECRET_KEY")
 app.secret_key = os.getenv("SECRET_KEY")
 jwt = JWTManager(app)
 
-mongo_client = MongoClient()
+mongo_client = get_mongo_client()
 db = mongo_client.get_database('recruiter')
 users_collection = db.get_collection('users') if db.get_collection('users') is not None else db.create_collection('users')
 text_data_collection = db.get_collection('text_data') if db.get_collection('text_data') is not None else db.create_collection('text_data')
-job_description_collection = db.get_collection('job_description') if db.get_collection('job_description') is not None else db.create_collection('job_description')
 process_collection = db.get_collection('process') if db.get_collection('process') is not None else db.create_collection('process')
-
+jobs_collection = db.get_collection('jobs') if db.get_collection('jobs') is not None else db.create_collection('jobs')
 
 openai_client = openai.Client(api_key=os.getenv("OPENAI_API_KEY"))
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
@@ -71,7 +80,7 @@ def extract_job_info(text):
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key={GEMINI_API_KEY}"
 
     # Payload to be sent in the POST request
-    payload = {"contents":[{"parts":[{"text":f"""Extract job information from the following text: {text}. Ensure to extract and include the following details, formatted in markdown:
+    payload = {"contents":[{"parts":[{"text":f"""Extract job information from the following text: {text}. Ensure to extract and include the following details but if not, don't include that section, formatted in markdown:
 
     About the job: Provide the job introduction.
     Who We Are: Offer a brief overview of the company.
@@ -88,7 +97,7 @@ def extract_job_info(text):
     Complete description with all specified sections
     Email (if available)
     Mobile (if available)
-    If any of the sections are not specified in the text, indicate 'Not specified!' in the respective section. If the job description is not found in the text, respond with 'Job description not found!'. The generated job description must contain all the points mentioned above and be presented in proper markdown format."""}]}]}
+    If any of the sections are not specified in the text, don't include that respective section. The generated job description must contain all the points mentioned above and be presented in proper markdown format. I want to extract minimum text from the text provided."""}]}]}
     
     headers = {
         "Content-Type": "application/json"
@@ -127,10 +136,16 @@ def login():
     user = users_collection.find_one({'email': username})
     if not user or not check_password_hash(user['password'], password):
         return jsonify({'message': 'Invalid credentials'}), 401
-
+    
     user['_id'] = str(user['_id'])
     session['user'] = user
     access_token = create_access_token(identity=username)
+
+    # Check if any process is in progress
+    job = jobs_collection.find_one({'userid': user['_id'], 'process_status': {'$elemMatch': {'$eq': 'in_progress'}}})
+    if job:
+        return redirect('/process')
+
     return jsonify({'access_token': access_token}), 200
 
 @app.route('/logout')
@@ -145,6 +160,49 @@ def home():
     else:
         return redirect(url_for('login'))
 
+def create_or_get_job(user_id, job_info):
+    # Find the highest job number for this user
+    highest_job = jobs_collection.find_one(
+        {'userid': user_id},
+        sort=[('job_title', -1)]
+    )
+
+    if highest_job:
+        job_number = int(highest_job['job_title'].split('_')[1]) + 1
+    else:
+        job_number = 1
+
+    job_title = f'job_{job_number:03d}'
+
+    existing_job = jobs_collection.find_one({
+        'userid': user_id,
+        'process_status.Creating Job description': 'not_started'
+    })
+    
+    if existing_job:
+        jobs_collection.update_one(
+            {'_id': existing_job['_id']},
+            {'$set': {'job_info': job_info, 'job_title': job_title}}
+        )
+        return str(existing_job['_id'])
+    else:
+        new_job = {
+            'userid': user_id,
+            'created_at': datetime.utcnow(),
+            'job_info': job_info,
+            'job_title': job_title,
+            'edited': False,
+            'process_status': {
+                "Creating Job description": "not_started",
+                "Job posting": "not_started",
+                "Getting resumes from portal": "not_started",
+                "Matching resumes with job description": "not_started",
+                "Sending resumes to your email": "not_started"
+            }
+        }
+        result = jobs_collection.insert_one(new_job)
+        return str(result.inserted_id)
+
 @app.route('/audio-to-text', methods=['POST'])
 def audio_to_text():
     if 'file' not in request.files:
@@ -153,37 +211,40 @@ def audio_to_text():
     if file.filename == '':
         return jsonify({'error': 'No selected file'})
     if file:
-        # Save the file temporarily
-        temp_audio_path = os.path.join('temp', file.filename)
-        file.save(temp_audio_path)
+        # Save the uploaded file temporarily
+        temp_filename = 'temp_audio.' + file.filename.split('.')[-1]
+        file.save(temp_filename)
 
-        # Convert audio to a compatible format (WAV)
-        audio = AudioSegment.from_file(temp_audio_path)
-        compatible_audio_path = "temp.wav"
-        audio.export(compatible_audio_path, format="wav")
+        # Convert the audio to WAV format
+        audio = AudioSegment.from_file(temp_filename)
+        audio.export("temp_audio.wav", format="wav")
 
+        # Perform speech recognition
         recognizer = sr.Recognizer()
-        audio_file = sr.AudioFile(compatible_audio_path)
-        with audio_file as source:
+        with sr.AudioFile("temp_audio.wav") as source:
             audio_data = recognizer.record(source)
+        
         try:
             text = recognizer.recognize_google(audio_data)
-            text_data_collection.insert_one({'user_id': session['user']['_id'], 'text': text})
         except sr.UnknownValueError:
-            return jsonify({'text': 'Speech recognition could not understand audio'}), 400
-        except sr.RequestError as e:
-            return jsonify({'text': f'Could not request results from Google Speech Recognition service'}), 400
-        print('actual text',text)
-        # Clean up the temporary files
-        os.remove(temp_audio_path)
-        os.remove(compatible_audio_path)
+            return jsonify({'error': 'Speech recognition could not understand the audio'})
+        except sr.RequestError:
+            return jsonify({'error': 'Could not request results from speech recognition service'})
+
+        # Clean up temporary files
+        os.remove(temp_filename)
+        os.remove("temp_audio.wav")
+
+        # Save the extracted text to the database
+        text_data_collection.insert_one({'user_id': session['user']['_id'], 'text': text})
+
+        # Extract job information
         job_info = extract_job_info(text)
+        
+        # Create or get job ID
+        job_id = create_or_get_job(session['user']['_id'], job_info)
 
-        with open('extracted_text.txt', 'w') as file:
-            file.write(job_info)
-
-        # Return a response without the text
-        return jsonify({'message': 'Text extracted and saved to file.'})
+        return jsonify({'message': 'Audio processed and text saved to database.', 'job_id': job_id})
 
 @app.route('/pdf-to-text', methods=['POST'])
 def pdf_to_text():
@@ -193,20 +254,19 @@ def pdf_to_text():
     if file.filename == '':
         return jsonify({'error': 'No selected file'})
     if file:
+        # Extract text from PDF
         text = extract_text_from_pdf(file)
-        text_data_collection.insert_one({'user_id': session['user']['_id'], 'text': text})
-        job_info = extract_job_info(text)
-        # Check if a job description already exists for this user
-        existing_job_desc = job_description_collection.find_one({'user_id': session['user']['_id']})
-        if existing_job_desc:
-            # If it exists, delete it
-            job_description_collection.delete_many({'user_id': session['user']['_id']})
-        job_description_collection.insert_one({'user_id': session['user']['_id'], 'description': job_info, 'edited': False})
-        with open('extracted_text.txt', 'w', encoding='utf-8') as file:
-            file.write(job_info)
 
-        # Return a response without the text
-        return jsonify({'message': 'Text extracted and saved to file.'})
+        # Save the extracted text to the database
+        text_data_collection.insert_one({'user_id': session['user']['_id'], 'text': text})
+
+        # Extract job information
+        job_info = extract_job_info(text)
+        
+        # Create or get job ID
+        job_id = create_or_get_job(session['user']['_id'], job_info)
+
+        return jsonify({'message': 'PDF processed and text saved to database.', 'job_id': job_id})
 
 @app.route('/save-resumes-embedding', methods=['GET'])
 def save_resumes():
@@ -220,17 +280,6 @@ def get_resumes():
 
     return resumes
 
-# @socketio.on('user_question')
-# def handle_user_question(data):
-#     query = data['query']
-#     entire_response = ''
-#     with open('extracted_text.txt', 'r', encoding='utf-8') as file:
-#         job_info_json = file.read()
-#     for message in get_results(query, job_info_json):
-#         entire_response += message
-#         rendered_response = md.render(entire_response)
-#         emit('bot_response', {'message': rendered_response})
-
 @app.route('/chat', methods=['POST'])
 def chat():
     query = request.json['query']
@@ -240,62 +289,17 @@ def chat():
         with open('extracted_text.txt', 'r', encoding='utf-8') as file:
             job_info_json = file.read()
         for message in get_results(query, job_info_json):
-            # entire_response += message
-            # rendered_response = md.render(entire_response)
             yield message
 
     return Response(generate(), mimetype='text/event-stream')
 
-def get_process_status():
-    process_status = process_collection.find_one({'user_id': session['user']['_id']})['status']
-    return process_status
+def get_process_status(job_id):
+    job = jobs_collection.find_one({'_id': ObjectId(job_id)})
+    if job:
+        return job['process_status']
+    return None
 
-def update_process_status(status, status_value):
-    process_status = get_process_status()
-    process_status[status] = status_value
-    process_collection.update_one({'user_id': session['user']['_id']}, {'$set': {'status': process_status}})
-
-def update_job_description():
-    update_process_status("Creating Job description", "in_progress")
-    text = text_data_collection.find_one({'user_id': session['user']['_id']})['text']
-    if job_description_collection.find_one({'user_id': session['user']['_id']}):
-        job_info = job_description_collection.find_one({'user_id': session['user']['_id']})['description']
-    else:
-        job_info = extract_job_info(text)
-    # Now insert the new job description
-    job_description_collection.insert_one({'user_id': session['user']['_id'], 'description': job_info, 'edited': True})
-    update_process_status("Creating Job description", "done")
-
-def update_job_posting():
-    update_process_status("Job posting", "in_progress")
-    time.sleep(5)
-    update_process_status("Job posting", "done")
-
-def update_getting_resumes():
-    update_process_status("Getting resumes from portal", "in_progress")
-    # time.sleep(5)
-    # update_process_status("Getting resumes from portal", "done")
-
-def update_matching_resumes():
-    # update_process_status("Matching resumes with job description", "in_progress")
-    # time.sleep(5)
-    # update_process_status("Matching resumes with job description", "done")
-    return "Matching resumes with job description"
-
-def update_sending_resumes():
-    # update_process_status("Sending resumes to your email", "in_progress")
-    # time.sleep(5)
-    # update_process_status("Sending resumes to your email", "done")
-    return "Sending resumes to your email"
-
-def start_process_updates():
-    update_job_description()
-    update_job_posting()
-    update_getting_resumes()
-    update_matching_resumes()
-    update_sending_resumes()
-
-def reset_process_status():
+def reset_process_status(job_id):
     process_status = {
         "Creating Job description": "not_started",
         "Job posting": "not_started",
@@ -303,18 +307,20 @@ def reset_process_status():
         "Matching resumes with job description": "not_started",
         "Sending resumes to your email": "not_started"
     }
-    process_collection.insert_one({'user_id': session['user']['_id'], 'status': process_status})
+    jobs_collection.update_one(
+        {'_id': ObjectId(job_id)},
+        {'$set': {'process_status': process_status}}
+    )
 
 @app.route('/process')
 def demo():
     return render_template('process.html')
 
-@app.route('/get_jobdesc', methods=['GET'])
-def get_jobdesc():
-    job_desc = job_description_collection.find_one({'user_id': session['user']['_id']})
-    if job_desc:
-        print('this is jobdesc from db ==> ',job_desc)
-        return jsonify({'description': md.render(job_desc['description']), 'edited': job_desc['edited']})
+@app.route('/get_jobdesc/<job_id>', methods=['GET'])
+def get_jobdesc(job_id):
+    job = jobs_collection.find_one({'_id': ObjectId(job_id)})
+    if job:
+        return jsonify({'description': md.render(job['job_info']), 'edited': job['edited']})
     else:
         return jsonify({'error': 'Job description not found'}), 404
 
@@ -322,19 +328,72 @@ def get_jobdesc():
 def update_jobdesc():
     data = request.get_json()
     new_desc = data['text']
-    job_description_collection.update_one({'user_id': session['user']['_id']}, {'$set': {'description': new_desc, 'edited': True}})
-    return jsonify({'message': 'Job description updated.'})
+    job_id = data.get('job_id')
+    
+    if not job_id:
+        return jsonify({'error': 'Job ID is required'}), 400
+    
+    result = jobs_collection.update_one(
+        {'_id': ObjectId(job_id)},
+        {'$set': {'job_info': new_desc, 'edited': True}}
+    )
+    
+    if result.modified_count > 0:
+        return jsonify({'message': 'Job description updated successfully.'})
+    else:
+        return jsonify({'error': 'Job not found or no changes made.'}), 404
 
-@app.route('/start-process')
+@app.route('/start-process', methods=['GET'])
 def start_process():
-    reset_process_status()
-    start_process_updates()
-    return jsonify({'message': 'Process started.'})
+    # Get all jobs from the collection
+    all_jobs = jobs_collection.find({})
+    
+    # Get the list of job IDs that are currently being processed
+    active_threads = [thread.name for thread in threading.enumerate() if thread.name.startswith('job_')]
+    
+    for job in all_jobs:
+        job_id = str(job['_id'])
+        print('-=-=-=->', active_threads)
+        
+        # Check if the job is already completed
+        if all(status == "done" for status in job['process_status'].values()):
+            continue
+        
+        # Check if the job is already being processed
+        if f'job_{job_id}' not in active_threads:
+            print('here')
+            # Update the job with process status
+            jobs_collection.update_one(
+                {'_id': ObjectId(job_id)},
+                {'$set': {
+                    'process_status': {
+                        "Creating Job description": "completed",
+                        "Job posting": "not_started",
+                        "Getting resumes from portal": "not_started",
+                        "Matching resumes with job description": "not_started",
+                        "Sending resumes to your email": "not_started"
+                    }
+                }}
+            )
+            
+            thread = threading.Thread(target=run_process, args=(job_id,), name=f'job_{job_id}')
+            thread.start()
 
-@app.route('/status')
-def get_status():
-    process_status = get_process_status()
-    return jsonify(process_status)
+    return jsonify({'message': 'Process started for all unprocessed jobs.'})
+
+def run_process(job_id):
+    update_job_description(job_id)
+    update_job_posting(job_id)
+    update_getting_resumes(job_id)
+    update_matching_resumes(job_id)
+    update_sending_resumes(job_id)
+
+@app.route('/status/<job_id>', methods=['GET'])
+def get_status(job_id):
+    process_status = get_process_status(job_id)
+    if process_status:
+        return jsonify(process_status)
+    return jsonify({'error': 'Job not found'}), 404
 
 @app.route('/save-text', methods=['POST'])
 def save_text():
@@ -343,11 +402,13 @@ def save_text():
         return jsonify({'error': 'No text provided'}), 400
 
     text = data['text']
-    with open('extracted_text.txt', 'w', encoding='utf-8') as file:
-        file.write(text)
 
-    return jsonify({'message': 'Text saved to file.'})
+    job_info = extract_job_info(text)
+    
+    # Create or get job ID
+    job_id = create_or_get_job(session['user']['_id'], job_info)
 
+    return jsonify({'message': 'PDF processed and text saved to database.', 'job_id': job_id})
 
 @app.route('/upload-file', methods=['POST'])
 def upload_file():
@@ -361,6 +422,21 @@ def upload_file():
         return jsonify({'message': 'File uploaded successfully', 'filename': file.filename})
     return jsonify({'error': 'File upload failed'})
 
+@app.route('/jobs', methods=['GET'])
+def get_jobs():
+    current_user = session['user']['_id']
+    print(current_user)
+    user = users_collection.find_one({'_id': ObjectId(current_user)})
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+
+    jobs = jobs_collection.find({'userid': str(user['_id'])})
+    job_list = []
+    for job in jobs:
+        job['_id'] = str(job['_id'])  # Convert ObjectId to string
+        job_list.append(job)
+
+    return jsonify(job_list)
 
 if __name__ == '__main__':
     app.run(debug=True, host="0.0.0.0", port=8000)
