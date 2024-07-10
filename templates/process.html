@@ -188,37 +188,6 @@
             cursor: pointer;
         }
 
-        #jobSelect {
-            width: 250px;
-            padding: 12px;
-            font-size: 16px;
-            border-radius: 8px;
-            border: 1px solid #e0e0e0;
-            position: absolute;
-            right: 20px;
-            top: 20px;
-            background-color: #ffffff;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-            appearance: none;
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            background-image: url('data:image/svg+xml;utf8,<svg fill="%23333" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/><path d="M0 0h24v24H0z" fill="none"/></svg>');
-            background-repeat: no-repeat;
-            background-position: right 10px center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        #jobSelect:hover {
-            border-color: #2196f3;
-        }
-
-        #jobSelect:focus {
-            outline: none;
-            border-color: #2196f3;
-            box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.2);
-        }
-
         .loader-overlay {
             position: absolute;
             top: 0;
@@ -276,6 +245,92 @@
             color: #333;
             text-align: center;
         }
+
+        .job-list {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+            width: 100%;
+        }
+
+        .job-item {
+            background-color: #ffffff;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .job-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }
+
+        .job-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .job-title {
+            font-weight: bold;
+            color: #333;
+            cursor: pointer;
+        }
+
+        .job-progress {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .progress-fill {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            background-color: #e8f5e9;
+            transition: width 0.3s ease;
+            z-index: 0;
+        }
+
+        .delete-job {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 5px;
+            margin-left: 10px;
+            transition: transform 0.2s ease;
+        }
+
+        .delete-job:hover {
+            transform: scale(1.1);
+        }
+
+        .delete-job svg {
+            width: 20px;
+            height: 20px;
+            fill: #e53935;
+        }
+
+        #backToJobsBtn {
+            display: none;
+            margin-bottom: 20px;
+            padding: 10px 20px;
+            background-color: #f0f0f0;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        #backToJobsBtn:hover {
+            background-color: #e0e0e0;
+        }
     </style>
 </head>
 
@@ -284,39 +339,41 @@
         <span style="margin-right: 5px;">&#8592;</span> Back to Home
     </a>
     <h1>Recruitment Process</h1>
-    <select id="jobSelect">
-        <option value="">Select a job</option>
-    </select>
     <div class="container">
-        <div id="loaderOverlay" class="loader-overlay" style="display: none;">
-            <div class="loader"></div>
+        <button id="backToJobsBtn">Back to Jobs List</button>
+        <div id="jobListContainer">
+            <h2>Jobs</h2>
+            <ul id="jobList" class="job-list">
+                <!-- Job list will be populated here -->
+            </ul>
         </div>
-        <div id="selectJobOverlay" class="select-job-overlay">
-            Select a job to see the process
-        </div>
-        <button class="accordion" data-step="Creating Job description">Step 1: Creating Job description</button>
-        <div class="panel">
-            <p>Develop a comprehensive job description outlining the role, responsibilities, and qualifications.</p>
-        </div>
-        <button class="accordion" data-step="Job posting">Step 2: Job posting</button>
-        <div class="panel">
-            <p>Publish the job posting on relevant platforms and job boards to attract potential candidates.</p>
-        </div>
-        <button class="accordion" data-step="Getting resumes from portal">Step 3: Getting candidate applications from
-            portal</button>
-        <div class="panel">
-            <p>Collect and organize resumes submitted by applicants through the designated portal.</p>
-        </div>
-        <button class="accordion" data-step="Matching resumes with job description">Step 4: Matching candidates with job
-            description</button>
-        <div class="panel">
-            <p>Analyze and compare received resumes against the job description to identify suitable candidates.</p>
-        </div>
-        <button class="accordion" data-step="Sending resumes to your email">Step 5: Sending the list of best candidates
-            to your
-            email</button>
-        <div class="panel">
-            <p>Forward selected resumes to the designated email address for further review and action.</p>
+        <div id="processContainer" class="process-container" style="display: none;">
+            <div id="loaderOverlay" class="loader-overlay" style="display: none;">
+                <div class="loader"></div>
+            </div>
+            <button class="accordion" data-step="Creating Job description">Step 1: Creating Job description</button>
+            <div class="panel">
+                <p>Develop a comprehensive job description outlining the role, responsibilities, and qualifications.</p>
+            </div>
+            <button class="accordion" data-step="Job posting">Step 2: Job posting</button>
+            <div class="panel">
+                <p>Publish the job posting on relevant platforms and job boards to attract potential candidates.</p>
+            </div>
+            <button class="accordion" data-step="Getting resumes from portal">Step 3: Getting candidate applications from
+                portal</button>
+            <div class="panel">
+                <p>Collect and organize resumes submitted by applicants through the designated portal.</p>
+            </div>
+            <button class="accordion" data-step="Matching resumes with job description">Step 4: Matching candidates with job
+                description</button>
+            <div class="panel">
+                <p>Analyze and compare received resumes against the job description to identify suitable candidates.</p>
+            </div>
+            <button class="accordion" data-step="Sending resumes to your email">Step 5: Sending the list of best candidates
+                to your email</button>
+            <div class="panel">
+                <p>Forward selected resumes to the designated email address for further review and action.</p>
+            </div>
         </div>
     </div>
 
@@ -339,9 +396,12 @@
             const editSaveBtn = document.getElementById('editSaveBtn');
             const doneBtn = document.getElementById('doneBtn');
             const closeBtn = document.querySelector('.close-btn');
-            const jobSelect = document.getElementById('jobSelect');
             const loaderOverlay = document.getElementById('loaderOverlay');
-            const selectJobOverlay = document.getElementById('selectJobOverlay');
+            const jobList = document.getElementById('jobList');
+            const jobListContainer = document.getElementById('jobListContainer');
+            const processContainer = document.getElementById('processContainer');
+            const backToJobsBtn = document.getElementById('backToJobsBtn');
+            let selectedJobId = null;
 
             function openAccordion(accordion, panel) {
                 accordion.classList.add("active");
@@ -365,20 +425,12 @@
             }
 
             function fetchStatus(showLoader = false) {
-                const jobId = jobSelect.value;
-                if (!jobId) {
-                    selectJobOverlay.style.display = 'flex';
-                    return;
-                }
-
-                selectJobOverlay.style.display = 'none';
-
                 if (showLoader) {
                     loaderOverlay.style.display = 'flex';
                 }
 
                 $.ajax({
-                    url: `/status/${jobId}`,
+                    url: `/status/${selectedJobId}`,
                     type: 'GET',
                     dataType: 'json',
                     success: function (data) {
@@ -390,6 +442,8 @@
                             const step = accordion.getAttribute('data-step');
                             updateAccordionStatus(accordion, data[step]);
                         }
+                        const progress = calculateProgress(data);
+                        updateJobProgress(selectedJobId, progress);
                     },
                     error: function (xhr, status, error) {
                         console.error('Error:', error);
@@ -398,12 +452,59 @@
                         if (showLoader) {
                             loaderOverlay.style.display = 'none';
                         }
-                        setTimeout(() => fetchStatus(false), 5000); // Poll every 5 seconds without showing loader
                     }
                 });
             }
 
-            setTimeout(() => fetchStatus(false), 5000);
+            function calculateProgress(data) {
+                const steps = Object.values(data);
+                const completedSteps = steps.filter(step => step === 'done').length;
+                return Math.round((completedSteps / steps.length) * 100);
+            }
+
+            function updateJobProgress(jobId, progress) {
+                const jobItem = document.querySelector(`#jobList [data-job-id="${jobId}"]`);
+                if (jobItem) {
+                    const progressElement = jobItem.querySelector('.job-progress');
+                    const progressFill = jobItem.querySelector('.progress-fill');
+                    
+                    if (progressElement) {
+                        progressElement.textContent = `${progress}%`;
+                    }
+                    
+                    if (progressFill) {
+                        progressFill.style.width = `${progress}%`;
+                    }
+                }
+            }
+
+            function fetchAllJobsProgress() {
+                $.ajax({
+                    url: '/all-jobs-progress',
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function (data) {
+                        if (data.error) {
+                            console.error('Error:', data.error);
+                            return;
+                        }
+                        for (let jobId in data) {
+                            updateJobProgress(jobId, data[jobId]);
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        console.error('Error fetching all jobs progress:', error);
+                    }
+                });
+            }
+
+            // Fetch all jobs progress every 5 seconds
+            setInterval(fetchAllJobsProgress, 5000);
+            setInterval(() => {
+                if (selectedJobId) {
+                    fetchStatus();
+                }
+            }, 5000);
 
             // Initialize accordions
             for (let i = 0; i < accordions.length; i++) {
@@ -418,25 +519,56 @@
                 });
             }
 
-            // Call /start-process when the page loads
-            $(document).ready(function () {
-                // Fetch job list
+            // Fetch job list
+            function fetchJobList() {
                 $.ajax({
                     url: '/jobs',
                     type: 'GET',
                     success: function (response) {
+                        const jobList = document.getElementById('jobList');
+                        jobList.innerHTML = '';
                         response.forEach(job => {
-                            const option = document.createElement('option');
-                            option.value = job._id;
-                            option.textContent = job.job_title;
-                            jobSelect.appendChild(option);
+                            const li = document.createElement('li');
+                            li.className = 'job-item';
+                            li.setAttribute('data-job-id', job._id);
+                            li.innerHTML = `
+                                <div class="progress-fill" style="width: 0%;"></div>
+                                <div class="job-content">
+                                    <span class="job-title">${job.job_title}</span>
+                                    <div>
+                                        <span class="job-progress">${job.edited ? '0%' : 'pending'}</span>
+                                        <button class="delete-job" title="Delete job">
+                                            <svg viewBox="0 0 24 24">
+                                                <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+                            `;
+                            li.querySelector('.job-title').addEventListener('click', () => selectJob(job._id));
+                            li.querySelector('.delete-job').addEventListener('click', (e) => {
+                                e.stopPropagation();
+                                deleteJob(job._id);
+                            });
+                            jobList.appendChild(li);
                         });
+                        // Fetch progress for all jobs immediately
+                        fetchAllJobsProgress();
                     },
                     error: function (xhr, status, error) {
                         console.error('Error fetching job list:', error);
                     }
                 });
-            });
+            }
+
+            function selectJob(jobId) {
+                selectedJobId = jobId;
+                fetchJobDescription(jobId);
+                fetchStatus(true);
+                jobList.style.display = 'none';
+                processContainer.style.display = 'block';
+                backToJobsBtn.style.display = 'block';
+            }
 
             function fetchJobDescription(jobId) {
                 $.ajax({
@@ -462,7 +594,7 @@
                     url: '/update_jobdesc',
                     type: 'POST',
                     contentType: 'application/json',
-                    data: JSON.stringify({ text: jobDescMarkdown.innerText, job_id: jobSelect.value }),
+                    data: JSON.stringify({ text: jobDescMarkdown.innerText, job_id: selectedJobId }),
                     success: function (response) {
                         console.log('Job description updated:', response.message);
                     },
@@ -499,29 +631,48 @@
                 startProcess();
             });
 
-            // Job select functionality
-            jobSelect.addEventListener('change', function () {
-                if (this.value) {
-                    fetchJobDescription(this.value);
-                    fetchStatus(true); // Fetch status with loader when job selection changes
-                    selectJobOverlay.style.display = 'none';
-                } else {
-                    selectJobOverlay.style.display = 'flex';
-                }
-            });
-
             function startProcess() {
                 $.ajax({
                     url: '/start-process',
                     type: 'GET',
                     success: function (response) {
                         console.log('Process started:', response.message);
+                        // Fetch status immediately after starting the process
+                        fetchStatus(true);
                     },
                     error: function (xhr, status, error) {
                         console.error('Error starting process:', error);
                     }
                 });
             }
+
+            // Back to Jobs button functionality
+            backToJobsBtn.addEventListener('click', function () {
+                selectedJobId = null;
+                jobList.style.display = 'table';
+                processContainer.style.display = 'none';
+                backToJobsBtn.style.display = 'none';
+                fetchJobList();
+            });
+
+            function deleteJob(jobId) {
+                if (confirm('Are you sure you want to delete this job?')) {
+                    $.ajax({
+                        url: `/delete-job/${jobId}`,
+                        type: 'DELETE',
+                        success: function (response) {
+                            console.log('Job deleted successfully');
+                            fetchJobList(); // Refresh the job list
+                        },
+                        error: function (xhr, status, error) {
+                            console.error('Error deleting job:', error);
+                        }
+                    });
+                }
+            }
+
+            // Initialize the job list
+            fetchJobList();
         });
     </script>
 </body>

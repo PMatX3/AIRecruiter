@@ -39,6 +39,23 @@
             font-weight: 500;
         }
 
+        .navbar .nav-links {
+            display: flex;
+            align-items: center;
+        }
+
+        .navbar .nav-links .nav-link {
+            color: #333;
+            text-decoration: none;
+            margin-right: 20px;
+            font-size: 14px;
+            transition: color 0.3s ease;
+        }
+
+        .navbar .nav-links .nav-link:hover {
+            color: #2196f3;
+        }
+
         .navbar .logout-button {
             background-color: #f44336;
             color: #fff;
@@ -52,7 +69,7 @@
         }
 
         .navbar .logout-button:hover {
-            background-color: #d32f2f;
+            background-color: #000000;
         }
 
         h1 {
@@ -318,7 +335,10 @@
 <body>
     <nav class="navbar">
         <h1>Recruiter AI</h1>
-        <a href="/logout" class="logout-button">Logout</a>
+        <div class="nav-links">
+            <a href="/process" class="nav-link">All Process</a>
+            <a href="/logout" class="logout-button">Logout</a>
+        </div>
     </nav>
 
     <div id="uploadData">
@@ -503,6 +523,7 @@
                 data: formData,
                 contentType: false,
                 processData: false,
+                timeout: 60000, 
                 success: function (data, textStatus, xhr) {
                     if (xhr.status === 200) {
                         $('#loader').hide();
@@ -550,7 +571,20 @@
                 const questionVideo = document.getElementById('questionVideo');
                 videoPopup.style.display = 'block';
                 questionVideo.currentTime = question.start;
-                questionVideo.play();
+
+                // Add error handling for video playback
+                questionVideo.onerror = function() {
+                    console.error('Video playback error');
+                    handleVideoError();
+                };
+
+                // Ensure video is fully loaded before playing
+                questionVideo.oncanplay = function() {
+                    questionVideo.play().catch(function(error) {
+                        console.error('Video play error:', error);
+                        handleVideoError();
+                    });
+                };
 
                 questionVideo.ontimeupdate = function () {
                     if (questionVideo.currentTime >= question.end) {
@@ -559,10 +593,24 @@
                         startListening(question.text);
                     }
                 };
+
+                // Add a timeout in case the video doesn't trigger the timeupdate event
+                setTimeout(function() {
+                    if (questionVideo.paused && currentQuestionIndex === questions.indexOf(question)) {
+                        console.log('Video playback timed out');
+                        handleVideoError();
+                    }
+                }, (question.end - question.start + 2) * 1000); // Add 2 seconds buffer
+
             } else {
                 document.getElementById('answer').innerText = '';
                 saveText();
             }
+        }
+
+        function handleVideoError() {
+            document.getElementById('question').innerText = questions[currentQuestionIndex].text;
+            startListening(questions[currentQuestionIndex].text);
         }
 
         function startListening(question) {

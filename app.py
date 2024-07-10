@@ -353,10 +353,9 @@ def start_process():
     
     for job in all_jobs:
         job_id = str(job['_id'])
-        print('-=-=-=->', active_threads)
         
         # Check if the job is already completed
-        if all(status == "done" for status in job['process_status'].values()):
+        if any(status == "done" for status in job['process_status'].values() or any(status == "in_progress" for status in process_status.values())):
             continue
         
         # Check if the job is already being processed
@@ -367,7 +366,7 @@ def start_process():
                 {'_id': ObjectId(job_id)},
                 {'$set': {
                     'process_status': {
-                        "Creating Job description": "completed",
+                        "Creating Job description": "not_started",
                         "Job posting": "not_started",
                         "Getting resumes from portal": "not_started",
                         "Matching resumes with job description": "not_started",
@@ -437,6 +436,65 @@ def get_jobs():
         job_list.append(job)
 
     return jsonify(job_list)
+
+@app.route('/all-jobs-progress', methods=['GET'])
+def get_all_jobs_progress():
+    if 'user' not in session or '_id' not in session['user']:
+        return jsonify({'error': 'User not authenticated'}), 401
+
+    current_user_id = session['user']['_id']
+    if not current_user_id:
+        return jsonify({'error': 'Invalid user ID'}), 400
+
+    try:
+        user = users_collection.find_one({'_id': ObjectId(current_user_id)})
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+
+        jobs = jobs_collection.find({'userid': str(user['_id'])})
+        progress_data = {}
+
+        for job in jobs:
+            job_id = str(job['_id'])
+            process_status = get_process_status(job_id)
+            if process_status:
+                steps = list(process_status.values())
+                completed_steps = steps.count('done')
+                progress = round((completed_steps / len(steps)) * 100)
+                progress_data[job_id] = progress
+
+        return jsonify(progress_data)
+    except Exception as e:
+        return jsonify({'error': 'Invalid user ID format'}), 400
+
+@app.route('/delete-job/<job_id>', methods=['DELETE'])
+def delete_job(job_id):
+    if 'user' not in session or '_id' not in session['user']:
+        return jsonify({'error': 'User not authenticated'}), 401
+
+    current_user_id = session['user']['_id']
+    
+    try:
+        # Check if the job exists and belongs to the current user
+        job = jobs_collection.find_one({'_id': ObjectId(job_id), 'userid': str(current_user_id)})
+        
+        if not job:
+            return jsonify({'error': 'Job not found or you do not have permission to delete it'}), 404
+        
+        # Delete the job from the jobs collection
+        result = jobs_collection.delete_one({'_id': ObjectId(job_id)})
+        
+        if result.deleted_count == 1:
+            # Also delete the corresponding job description if it exists
+            jobs_collection.delete_one({'_id': ObjectId(job_id)})
+            
+            return jsonify({'message': 'Job deleted successfully'}), 200
+        else:
+            return jsonify({'error': 'Failed to delete the job'}), 500
+    
+    except Exception as e:
+        return jsonify({'error': 'Invalid job ID format'}), 400
+
 
 if __name__ == '__main__':
     app.run(debug=True, host="0.0.0.0", port=8000)

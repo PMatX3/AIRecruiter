@@ -72,7 +72,30 @@ def get_results(query, job_info_json):
         {"role": "user", "parts": query}
     ]
 
-    response = model.generate_content(messages, stream=True)
+    response = model.generate_content(messages)
 
-    for chunk in response:
-        yield chunk.text
+    return response.text
+
+def combine_resumes():
+    import PyPDF2
+    import os
+
+    # Directory containing the resumes
+    resume_dir = 'best_resumes/'
+    
+    # Create a PDF merger object
+    merger = PyPDF2.PdfMerger()
+
+    # Iterate through all PDF files in the directory
+    for filename in os.listdir(resume_dir):
+        if filename.endswith('.pdf'):
+            filepath = os.path.join(resume_dir, filename)
+            # Append the PDF to the merger
+            merger.append(filepath)
+
+    # Write the combined PDF to a file
+    output_path = os.path.join(resume_dir, 'combined_resumes.pdf')
+    merger.write(output_path)
+    merger.close()
+
+    print(f"All resumes have been combined into {output_path}")

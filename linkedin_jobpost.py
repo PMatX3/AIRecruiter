@@ -1,9 +1,14 @@
 import requests
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+access_token = os.getenv("LINKEDIN_ACCESS_TOKEN")
 
 def post_job_description_to_linkedin(text):
     url = "https://api.linkedin.com/v2/ugcPosts"
     payload = {
-        "author": "urn:li:person:AkmRuLQhVO",
+        "author": "urn:li:person:h7zeQ4FBG0",
         "lifecycleState": "PUBLISHED",
         "specificContent": {
             "com.linkedin.ugc.ShareContent": {
@@ -19,16 +24,56 @@ def post_job_description_to_linkedin(text):
     }
 
     headers = {
-        "Authorization": "Bearer AQWxIcTKA13m1wXCv1D175n3NdFJCs6_Lm7liHMk9erMWYltRk_ywrBv7mbdvBzFWyHvhYsBMgRM773-4XxKQSMuCxaPoyQjO9rK5t92q_T-IqKQxBy68EO_3NQzfsDDj48o5fF_gY3e7yk3Cd3zExlvqWYL8OBp--73QkKmldBlHPFbrFFTtoQu8agkPrXdBrz6MHOoZlyk7QGra8lF-iKzXbqBQzYh2tw2yb7y84SxY6DzZMXGZ63mdd3oLRphrjMS95AWy8HF5KgC65G-Xyq61KLeAytPAV86z8UKzA3ifBw_7jrJGYn0yly4Giia1jWdJ-i9cjZjBxiwGqYKnuP55Iz6Yw",
-        "X-Restli-Protocol-Version":"2.0.0"
+        "Authorization": f"Bearer {access_token}",
     }
 
+    print(text)
     response = requests.post(url, json=payload, headers=headers)
     print(response)
     if response.status_code == 201:
-        return "Job description posted successfully on LinkedIn."
+        post_urn = response.headers.get('x-restli-id')
+        if post_urn:
+            return response.status_code
+        else:
+            return response.status_code
     else:
-        return "Failed to post job description on LinkedIn."
+        return response.status_code
 
 
-post_job_description_to_linkedin("This is test job")
+def get_linkedin_post_comments(post_urn, access_token):
+    url = f"https://api.linkedin.com/v2/socialActions/{post_urn}/comments"
+    headers = {
+        "Authorization": f"Bearer {access_token}",
+        "X-Restli-Protocol-Version": "2.0.0"
+    }
+
+    response = requests.get(url, headers=headers)
+    if response.status_code == 200:
+        comments = response.json()
+        return comments
+    else:
+        print(f"Failed to fetch comments: {response.status_code}")
+        return None
+
+def get_linkedin_post_details(post_urn, access_token):
+    url = f"https://api.linkedin.com/v2/ugcPosts/{post_urn}"
+    headers = {
+        "Authorization": f"Bearer {access_token}",
+        "X-Restli-Protocol-Version": "2.0.0"
+    }
+
+    response = requests.get(url, headers=headers)
+    if response.status_code == 200:
+        post_details = response.json()
+        return post_details
+    else:
+        print(f"Failed to fetch post details: {response.status_code}")
+        return None
+
+
+# post_urn = post_job_description_to_linkedin("This is test job")
+# print(post_urn)
+# comments = get_linkedin_post_comments("urn:li:activity:7123235869976612864", access_token)
+# print(comments)
+# # data = get_linkedin_post_details("urn:li:activity:7123235869976612864", access_token)
+# # print(data)
