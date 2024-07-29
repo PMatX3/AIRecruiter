@@ -9,6 +9,7 @@ def post_job_description_to_linkedin(text):
     url = "https://api.linkedin.com/v2/ugcPosts"
     payload = {
         "author": "urn:li:person:h7zeQ4FBG0",
+        # "author": "urn:li:organization:219216776",
         "lifecycleState": "PUBLISHED",
         "specificContent": {
             "com.linkedin.ugc.ShareContent": {

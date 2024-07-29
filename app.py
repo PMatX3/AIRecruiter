@@ -28,7 +28,11 @@ from process import (
     update_process_status
 )
 from datetime import datetime
-import threading
+import base64
+import io
+from PyPDF2 import PdfReader
+from celery import Celery
+from celery.app.control import Inspect
 
 # Load environment variables
 load_dotenv()
@@ -40,6 +44,8 @@ AudioSegment.ffprobe ="ffprobe.exe"  # ffprobe is part of ffmpeg and might also 
 app = Flask(__name__)
 app.config['JWT_SECRET_KEY'] = os.getenv("JWT_SECRET_KEY")
 app.secret_key = os.getenv("SECRET_KEY")
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16 MB limit
+app.config['REQUEST_TIMEOUT'] = 300  # 5 minutes timeout
 jwt = JWTManager(app)
 
 mongo_client = get_mongo_client()
@@ -51,10 +57,6 @@ jobs_collection = db.get_collection('jobs') if db.get_collection('jobs') is not 
 
 openai_client = openai.Client(api_key=os.getenv("OPENAI_API_KEY"))
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-
-socketio = SocketIO(app, ping_timeout=240, ping_interval=120)
-
-socketio.init_app(app, cors_allowed_origins="*")
 
 def to_markdown(text):
   text = text.replace('•', '  *')
@@ -75,6 +77,12 @@ process_status = {
     "Matching resumes with job description": "not_started",
     "Sending resumes to your email": "not_started"
 }
+
+# Configure Celery
+app.config['CELERY_BROKER_URL'] = 'redis://localhost:6379/0'
+app.config['CELERY_RESULT_BACKEND'] = 'redis://localhost:6379/0'
+celery = Celery(app.name, broker=app.config['CELERY_BROKER_URL'])
+celery.conf.update(app.config)
 
 def extract_job_info(text):
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key={GEMINI_API_KEY}"
@@ -248,25 +256,47 @@ def audio_to_text():
 
 @app.route('/pdf-to-text', methods=['POST'])
 def pdf_to_text():
-    if 'file' not in request.files:
-        return jsonify({'error': 'No file part'})
-    file = request.files['file']
-    if file.filename == '':
-        return jsonify({'error': 'No selected file'})
-    if file:
+    print("PDF to text conversion started")
+    try:
+        data = request.json
+        print(f"Received data: {data.keys()}")
+        
+        if 'content' not in data:
+            print("Error: No file content in the request")
+            return jsonify({'error': 'No file content'}), 400
+        
+        file_name = data.get('name', 'unnamed.pdf')
+        file_content = data['content']
+        
+        print(f"Processing file: {file_name}")
+        
+        # Decode base64 content
+        pdf_bytes = base64.b64decode(file_content)
+        pdf_file = io.BytesIO(pdf_bytes)
+        
         # Extract text from PDF
-        text = extract_text_from_pdf(file)
+        text = extract_text_from_pdf(pdf_file)
+        print(f"Text extracted from PDF, length: {len(text)}")
 
         # Save the extracted text to the database
-        text_data_collection.insert_one({'user_id': session['user']['_id'], 'text': text})
+        result = text_data_collection.insert_one({'user_id': session['user']['_id'], 'text': text})
+        print(f"Text saved to database with ID: {result.inserted_id}")
 
         # Extract job information
         job_info = extract_job_info(text)
+        print("Job information extracted")
         
         # Create or get job ID
         job_id = create_or_get_job(session['user']['_id'], job_info)
+        print(f"Job created or retrieved with ID: {job_id}")
 
+        print("PDF processing completed successfully")
         return jsonify({'message': 'PDF processed and text saved to database.', 'job_id': job_id})
+    except Exception as e:
+        import traceback
+        print(f"Error in PDF to text conversion: {str(e)}")
+        print(traceback.format_exc())  # This will print the full stack trace
+        return jsonify({'error': 'An error occurred during PDF processing'}), 500
 
 @app.route('/save-resumes-embedding', methods=['GET'])
 def save_resumes():
@@ -349,43 +379,99 @@ def start_process():
     all_jobs = jobs_collection.find({})
     
     # Get the list of job IDs that are currently being processed
-    active_threads = [thread.name for thread in threading.enumerate() if thread.name.startswith('job_')]
+    active_tasks = []
+    active_dict = celery.control.inspect().active()
+    print(active_dict)
+    if active_dict:
+        active_tasks = [task.id for tasks in active_dict.values() for task in tasks]
     
     for job in all_jobs:
         job_id = str(job['_id'])
         
-        # Check if the job is already completed
-        if any(status == "done" for status in job['process_status'].values() or any(status == "in_progress" for status in process_status.values())):
+        # Check if the job is already completed or in progress
+        if any(status == "done" for status in job['process_status'].values()) or job_id in active_tasks:
+            print(f"Job {job_id} is already completed or in progress")
             continue
         
-        # Check if the job is already being processed
-        if f'job_{job_id}' not in active_threads:
-            print('here')
-            # Update the job with process status
-            jobs_collection.update_one(
-                {'_id': ObjectId(job_id)},
-                {'$set': {
-                    'process_status': {
-                        "Creating Job description": "not_started",
-                        "Job posting": "not_started",
-                        "Getting resumes from portal": "not_started",
-                        "Matching resumes with job description": "not_started",
-                        "Sending resumes to your email": "not_started"
-                    }
-                }}
-            )
-            
-            thread = threading.Thread(target=run_process, args=(job_id,), name=f'job_{job_id}')
-            thread.start()
+        # Update the job with process status
+        jobs_collection.update_one(
+            {'_id': ObjectId(job_id)},
+            {'$set': {
+                'process_status': {
+                    "Creating Job description": "not_started",
+                    "Job posting": "not_started",
+                    "Getting resumes from portal": "not_started",
+                    "Matching resumes with job description": "not_started",
+                    "Sending resumes to your email": "not_started"
+                }
+            }}
+        )
+        
+        # Start the process as a Celery task
+        run_process.delay(job_id)
 
     return jsonify({'message': 'Process started for all unprocessed jobs.'})
 
+@celery.task
 def run_process(job_id):
     update_job_description(job_id)
     update_job_posting(job_id)
     update_getting_resumes(job_id)
     update_matching_resumes(job_id)
     update_sending_resumes(job_id)
+
+def check_and_queue_in_progress_jobs():
+    try:
+        # Ensure Celery app is properly initialized
+        if not celery or not celery.control:
+            print("Celery app is not properly initialized. Skipping task queue check.")
+            return
+
+        # Check if Celery worker is running
+        try:
+            celery.control.ping(timeout=1)
+        except TimeoutError:
+            print("No Celery workers are currently running. Please start a Celery worker.")
+            return
+
+        # Get all active and reserved tasks
+        i = Inspect(app=celery)
+        active_tasks = i.active() or {}
+        reserved_tasks = i.reserved() or {}
+        
+        # Combine all task IDs
+        all_task_ids = set()
+        all_task_ids.update([task['id'] for worker_tasks in active_tasks.values() for task in worker_tasks])
+        all_task_ids.update([task['id'] for worker_tasks in reserved_tasks.values() for task in worker_tasks])
+
+        print(f"Current active and reserved tasks: {all_task_ids}")
+
+        # Find all jobs with in-progress or not_started status
+        in_progress_jobs = jobs_collection.find({
+            "$or": [
+                { "process_status.Creating Job description": { "$in": ["not_started", "in_progress"] } },
+                { "process_status.Job posting": { "$in": ["not_started", "in_progress"] } },
+                { "process_status.Getting resumes from portal": { "$in": ["not_started", "in_progress"] } },
+                { "process_status.Matching resumes with job description": { "$in": ["not_started", "in_progress"] } },
+                { "process_status.Sending resumes to your email": { "$in": ["not_started", "in_progress"] } }
+            ]
+        });
+        for job in in_progress_jobs:
+            job_id = str(job['_id'])
+            
+            # Check if this job is already in the Celery queue or running
+            if job_id not in all_task_ids:
+                # If not, add it to the Celery queue
+                run_process.apply_async((job_id,), task_id=job_id)
+                print(f"Added job {job_id} to Celery queue")
+            else:
+                print(f"Job {job_id} is already in progress or queued")
+
+        print(f"Total jobs checked: {len(list(in_progress_jobs))}")
+        print(f"Total tasks in queue after check: {len(all_task_ids)}")
+
+    except Exception as e:
+        print(f"An error occurred while checking and queueing jobs: {str(e)}")
 
 @app.route('/status/<job_id>', methods=['GET'])
 def get_status(job_id):
@@ -441,7 +527,7 @@ def get_jobs():
 def get_all_jobs_progress():
     if 'user' not in session or '_id' not in session['user']:
         return jsonify({'error': 'User not authenticated'}), 401
-
+    
     current_user_id = session['user']['_id']
     if not current_user_id:
         return jsonify({'error': 'Invalid user ID'}), 400

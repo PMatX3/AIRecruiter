@@ -5,11 +5,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Registration Page</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         /* Base Styles */
         body {
-            font-family: 'Roboto', sans-serif;
-            background: #f5f5f5;
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
             color: #333;
             display: flex;
             justify-content: center;
@@ -19,25 +20,33 @@
             line-height: 1.6;
             padding: 20px;
             box-sizing: border-box;
+            overflow: hidden; /* Prevent scrollbar */
         }
 
         /* Container Styling */
         .container {
             background: #fff;
             padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            width: 100%;
-            max-width: 350px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 400px;
             text-align: center;
+            transition: transform 0.3s ease;
+            overflow-y: auto; /* Allow scrolling within container if needed */
+            max-height: 90vh; /* Limit height to 90% of viewport height */
+        }
+
+        .container:hover {
+            transform: translateY(-5px);
         }
 
         /* Header Styling */
         h2 {
-            margin-bottom: 25px;
+            margin: 0 0 20px 0;
             font-size: 24px;
-            color: #333;
-            font-weight: 500;
+            color: #2c3e50;
+            font-weight: 600;
         }
 
         /* Form Group Styling */
@@ -49,27 +58,30 @@
         /* Label Styling */
         label {
             display: block;
-            margin-bottom: 5px;
+            margin-bottom: 6px;
             font-size: 14px;
-            color: #333;
+            color: #34495e;
+            font-weight: 500;
         }
 
         /* Input Styling */
         input {
             width: 100%;
-            padding: 12px;
-            border: 1px solid #e0e0e0;
-            border-radius: 4px;
+            padding: 10px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
             font-size: 14px;
-            background: #fff;
+            background: #f9f9f9;
             color: #333;
-            transition: border-color 0.3s ease;
+            transition: all 0.3s ease;
             box-sizing: border-box;
         }
 
         /* Input Focus Styling */
         input:focus {
-            border-color: #2196f3;
+            border-color: #3498db;
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
             outline: none;
         }
 
@@ -77,18 +89,22 @@
         button {
             width: 100%;
             padding: 12px;
-            background-color: #2196f3;
+            background-color: #3498db;
             color: white;
             border: none;
-            border-radius: 4px;
+            border-radius: 8px;
             font-size: 16px;
             cursor: pointer;
-            transition: background-color 0.3s, transform 0.3s;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         /* Button Hover and Active Styling */
         button:hover {
-            background-color: #1976d2;
+            background-color: #2980b9;
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
         }
 
         button:active {
@@ -96,53 +112,180 @@
         }
 
         /* Responsive Design */
-        @media (max-width: 400px) {
+        @media (max-width: 480px) {
             .container {
-                width: 90%;
-                padding: 20px;
+                padding: 20px 15px;
             }
         }
 
         a {
-            color: #2196f3;
+            color: #3498db;
             text-decoration: none;
             font-size: 14px;
-            margin-top: 15px;
+            margin-top: 9px;
             display: inline-block;
+            transition: color 0.3s ease;
         }
 
         a:hover {
-            text-decoration: underline;
+            color: #2980b9;
+        }
+
+        /* Additional Styling */
+        .form-header {
+            margin-bottom: 20px;
+        }
+
+        .form-header img {
+            width: 60px;
+            margin-bottom: 15px;
+        }
+
+        .input-icon {
+            position: relative;
+        }
+
+        .input-icon input {
+            padding-left: 35px;
+        }
+
+        .input-icon i {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #7f8c8d;
+        }
+
+        /* Password Criteria Styling */
+        .password-criteria {
+            margin-top: 10px;
+            font-size: 12px;
+            text-align: left;
+        }
+
+        .password-criteria p {
+            margin: 5px 0;
+            color: #7f8c8d;
+            transition: color 0.3s ease;
+        }
+
+        .password-criteria p.valid {
+            color: #27ae60;
+        }
+
+        .password-criteria p.invalid {
+            color: #e74c3c;
+        }
+
+        /* Disabled button styling */
+        button:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+        }
+
+        button:disabled:hover {
+            box-shadow: none;
         }
     </style>
+    <script src="https://kit.fontawesome.com/your-fontawesome-kit.js" crossorigin="anonymous"></script>
 </head>
 
 <body>
     <div class="container">
-        <h2>Register</h2>
+        <div class="form-header">
+            <h2>Create an Account</h2>
+        </div>
         <form id="registrationForm">
             <div class="form-group">
                 <label for="username">Username</label>
-                <input type="text" id="username" name="username" required>
+                <div class="input-icon">
+                    <i class="fas fa-user"></i>
+                    <input type="text" id="username" name="username" required placeholder="Choose a username">
+                </div>
             </div>
             <div class="form-group">
                 <label for="phone">Phone</label>
-                <input type="tel" id="phone" name="phone" required pattern="[0-9]{10}"
-                    title="Please enter a valid 10-digit phone number" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                <div class="input-icon">
+                    <i class="fas fa-phone"></i>
+                    <input type="tel" id="phone" name="phone" required pattern="[0-9]{10}"
+                        title="Please enter a valid 10-digit phone number" 
+                        oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                        placeholder="Enter your phone number">
+                </div>
             </div>
             <div class="form-group">
                 <label for="email">Email</label>
-                <input type="email" id="email" name="email" required>
+                <div class="input-icon">
+                    <i class="fas fa-envelope"></i>
+                    <input type="email" id="email" name="email" required placeholder="Enter your email">
+                </div>
             </div>
             <div class="form-group">
                 <label for="password">Password</label>
-                <input type="password" id="password" name="password" required>
+                <div class="input-icon">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" id="password" name="password" required placeholder="Create a password">
+                </div>
+                <div id="passwordCriteria" class="password-criteria">
+                    <p id="lengthCriteria">At least 8 characters</p>
+                    <p id="uppercaseCriteria">At least one uppercase letter</p>
+                    <p id="numberCriteria">At least one number</p>
+                    <p id="specialCharCriteria">At least one special character</p>
+                </div>
             </div>
             <button type="submit">Register</button>
             <a href="/login">Already have an account? <span>Login</span></a>
         </form>
     </div>
     <script>
+        function validatePassword(password) {
+            const submitButton = document.querySelector('button[type="submit"]');
+            let isValid = true;
+
+            // Length criteria
+            const lengthCriteria = document.getElementById('lengthCriteria');
+            if (password.length < 8) {
+                lengthCriteria.className = 'invalid';
+                isValid = false;
+            } else {
+                lengthCriteria.className = 'valid';
+            }
+
+            // Uppercase letter criteria
+            const uppercaseCriteria = document.getElementById('uppercaseCriteria');
+            if (!/[A-Z]/.test(password)) {
+                uppercaseCriteria.className = 'invalid';
+                isValid = false;
+            } else {
+                uppercaseCriteria.className = 'valid';
+            }
+
+            // Number criteria
+            const numberCriteria = document.getElementById('numberCriteria');
+            if (!/[0-9]/.test(password)) {
+                numberCriteria.className = 'invalid';
+                isValid = false;
+            } else {
+                numberCriteria.className = 'valid';
+            }
+
+            // Special character criteria
+            const specialCharCriteria = document.getElementById('specialCharCriteria');
+            if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+                specialCharCriteria.className = 'invalid';
+                isValid = false;
+            } else {
+                specialCharCriteria.className = 'valid';
+            }
+
+            submitButton.disabled = !isValid;
+        }
+
+        document.getElementById('password').addEventListener('input', function() {
+            validatePassword(this.value);
+        });
+
         document.getElementById('registrationForm').addEventListener('submit', function (event) {
             event.preventDefault();
 
@@ -151,21 +294,25 @@
             let email = document.getElementById('email').value;
             let password = document.getElementById('password').value;
 
-            fetch('/register', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    username: username,
-                    phone: phone,
-                    email: email,
-                    password: password
+            // Validate password before submitting
+            validatePassword(password);
+
+            if (!document.querySelector('button[type="submit"]').disabled) {
+                fetch('/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        phone: phone,
+                        email: email,
+                        password: password
+                    })
                 })
-            })
                 .then(response => {
                     if (response.ok) {
-                        window.location.href = '/login';
+                        window.location.href = '/';
                     } else {
                         return response.json().then(data => {
                             alert('Registration failed: ' + data.message);
@@ -176,6 +323,7 @@
                     console.error('Error:', error);
                     alert('An error occurred. Please try again.');
                 });
+            }
         });
     </script>
 </body>

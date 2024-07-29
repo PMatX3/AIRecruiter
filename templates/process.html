@@ -359,18 +359,15 @@
             <div class="panel">
                 <p>Publish the job posting on relevant platforms and job boards to attract potential candidates.</p>
             </div>
-            <button class="accordion" data-step="Getting resumes from portal">Step 3: Getting candidate applications from
-                portal</button>
+            <button class="accordion" data-step="Getting resumes from portal">Step 3: Getting candidate applications from portal</button>
             <div class="panel">
                 <p>Collect and organize resumes submitted by applicants through the designated portal.</p>
             </div>
-            <button class="accordion" data-step="Matching resumes with job description">Step 4: Matching candidates with job
-                description</button>
+            <button class="accordion" data-step="Matching resumes with job description">Step 4: Matching candidates with job description</button>
             <div class="panel">
                 <p>Analyze and compare received resumes against the job description to identify suitable candidates.</p>
             </div>
-            <button class="accordion" data-step="Sending resumes to your email">Step 5: Sending the list of best candidates
-                to your email</button>
+            <button class="accordion" data-step="Sending resumes to your email">Step 5: Sending the list of best candidates to your email</button>
             <div class="panel">
                 <p>Forward selected resumes to the designated email address for further review and action.</p>
             </div>
@@ -388,9 +385,9 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script>
+        // Defer non-critical JavaScript
         window.addEventListener('load', function () {
             const accordions = document.getElementsByClassName("accordion");
-            const panels = document.getElementsByClassName("panel");
             const jobDescPopup = document.getElementById('jobDescPopup');
             const jobDescMarkdown = document.getElementById('jobDescMarkdown');
             const editSaveBtn = document.getElementById('editSaveBtn');
@@ -402,25 +399,26 @@
             const processContainer = document.getElementById('processContainer');
             const backToJobsBtn = document.getElementById('backToJobsBtn');
             let selectedJobId = null;
+            let statusUpdateInterval;
 
-            function openAccordion(accordion, panel) {
-                accordion.classList.add("active");
-                panel.style.maxHeight = panel.scrollHeight + "px";
-            }
-
-            function closeAccordion(accordion, panel) {
-                accordion.classList.remove("active");
-                panel.style.maxHeight = null;
-            }
+            // Use event delegation for dynamic elements
+            jobList.addEventListener('click', function(e) {
+                if (e.target.classList.contains('job-title')) {
+                    selectJob(e.target.closest('.job-item').dataset.jobId);
+                } else if (e.target.closest('.delete-job')) {
+                    e.stopPropagation();
+                    deleteJob(e.target.closest('.job-item').dataset.jobId);
+                }
+            });
 
             function updateAccordionStatus(accordion, status) {
                 accordion.classList.remove("running", "completed");
                 if (status === "in_progress") {
                     accordion.classList.add("running");
-                    openAccordion(accordion, accordion.nextElementSibling);
+                    accordion.nextElementSibling.style.maxHeight = accordion.nextElementSibling.scrollHeight + "px";
                 } else if (status === "done") {
                     accordion.classList.add("completed");
-                    closeAccordion(accordion, accordion.nextElementSibling);
+                    accordion.nextElementSibling.style.maxHeight = null;
                 }
             }
 
@@ -429,11 +427,9 @@
                     loaderOverlay.style.display = 'flex';
                 }
 
-                $.ajax({
-                    url: `/status/${selectedJobId}`,
-                    type: 'GET',
-                    dataType: 'json',
-                    success: function (data) {
+                fetch(`/status/${selectedJobId}`)
+                    .then(response => response.json())
+                    .then(data => {
                         if (data.error) {
                             console.error('Error:', data.error);
                             return;
@@ -444,16 +440,13 @@
                         }
                         const progress = calculateProgress(data);
                         updateJobProgress(selectedJobId, progress);
-                    },
-                    error: function (xhr, status, error) {
-                        console.error('Error:', error);
-                    },
-                    complete: function () {
+                    })
+                    .catch(error => console.error('Error:', error))
+                    .finally(() => {
                         if (showLoader) {
                             loaderOverlay.style.display = 'none';
                         }
-                    }
-                });
+                    });
             }
 
             function calculateProgress(data) {
@@ -463,27 +456,17 @@
             }
 
             function updateJobProgress(jobId, progress) {
-                const jobItem = document.querySelector(`#jobList [data-job-id="${jobId}"]`);
+                const jobItem = jobList.querySelector(`[data-job-id="${jobId}"]`);
                 if (jobItem) {
-                    const progressElement = jobItem.querySelector('.job-progress');
-                    const progressFill = jobItem.querySelector('.progress-fill');
-                    
-                    if (progressElement) {
-                        progressElement.textContent = `${progress}%`;
-                    }
-                    
-                    if (progressFill) {
-                        progressFill.style.width = `${progress}%`;
-                    }
+                    jobItem.querySelector('.job-progress').textContent = `${progress}%`;
+                    jobItem.querySelector('.progress-fill').style.width = `${progress}%`;
                 }
             }
 
             function fetchAllJobsProgress() {
-                $.ajax({
-                    url: '/all-jobs-progress',
-                    type: 'GET',
-                    dataType: 'json',
-                    success: function (data) {
+                fetch('/all-jobs-progress')
+                    .then(response => response.json())
+                    .then(data => {
                         if (data.error) {
                             console.error('Error:', data.error);
                             return;
@@ -491,43 +474,32 @@
                         for (let jobId in data) {
                             updateJobProgress(jobId, data[jobId]);
                         }
-                    },
-                    error: function (xhr, status, error) {
-                        console.error('Error fetching all jobs progress:', error);
-                    }
-                });
+                    })
+                    .catch(error => console.error('Error fetching all jobs progress:', error));
             }
 
-            // Fetch all jobs progress every 5 seconds
-            setInterval(fetchAllJobsProgress, 5000);
-            setInterval(() => {
-                if (selectedJobId) {
-                    fetchStatus();
-                }
-            }, 5000);
+            // Use requestAnimationFrame for smoother updates
+            function updateProgressLoop() {
+                fetchAllJobsProgress();
+                setTimeout(updateProgressLoop, 30000); // Run this function every 30 seconds
+            }
+            updateProgressLoop(); // Initial call to start the loop
 
             // Initialize accordions
-            for (let i = 0; i < accordions.length; i++) {
-                accordions[i].addEventListener("click", function () {
+            for (let accordion of accordions) {
+                accordion.addEventListener("click", function () {
                     this.classList.toggle("active");
                     var panel = this.nextElementSibling;
-                    if (panel.style.maxHeight) {
-                        panel.style.maxHeight = null;
-                    } else {
-                        panel.style.maxHeight = panel.scrollHeight + "px";
-                    }
+                    panel.style.maxHeight = panel.style.maxHeight ? null : panel.scrollHeight + "px";
                 });
             }
 
-            // Fetch job list
             function fetchJobList() {
-                $.ajax({
-                    url: '/jobs',
-                    type: 'GET',
-                    success: function (response) {
-                        const jobList = document.getElementById('jobList');
-                        jobList.innerHTML = '';
-                        response.forEach(job => {
+                fetch('/jobs')
+                    .then(response => response.json())
+                    .then(jobs => {
+                        const fragment = document.createDocumentFragment();
+                        jobs.forEach(job => {
                             const li = document.createElement('li');
                             li.className = 'job-item';
                             li.setAttribute('data-job-id', job._id);
@@ -545,20 +517,13 @@
                                     </div>
                                 </div>
                             `;
-                            li.querySelector('.job-title').addEventListener('click', () => selectJob(job._id));
-                            li.querySelector('.delete-job').addEventListener('click', (e) => {
-                                e.stopPropagation();
-                                deleteJob(job._id);
-                            });
-                            jobList.appendChild(li);
+                            fragment.appendChild(li);
                         });
-                        // Fetch progress for all jobs immediately
+                        jobList.innerHTML = '';
+                        jobList.appendChild(fragment);
                         fetchAllJobsProgress();
-                    },
-                    error: function (xhr, status, error) {
-                        console.error('Error fetching job list:', error);
-                    }
-                });
+                    })
+                    .catch(error => console.error('Error fetching job list:', error));
             }
 
             function selectJob(jobId) {
@@ -568,43 +533,34 @@
                 jobList.style.display = 'none';
                 processContainer.style.display = 'block';
                 backToJobsBtn.style.display = 'block';
+                
+                clearInterval(statusUpdateInterval);
+                statusUpdateInterval = setInterval(() => fetchStatus(), 5000);
             }
 
             function fetchJobDescription(jobId) {
-                $.ajax({
-                    url: `/get_jobdesc/${jobId}`,
-                    type: 'GET',
-                    success: function (response) {
-                        jobDescMarkdown.innerHTML = response.description;
-                        if (response.edited) {
-                            jobDescPopup.style.display = 'none';
-                        }
-                        else {
-                            jobDescPopup.style.display = 'block';
-                        }
-                    },
-                    error: function (xhr, status, error) {
-                        console.error('Error fetching job description:', error);
-                    }
-                });
+                fetch(`/get_jobdesc/${jobId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        jobDescMarkdown.innerHTML = data.description;
+                        jobDescPopup.style.display = data.edited ? 'none' : 'block';
+                    })
+                    .catch(error => console.error('Error fetching job description:', error));
             }
 
             function updateJobDescription() {
-                $.ajax({
-                    url: '/update_jobdesc',
-                    type: 'POST',
-                    contentType: 'application/json',
-                    data: JSON.stringify({ text: jobDescMarkdown.innerText, job_id: selectedJobId }),
-                    success: function (response) {
-                        console.log('Job description updated:', response.message);
+                fetch('/update_jobdesc', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
                     },
-                    error: function (xhr, status, error) {
-                        console.error('Error updating job description:', error);
-                    }
-                });
+                    body: JSON.stringify({ text: jobDescMarkdown.innerText, job_id: selectedJobId }),
+                })
+                    .then(response => response.json())
+                    .then(data => console.log('Job description updated:', data.message))
+                    .catch(error => console.error('Error updating job description:', error));
             }
 
-            // Edit/Save button functionality
             editSaveBtn.addEventListener('click', function () {
                 if (this.textContent === 'Edit') {
                     this.textContent = 'Save';
@@ -618,13 +574,12 @@
                 }
             });
 
-            // Done button functionality
             doneBtn.addEventListener('click', function () {
                 jobDescPopup.style.display = 'none';
+                updateJobDescription();
                 startProcess();
             });
 
-            // Close button functionality
             closeBtn.addEventListener('click', function () {
                 jobDescPopup.style.display = 'none';
                 updateJobDescription();
@@ -632,46 +587,36 @@
             });
 
             function startProcess() {
-                $.ajax({
-                    url: '/start-process',
-                    type: 'GET',
-                    success: function (response) {
-                        console.log('Process started:', response.message);
-                        // Fetch status immediately after starting the process
+                fetch('/start-process')
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log('Process started:', data.message);
                         fetchStatus(true);
-                    },
-                    error: function (xhr, status, error) {
-                        console.error('Error starting process:', error);
-                    }
-                });
+                    })
+                    .catch(error => console.error('Error starting process:', error));
             }
 
-            // Back to Jobs button functionality
             backToJobsBtn.addEventListener('click', function () {
                 selectedJobId = null;
                 jobList.style.display = 'table';
                 processContainer.style.display = 'none';
                 backToJobsBtn.style.display = 'none';
                 fetchJobList();
+                clearInterval(statusUpdateInterval);
             });
 
             function deleteJob(jobId) {
                 if (confirm('Are you sure you want to delete this job?')) {
-                    $.ajax({
-                        url: `/delete-job/${jobId}`,
-                        type: 'DELETE',
-                        success: function (response) {
+                    fetch(`/delete-job/${jobId}`, { method: 'DELETE' })
+                        .then(response => response.json())
+                        .then(() => {
                             console.log('Job deleted successfully');
-                            fetchJobList(); // Refresh the job list
-                        },
-                        error: function (xhr, status, error) {
-                            console.error('Error deleting job:', error);
-                        }
-                    });
+                            fetchJobList();
+                        })
+                        .catch(error => console.error('Error deleting job:', error));
                 }
             }
 
-            // Initialize the job list
             fetchJobList();
         });
     </script>

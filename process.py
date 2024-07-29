@@ -3,13 +3,14 @@ import logging
 from bson import ObjectId
 from flask import jsonify
 from mongo_connection import get_mongo_client
-from linkedin_jobpost import post_job_description_to_linkedin
+from job_post_scripts.linkedin_jobpost import post_job_description_to_linkedin
 from email_test import send_mail, get_resume
 from flask import session
 from utils import extract_text_from_pdf
 import os
 import requests
 from dotenv import load_dotenv
+from datetime import datetime, timedelta
 
 load_dotenv()
 
@@ -46,7 +47,7 @@ def update_job_description(job_id):
         logging.info(f"Job description update completed for job {job_id}")
     except Exception as e:
         logging.error(f"Error updating job description for job {job_id}: {str(e)}")
-        update_process_status(job_id, "Creating Job description", "error")
+        update_process_status(job_id, "Creating Job description", "in_progress")
 
 def update_job_posting(job_id):
     logging.info(f"Starting job posting update for job {job_id}")
@@ -60,8 +61,6 @@ def update_job_posting(job_id):
         if status == 201:
             logging.info(f"Job {job_id} posted successfully to LinkedIn")
             update_process_status(job_id, "Job posting", "done")
-            
-            from datetime import datetime, timedelta
 
             current_date = datetime.now()
             end_date = current_date + timedelta(days=10)
@@ -74,12 +73,16 @@ def update_job_posting(job_id):
                 }}
             )
             logging.info(f"Updated posting dates for job {job_id}")
+            
+            time_to_sleep = (end_date - current_date).total_seconds()
+            logging.info(f"Sleeping for {time_to_sleep} seconds until end date for job {job_id}")
+            time.sleep(time_to_sleep)
         else:
             logging.error(f"Error posting job {job_id} to LinkedIn: status code {status}")
-            update_process_status(job_id, "Job posting", "error")
+            update_process_status(job_id, "Job posting", "in_progress")
     except Exception as e:
         logging.error(f"Error in job posting process for job {job_id}: {str(e)}")
-        update_process_status(job_id, "Job posting", "error")
+        update_process_status(job_id, "Job posting", "in_progress")
 
 def update_getting_resumes(job_id):
     logging.info(f"Starting resume retrieval for job {job_id}")
@@ -106,7 +109,7 @@ def update_getting_resumes(job_id):
                 update_process_status(job_id, "Getting resumes from portal", "done")
             except Exception as e:
                 logging.error(f"Error retrieving email attachments for job {job_id}: {str(e)}")
-                update_process_status(job_id, "Getting resumes from portal", "error")
+                update_process_status(job_id, "Getting resumes from portal", "in_progress")
         else:
             logging.info(f"End date {end_date} does not match tomorrow for job {job_id}. Keeping status as in_progress.")
     else:
@@ -180,7 +183,7 @@ def update_matching_resumes(job_id):
         logging.info(f"Resume matching completed for job {job_id}. Matched {len(matched_resumes)} resumes.")
     except Exception as e:
         logging.error(f"Error in resume matching process for job {job_id}: {str(e)}")
-        update_process_status(job_id, "Matching resumes with job description", "error")
+        update_process_status(job_id, "Matching resumes with job description", "in_progress")
 
 def update_sending_resumes(job_id):
     logging.info(f"Starting resume sending process for job {job_id}")
@@ -202,4 +205,4 @@ def update_sending_resumes(job_id):
         logging.info(f"Resumes sent successfully for job {job_id}")
     except Exception as e:
         logging.error(f"Error sending resumes for job {job_id}: {str(e)}")
-        update_process_status(job_id, "Sending resumes to your email", "error")
+        update_process_status(job_id, "Sending resumes to your email", "in_progress")
