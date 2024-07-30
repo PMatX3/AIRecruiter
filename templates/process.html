@@ -60,6 +60,11 @@
             color: #2e7d32;
         }
 
+        .accordion.failed {
+            background: #f5d6d6;
+            color: #e53935;
+        }
+
         .accordion.running {
             background: #e3f2fd;
             color: #1565c0;
@@ -331,6 +336,59 @@
         #backToJobsBtn:hover {
             background-color: #e0e0e0;
         }
+
+        .job-item {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .failed-job {
+            opacity: 0.7;
+        }
+
+        .job-progress.failed-job {
+            color: #e53935;
+            font-weight: bold;
+        }
+
+        .failed-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255, 255, 255, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2;
+            cursor: help;
+        }
+
+        .failed-overlay span {
+            color: #e53935;
+            font-weight: bold;
+            font-size: 1.2em;
+            text-transform: uppercase;
+        }
+
+        .tooltip {
+            position: absolute;
+            background-color: #333;
+            color: #fff;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 14px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            white-space: nowrap;
+            z-index: 1000;
+        }
+
+        .failed-overlay:hover .tooltip {
+            opacity: 1;
+        }
     </style>
 </head>
 
@@ -419,6 +477,9 @@
                 } else if (status === "done") {
                     accordion.classList.add("completed");
                     accordion.nextElementSibling.style.maxHeight = null;
+                } else if (status === "failed") {
+                    accordion.classList.add("failed");
+                    accordion.nextElementSibling.style.maxHeight = null;
                 }
             }
 
@@ -499,16 +560,25 @@
                     .then(response => response.json())
                     .then(jobs => {
                         const fragment = document.createDocumentFragment();
+                        if (jobs.length === 0) {
+                            jobList.innerHTML = 'No jobs found';
+                            return;
+                        }
                         jobs.forEach(job => {
                             const li = document.createElement('li');
                             li.className = 'job-item';
                             li.setAttribute('data-job-id', job._id);
+
+                            const hasFailed = job.process_status && Object.values(job.process_status).includes("failed");
+                            const statusClass = hasFailed ? 'failed-job' : '';
+                            const statusText = hasFailed ? 'Failed' : (job.edited ? '0%' : 'pending');
+
                             li.innerHTML = `
                                 <div class="progress-fill" style="width: 0%;"></div>
-                                <div class="job-content">
+                                <div class="job-content ${statusClass}">
                                     <span class="job-title">${job.job_title}</span>
                                     <div>
-                                        <span class="job-progress">${job.edited ? '0%' : 'pending'}</span>
+                                        <span class="job-progress">${statusText}</span>
                                         <button class="delete-job" title="Delete job">
                                             <svg viewBox="0 0 24 24">
                                                 <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
@@ -516,6 +586,7 @@
                                         </button>
                                     </div>
                                 </div>
+                                ${hasFailed ? '<div class="failed-overlay delete-job"><span>Failed</span><div class="tooltip">Job failed due to inappropriate behavior from Job portals (Click to delete)</div></div>' : ''}
                             `;
                             fragment.appendChild(li);
                         });

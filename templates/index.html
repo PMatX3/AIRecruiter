@@ -492,48 +492,38 @@
         });
 
         // File Upload Functions
-        function uploadPDF() {
-            var fileInput = document.getElementById('pdfInput');
-            var file = fileInput.files[0];
-            
-            console.log("File input:", fileInput);
-            console.log("File:", file);
-            
+        function uploadAudio() {
+            var file = document.getElementById('audioInput').files[0];
             if (!file) {
                 showFloatingMessage('Please choose a file first.');
                 return;
             }
-            
-            var reader = new FileReader();
-            reader.onload = function(e) {
-                var base64File = e.target.result.split(',')[1];
-                var fileData = {
-                    name: file.name,
-                    type: file.type,
-                    size: file.size,
-                    content: base64File
-                };
-                
-                console.log("File data prepared:", fileData);
-                
-                ajaxCall('/pdf-to-text', fileData);
-            };
-            reader.readAsDataURL(file);
+            var formData = new FormData();
+            formData.append('file', file);
+            ajaxCall('/audio-to-text', formData);
         }
 
-        function ajaxCall(url, fileData) {
+        function uploadPDF() {
+            var file = document.getElementById('pdfInput').files[0];
+            if (!file) {
+                showFloatingMessage('Please choose a file first.');
+                return;
+            }
+            var formData = new FormData();
+            formData.append('file', file);
+            ajaxCall('/pdf-to-text', formData);
+        }
+
+        function ajaxCall(url, formData) {
             $('#overlay').show();
             $('#loader').show();
-            
-            console.log("File data received in ajaxCall:", fileData);
-            
             $.ajax({
                 url: url,
                 type: 'POST',
-                data: JSON.stringify(fileData),
-                contentType: 'application/json',
-                dataType: 'json',
-                timeout: 60000,
+                data: formData,
+                contentType: false,
+                processData: false,
+                timeout: 60000, 
                 success: function (data, textStatus, xhr) {
                     if (xhr.status === 200) {
                         $('#loader').hide();

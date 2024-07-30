@@ -37,9 +37,13 @@ from celery.app.control import Inspect
 # Load environment variables
 load_dotenv()
 
-AudioSegment.converter = "ffmpeg.exe"
-AudioSegment.ffmpeg = "ffmpeg.exe"  # Some versions of pydub might require setting this as well
-AudioSegment.ffprobe ="ffprobe.exe"  # ffprobe is part of ffmpeg and might also need to be specified
+# AudioSegment.converter = "ffmpeg.exe"
+# AudioSegment.ffmpeg = "ffmpeg.exe"  # Some versions of pydub might require setting this as well
+# AudioSegment.ffprobe ="ffprobe.exe"  # ffprobe is part of ffmpeg and might also need to be specified
+AudioSegment.converter = "/usr/bin/ffmpeg"
+AudioSegment.ffmpeg = "/usr/bin/ffmpeg"
+AudioSegment.ffprobe = "/usr/bin/ffprobe"
+
 
 app = Flask(__name__)
 app.config['JWT_SECRET_KEY'] = os.getenv("JWT_SECRET_KEY")
@@ -105,7 +109,7 @@ def extract_job_info(text):
     Complete description with all specified sections
     Email (if available)
     Mobile (if available)
-    If any of the sections are not specified in the text, don't include that respective section. The generated job description must contain all the points mentioned above and be presented in proper markdown format. I want to extract minimum text from the text provided."""}]}]}
+    If any of the sections are not specified in the text, don't include that respective section. The generated job description must contain all the points mentioned above and be presented in proper markdown format. I want to extract minimum text from the text provided. To Apply section must be : 'To Apply: Send you resume to airecruiter@gmail.com and must use 'job_id' in the subject line otherwise, it will not be considered'"""}]}]}
     
     headers = {
         "Content-Type": "application/json"
@@ -186,18 +190,18 @@ def create_or_get_job(user_id, job_info):
         'userid': user_id,
         'process_status.Creating Job description': 'not_started'
     })
-    
+    updated_job_info = job_info.replace("job_id", job_title)
     if existing_job:
         jobs_collection.update_one(
             {'_id': existing_job['_id']},
-            {'$set': {'job_info': job_info, 'job_title': job_title}}
+            {'$set': {'job_info': updated_job_info, 'job_title': job_title}}
         )
         return str(existing_job['_id'])
     else:
         new_job = {
             'userid': user_id,
             'created_at': datetime.utcnow(),
-            'job_info': job_info,
+            'job_info': updated_job_info,
             'job_title': job_title,
             'edited': False,
             'process_status': {
@@ -213,74 +217,50 @@ def create_or_get_job(user_id, job_info):
 
 @app.route('/audio-to-text', methods=['POST'])
 def audio_to_text():
+    print("Starting audio-to-text conversion")
     if 'file' not in request.files:
+        print("Error: No file part in the request")
         return jsonify({'error': 'No file part'})
     file = request.files['file']
     if file.filename == '':
+        print("Error: No selected file")
         return jsonify({'error': 'No selected file'})
     if file:
+        print(f"Processing file: {file.filename}")
         # Save the uploaded file temporarily
         temp_filename = 'temp_audio.' + file.filename.split('.')[-1]
         file.save(temp_filename)
+        print(f"Temporary file saved: {temp_filename}")
 
         # Convert the audio to WAV format
         audio = AudioSegment.from_file(temp_filename)
         audio.export("temp_audio.wav", format="wav")
+        print("Audio converted to WAV format")
 
         # Perform speech recognition
         recognizer = sr.Recognizer()
         with sr.AudioFile("temp_audio.wav") as source:
             audio_data = recognizer.record(source)
+        print("Audio data recorded")
         
         try:
             text = recognizer.recognize_google(audio_data)
+            print("Speech recognition successful")
         except sr.UnknownValueError:
+            print("Error: Speech recognition could not understand the audio")
             return jsonify({'error': 'Speech recognition could not understand the audio'})
         except sr.RequestError:
+            print("Error: Could not request results from speech recognition service")
             return jsonify({'error': 'Could not request results from speech recognition service'})
 
         # Clean up temporary files
         os.remove(temp_filename)
         os.remove("temp_audio.wav")
+        print("Temporary files cleaned up")
 
         # Save the extracted text to the database
         text_data_collection.insert_one({'user_id': session['user']['_id'], 'text': text})
-
-        # Extract job information
-        job_info = extract_job_info(text)
-        
-        # Create or get job ID
-        job_id = create_or_get_job(session['user']['_id'], job_info)
-
-        return jsonify({'message': 'Audio processed and text saved to database.', 'job_id': job_id})
-
-@app.route('/pdf-to-text', methods=['POST'])
-def pdf_to_text():
-    print("PDF to text conversion started")
-    try:
-        data = request.json
-        print(f"Received data: {data.keys()}")
-        
-        if 'content' not in data:
-            print("Error: No file content in the request")
-            return jsonify({'error': 'No file content'}), 400
-        
-        file_name = data.get('name', 'unnamed.pdf')
-        file_content = data['content']
-        
-        print(f"Processing file: {file_name}")
-        
-        # Decode base64 content
-        pdf_bytes = base64.b64decode(file_content)
-        pdf_file = io.BytesIO(pdf_bytes)
-        
-        # Extract text from PDF
-        text = extract_text_from_pdf(pdf_file)
-        print(f"Text extracted from PDF, length: {len(text)}")
-
-        # Save the extracted text to the database
-        result = text_data_collection.insert_one({'user_id': session['user']['_id'], 'text': text})
-        print(f"Text saved to database with ID: {result.inserted_id}")
+        print("Extracted text saved to database")
 
         # Extract job information
         job_info = extract_job_info(text)
@@ -290,8 +270,46 @@ def pdf_to_text():
         job_id = create_or_get_job(session['user']['_id'], job_info)
         print(f"Job created or retrieved with ID: {job_id}")
 
-        print("PDF processing completed successfully")
-        return jsonify({'message': 'PDF processed and text saved to database.', 'job_id': job_id})
+        print("Audio-to-text conversion completed successfully")
+        return jsonify({'message': 'Audio processed and text saved to database.', 'job_id': job_id})
+
+@app.route('/pdf-to-text', methods=['POST'])
+def pdf_to_text():
+    print("PDF to text conversion started")
+    try:
+        print(f"Request method: {request.json}")
+        
+        if 'file' not in request.files:
+            print("Error: No file part in the request")
+            return jsonify({'error': 'No file part'}), 400
+        
+        file = request.files['file']
+        print(f"Received file: {file.filename}")
+        
+        if file.filename == '':
+            print("Error: No selected file")
+            return jsonify({'error': 'No selected file'}), 400
+        
+        if file:
+            print(f"Processing file: {file.filename}")
+            # Extract text from PDF
+            text = extract_text_from_pdf(file)
+            print(f"Text extracted from PDF, length: {len(text)}")
+
+            # Save the extracted text to the database
+            result = text_data_collection.insert_one({'user_id': session['user']['_id'], 'text': text})
+            print(f"Text saved to database with ID: {result.inserted_id}")
+
+            # Extract job information
+            job_info = extract_job_info(text)
+            print("Job information extracted")
+            
+            # Create or get job ID
+            job_id = create_or_get_job(session['user']['_id'], job_info)
+            print(f"Job created or retrieved with ID: {job_id}")
+
+            print("PDF processing completed successfully")
+            return jsonify({'message': 'PDF processed and text saved to database.', 'job_id': job_id})
     except Exception as e:
         import traceback
         print(f"Error in PDF to text conversion: {str(e)}")
@@ -416,9 +434,9 @@ def start_process():
 def run_process(job_id):
     update_job_description(job_id)
     update_job_posting(job_id)
-    update_getting_resumes(job_id)
-    update_matching_resumes(job_id)
-    update_sending_resumes(job_id)
+    # update_getting_resumes(job_id)
+    # update_matching_resumes(job_id)
+    # update_sending_resumes(job_id)
 
 def check_and_queue_in_progress_jobs():
     try:

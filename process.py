@@ -11,6 +11,7 @@ import os
 import requests
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
+from celery import Celery
 
 load_dotenv()
 
@@ -25,24 +26,48 @@ GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
+celery_app = Celery('tasks', broker='redis://localhost:6379/0')
+
 def update_process_status(job_id, status, status_value):
     try:
+        # Log the input parameters
+        logging.info(f"Attempting to update job {job_id}: {status} -> {status_value}")
+
+        # Check if the job exists before updating
+        job = jobs_collection.find_one({'_id': ObjectId(job_id)})
+        if not job:
+            logging.error(f"Job {job_id} not found in the database")
+            return
+
+        # Perform the update
         result = jobs_collection.update_one(
             {'_id': ObjectId(job_id)},
             {'$set': {f'process_status.{status}': status_value}}
         )
+
+        # Log detailed result information
+
         if result.modified_count > 0:
-            logging.info(f"Updated status for job {job_id}: {status} -> {status_value}")
+            logging.info(f"Successfully updated status for job {job_id}: {status} -> {status_value}")
         else:
-            logging.warning(f"Failed to update status for job {job_id}: {status} -> {status_value}")
+            if result.matched_count > 0:
+                logging.warning(f"Job {job_id} found but not modified. Current value might be the same as the new value.")
+            else:
+                logging.info(f"Update result: matched={result.matched_count}, modified={result.modified_count}")
+                logging.error(f"Failed to update status for job {job_id}: {status} -> {status_value}. Job not found or no changes made.")
+
+        # Log the updated job document
+        updated_job = jobs_collection.find_one({'_id': ObjectId(job_id)})
+        logging.info(f"Updated job document: {updated_job}")
+
     except Exception as e:
-        logging.error(f"Error updating process status for job {job_id}: {str(e)}")
+        logging.error(f"Error updating process status for job {job_id}: {str(e)}", exc_info=True)
 
 def update_job_description(job_id):
     logging.info(f"Starting job description update for job {job_id}")
     update_process_status(job_id, "Creating Job description", "in_progress")
     try:
-        time.sleep(10)  # Simulating work
+        time.sleep(5)  # Simulating work
         update_process_status(job_id, "Creating Job description", "done")
         logging.info(f"Job description update completed for job {job_id}")
     except Exception as e:
@@ -73,17 +98,14 @@ def update_job_posting(job_id):
                 }}
             )
             logging.info(f"Updated posting dates for job {job_id}")
-            
-            time_to_sleep = (end_date - current_date).total_seconds()
-            logging.info(f"Sleeping for {time_to_sleep} seconds until end date for job {job_id}")
-            time.sleep(time_to_sleep)
         else:
             logging.error(f"Error posting job {job_id} to LinkedIn: status code {status}")
-            update_process_status(job_id, "Job posting", "in_progress")
+            update_process_status(job_id, "Job posting", "failed")
     except Exception as e:
         logging.error(f"Error in job posting process for job {job_id}: {str(e)}")
-        update_process_status(job_id, "Job posting", "in_progress")
+        update_process_status(job_id, "Job posting", "failed")
 
+#get resumes from the gmail after 10 days from the posting date
 def update_getting_resumes(job_id):
     logging.info(f"Starting resume retrieval for job {job_id}")
     job = jobs_collection.find_one({'_id': ObjectId(job_id)})
@@ -206,3 +228,48 @@ def update_sending_resumes(job_id):
     except Exception as e:
         logging.error(f"Error sending resumes for job {job_id}: {str(e)}")
         update_process_status(job_id, "Sending resumes to your email", "in_progress")
+
+@celery_app.task
+def task_update_getting_resumes(job_id):
+    update_getting_resumes(job_id)
+
+@celery_app.task
+def task_update_matching_resumes(job_id):
+    update_matching_resumes(job_id)
+
+@celery_app.task
+def task_update_sending_resumes(job_id):
+    update_sending_resumes(job_id)
+
+def check_enddate():
+    logging.info("Starting end date check for all jobs")
+    current_date = datetime.now().date()
+    
+    jobs = jobs_collection.find({'end_date': {'$lte': current_date}})
+    
+    for job in jobs:
+        job_id = str(job['_id'])
+        logging.info(f"Processing job {job_id} with end date {job['end_date']}")
+        
+        # Chain the tasks
+        chain = (
+            task_update_getting_resumes.s(job_id) |
+            task_update_matching_resumes.s(job_id) |
+            task_update_sending_resumes.s(job_id)
+        )
+        chain.apply_async()
+
+    logging.info("End date check completed")
+
+# Schedule the check_enddate function to run daily
+@celery_app.task
+def scheduled_check_enddate():
+    check_enddate()
+
+# Set up the scheduled task
+celery_app.conf.beat_schedule = {
+    'check-enddate-daily': {
+        'task': 'process.scheduled_check_enddate',
+        'schedule': 86400,  # 24 hours in seconds
+    },
+}
