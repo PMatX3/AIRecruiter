@@ -275,45 +275,45 @@ def audio_to_text():
 
 @app.route('/pdf-to-text', methods=['POST'])
 def pdf_to_text():
-    print("PDF to text conversion started")
+    # print("PDF to text conversion started")
     try:
-        print(f"Request method: {request.json}")
+        # print(f"Request method: {request.json}")
         
         if 'file' not in request.files:
-            print("Error: No file part in the request")
+            # print("Error: No file part in the request")
             return jsonify({'error': 'No file part'}), 400
         
         file = request.files['file']
-        print(f"Received file: {file.filename}")
+        # print(f"Received file: {file.filename}")
         
         if file.filename == '':
-            print("Error: No selected file")
+            # print("Error: No selected file")
             return jsonify({'error': 'No selected file'}), 400
         
         if file:
-            print(f"Processing file: {file.filename}")
+            # print(f"Processing file: {file.filename}")
             # Extract text from PDF
             text = extract_text_from_pdf(file)
-            print(f"Text extracted from PDF, length: {len(text)}")
+            # print(f"Text extracted from PDF, length: {len(text)}")
 
             # Save the extracted text to the database
             result = text_data_collection.insert_one({'user_id': session['user']['_id'], 'text': text})
-            print(f"Text saved to database with ID: {result.inserted_id}")
+            # print(f"Text saved to database with ID: {result.inserted_id}")
 
             # Extract job information
             job_info = extract_job_info(text)
-            print("Job information extracted")
+            # print("Job information extracted")
             
             # Create or get job ID
             job_id = create_or_get_job(session['user']['_id'], job_info)
-            print(f"Job created or retrieved with ID: {job_id}")
+            # print(f"Job created or retrieved with ID: {job_id}")
 
-            print("PDF processing completed successfully")
+            # print("PDF processing completed successfully")
             return jsonify({'message': 'PDF processed and text saved to database.', 'job_id': job_id})
     except Exception as e:
         import traceback
-        print(f"Error in PDF to text conversion: {str(e)}")
-        print(traceback.format_exc())  # This will print the full stack trace
+        # print(f"Error in PDF to text conversion: {str(e)}")
+        # print(traceback.format_exc())  # This will print the full stack trace
         return jsonify({'error': 'An error occurred during PDF processing'}), 500
 
 @app.route('/save-resumes-embedding', methods=['GET'])
