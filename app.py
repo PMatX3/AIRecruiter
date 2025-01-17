@@ -4,7 +4,8 @@ from pydub import AudioSegment
 import openai
 from openai import OpenAI
 import json
-import os, time
+import traceback
+import os, time, random, string
 import requests
 from flask_socketio import SocketIO, emit
 from utils import extract_text_from_pdf, save_resumes_embedding, get_results
@@ -15,6 +16,7 @@ from mdit_py_plugins.front_matter import front_matter_plugin
 from mdit_py_plugins.footnote import footnote_plugin
 from IPython.display import Markdown
 import textwrap
+import jwt
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 from pymongo import MongoClient
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -25,7 +27,8 @@ from process import (
     update_getting_resumes,
     update_matching_resumes,
     update_sending_resumes,
-    update_process_status
+    update_process_status,
+    update_getting_resumes_celery
 )
 from datetime import datetime
 import base64
@@ -33,9 +36,16 @@ import io
 from PyPDF2 import PdfReader
 from celery import Celery
 from celery.app.control import Inspect
+import logging
+from datetime import timedelta
 
 # Load environment variables
 load_dotenv()
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s', filename='app.log', filemode='a')
+
+# Example usage of logging
+logging.info("Application startup")
 
 # AudioSegment.converter = "ffmpeg.exe"
 # AudioSegment.ffmpeg = "ffmpeg.exe"  # Some versions of pydub might require setting this as well
@@ -50,7 +60,7 @@ app.config['JWT_SECRET_KEY'] = os.getenv("JWT_SECRET_KEY")
 app.secret_key = os.getenv("SECRET_KEY")
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16 MB limit
 app.config['REQUEST_TIMEOUT'] = 300  # 5 minutes timeout
-jwt = JWTManager(app)
+jwt_manager = JWTManager(app)
 
 mongo_client = get_mongo_client()
 db = mongo_client.get_database('recruiter')
@@ -85,40 +95,49 @@ process_status = {
 # Configure Celery
 app.config['CELERY_BROKER_URL'] = 'redis://localhost:6379/0'
 app.config['CELERY_RESULT_BACKEND'] = 'redis://localhost:6379/0'
+print("celery broker url: ", app.config['CELERY_BROKER_URL'])
 celery = Celery(app.name, broker=app.config['CELERY_BROKER_URL'])
 celery.conf.update(app.config)
 
+
 def extract_job_info(text):
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key={GEMINI_API_KEY}"
+    try:
+        print("GEMINI_API_KEY__:", GEMINI_API_KEY)
 
-    # Payload to be sent in the POST request
-    payload = {"contents":[{"parts":[{"text":f"""Extract job information from the following text: {text}. Ensure to extract and include the following details but if not, don't include that section, formatted in markdown:
+        # url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key={GEMINI_API_KEY}"
+        url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=AIzaSyCAy0tBG3nXf4FhUsfy-1rZ9XAdT0_rJZg"
 
-    About the job: Provide the job introduction.
-    Who We Are: Offer a brief overview of the company.
-    Your New Role: Describe the job role.
-    Your Role Accountabilities: List the responsibilities and accountabilities.
-    Qualifications & Experience: Detail the required qualifications and experience.
-    Hybrid Working: Describe the working conditions.
-    How We Get Things Done: Summarize the company's guiding principles.
-    Championing Inclusion at [Company]: Include the company's diversity and inclusion statement.
-    For inquiries, include the contact email and mobile number if available.
-    Ensure the output includes:
+        # Payload to be sent in the POST request
+        payload = {"contents":[{"parts":[{"text":f"""Extract job information from the following text: {text}. Ensure to extract and include the following details but if not, don't include that section, formatted in markdown:
 
-    Job title (if available)
-    Complete description with all specified sections
-    Email (if available)
-    Mobile (if available)
-    If any of the sections are not specified in the text, don't include that respective section. The generated job description must contain all the points mentioned above and be presented in proper markdown format. I want to extract minimum text from the text provided. To Apply section must be : 'To Apply: Send you resume to airecruiter@gmail.com and must use 'job_id' in the subject line otherwise, it will not be considered'"""}]}]}
-    
-    headers = {
-        "Content-Type": "application/json"
-    }
+        About the job: Provide the job introduction.
+        Who We Are: Offer a brief overview of the company.
+        Your New Role: Describe the job role.
+        Your Role Accountabilities: List the responsibilities and accountabilities.
+        Qualifications & Experience: Detail the required qualifications and experience.
+        Hybrid Working: Describe the working conditions.
+        How We Get Things Done: Summarize the company's guiding principles.
+        Championing Inclusion at [Company]: Include the company's diversity and inclusion statement.
+        For inquiries, include the contact email and mobile number if available.
+        Ensure the output includes:
 
-    res = requests.post(url, data=json.dumps(payload), headers=headers)
-    all_items = res.json()['candidates'][0]['content']['parts'][0]['text']
-    print(all_items)
-    return all_items
+        Job title (if available)
+        Complete description with all specified sections
+        Email (if available)
+        Mobile (if available)
+        If any of the sections are not specified in the text, don't include that respective section. The generated job description must contain all the points mentioned above and be presented in proper markdown format. I want to extract minimum text from the text provided. To Apply section must be : 'To Apply: Send you resume to airecruiter@gmail.com and must use 'job_id' in the subject line otherwise, it will not be considered'"""}]}]}
+        
+        headers = {
+            "Content-Type": "application/json"
+        }
+        print("==============")
+        print("payload: ", payload)
+        res = requests.post(url, data=json.dumps(payload), headers=headers)
+        print("res: ", res.json())
+        all_items = res.json()['candidates'][0]['content']['parts'][0]['text']
+        return all_items
+    except:
+        return None
 
 @app.route('/register', methods=['GET','POST'])
 def register():
@@ -129,12 +148,17 @@ def register():
     phone = data.get('phone')
     email = data.get('email')
     password = data.get('password')
-
+    print("username: ", username)
+    print("phone: ", phone)
+    print("email: ", email)
+    print("password: ", password)
     if users_collection.find_one({'username': username}):
         return jsonify({'message': 'User already exists'}), 400
 
     hashed_password = generate_password_hash(password)
+    print("hashed_password: ", hashed_password)
     users_collection.insert_one({'username': username, 'phone': phone, 'email': email, 'password': hashed_password})
+    print("User registered successfully")
     return jsonify({'message': 'User registered successfully'}), 201
 
 @app.route('/login', methods=['GET','POST'])
@@ -160,6 +184,92 @@ def login():
 
     return jsonify({'access_token': access_token}), 200
 
+# @app.route('/forgot_password_template', methods=['GET'])
+# def forgot_password():
+    
+
+@app.route('/forgot_password', methods=['GET','POST'])
+def forgot_password():
+    if request.method == 'GET':
+        return render_template('forgot_password.html')
+    elif request.method == 'POST':
+        from email_test import send_email_2
+        from datetime import datetime, timedelta
+        DOMAIN = "https://www.yourbestrecruiter.ai"
+        data = request.get_json()
+
+        email = data['email']
+        user = users_collection.find_one({'email': email})
+        if not user:
+            return jsonify({'message': 'User not found'}), 404
+        
+        username = user['username']
+        exp = datetime.utcnow() + timedelta(hours=1)
+        reset_token = jwt.encode({'user_id': email, 'exp': exp}, app.secret_key, algorithm='HS256')
+        path = url_for('change_password', token=reset_token)
+        reset_link = f"{DOMAIN}{path}"
+        send_email_2([email], 'Reset Password link', username , reset_link)
+
+    return jsonify({'message': 'Password reset link sent to email'}), 200
+
+@app.route('/change_password', methods=['POST','GET'])
+def change_password():
+    if request.method == 'GET':
+        token = request.args.get('token', None)
+        print("token: ", token)
+        if token:
+            try:
+                decoded_token = jwt.decode(token, app.secret_key, algorithms=['HS256'])
+                email = decoded_token.get('user_id')
+                print("email: ", email)
+                user = users_collection.find_one({'email': email})
+                print("user: ", user)
+                if user:
+                    return render_template('change_password.html', user_id=email)
+                else:
+                    return jsonify({'message': 'User not found'}), 404
+            except jwt_manager.ExpiredSignatureError:
+                return 'Token has expired', 401
+            except jwt_manager.InvalidTokenError:
+                return 'Invalid token', 401
+        user_id = session.get('user_id')
+        return render_template('change_password.html', user_id=user_id)
+    if request.method == 'POST':
+        data = request.get_json()
+        email = data.get('hidden_email')
+        password = data.get('password')
+        print("email: ", email)
+        print("password: ", password)
+
+        users_collection.update_one({'email': email}, {'$set': {'password': generate_password_hash(password)}})
+        return redirect(url_for('login'))
+    
+@app.route('/terms_of_services', methods=['GET'])
+def terms_of_services():
+    return render_template('terms_services.html')
+
+@app.route('/privacy_policy', methods=['GET'])
+def privacy_policy():
+    return render_template('privacy_policy.html')
+
+@app.route('/change_password_template', methods=['POST'])
+def change_password_post():
+    return render_template('change_password.html')
+
+@app.route('/send_otp', methods=['POST'])
+def send_otp():
+    data = request.get_json()
+    email = data.get('email')
+    user = users_collection.find_one({'email': email})
+    if not user:
+        return jsonify({'message': 'User not found'}), 404
+
+    # Generate a random 6-digit OTP
+    otp = ''.join(random.choice(string.digits) for _ in range(6))
+    
+    
+    return jsonify({'message': 'OTP sent to email'}), 200
+
 @app.route('/logout')
 def logout():
     session.clear()
@@ -170,7 +280,7 @@ def home():
     if 'user' in session:
         return render_template('index.html')
     else:
-        return redirect(url_for('login'))
+        return render_template('home.html')
 
 def create_or_get_job(user_id, job_info):
     # Find the highest job number for this user
@@ -184,24 +294,29 @@ def create_or_get_job(user_id, job_info):
     else:
         job_number = 1
 
-    job_title = f'job_{job_number:03d}'
-
     existing_job = jobs_collection.find_one({
         'userid': user_id,
         'process_status.Creating Job description': 'not_started'
     })
-    updated_job_info = job_info.replace("job_id", job_title)
+    
+    job_title = f'job_{job_number:03d}'
+    
     if existing_job:
+        updated_job_info = job_info.replace("job_id", f"job_{str(existing_job['_id'])}")
         jobs_collection.update_one(
             {'_id': existing_job['_id']},
-            {'$set': {'job_info': updated_job_info, 'job_title': job_title}}
+            {'$set': {'job_info': updated_job_info, 
+                      'job_title': job_title,
+                      'job_id': str(existing_job['_id']),
+                      'edited': False
+                      }}
         )
         return str(existing_job['_id'])
     else:
         new_job = {
             'userid': user_id,
             'created_at': datetime.utcnow(),
-            'job_info': updated_job_info,
+            'job_info': job_info,
             'job_title': job_title,
             'edited': False,
             'process_status': {
@@ -213,6 +328,11 @@ def create_or_get_job(user_id, job_info):
             }
         }
         result = jobs_collection.insert_one(new_job)
+        updated_job_info = job_info.replace("job_id", f"job_{str(result.inserted_id)}")
+        jobs_collection.update_one(
+            {'_id': result.inserted_id},
+            {'$set': {'job_info': updated_job_info}}
+        )
         return str(result.inserted_id)
 
 @app.route('/audio-to-text', methods=['POST'])
@@ -275,46 +395,38 @@ def audio_to_text():
 
 @app.route('/pdf-to-text', methods=['POST'])
 def pdf_to_text():
-    # print("PDF to text conversion started")
     try:
-        # print(f"Request method: {request.json}")
-        
         if 'file' not in request.files:
-            # print("Error: No file part in the request")
             return jsonify({'error': 'No file part'}), 400
-        
+        print("file found")
         file = request.files['file']
-        # print(f"Received file: {file.filename}")
         
         if file.filename == '':
-            # print("Error: No selected file")
             return jsonify({'error': 'No selected file'}), 400
-        
-        if file:
-            # print(f"Processing file: {file.filename}")
-            # Extract text from PDF
+        print("file not empty")
+        # Determine file type based on the extension
+        file_extension = file.filename.rsplit('.', 1)[1].lower()
+        print("file extension: ", file_extension)
+        if file_extension not in ['pdf', 'txt']:
+            return jsonify({'error': 'Unsupported file type'}), 400
+        print("file extension supported")
+        if file_extension == 'pdf':
             text = extract_text_from_pdf(file)
-            # print(f"Text extracted from PDF, length: {len(text)}")
-
-            # Save the extracted text to the database
-            result = text_data_collection.insert_one({'user_id': session['user']['_id'], 'text': text})
-            # print(f"Text saved to database with ID: {result.inserted_id}")
-
-            # Extract job information
-            job_info = extract_job_info(text)
-            # print("Job information extracted")
-            
-            # Create or get job ID
-            job_id = create_or_get_job(session['user']['_id'], job_info)
-            # print(f"Job created or retrieved with ID: {job_id}")
-
-            # print("PDF processing completed successfully")
-            return jsonify({'message': 'PDF processed and text saved to database.', 'job_id': job_id})
+        elif file_extension == 'txt':
+            text = file.read().decode('utf-8')  # Assuming UTF-8 encoding for text files
+        print("text extracted")
+        print("text: ", text)
+        result = text_data_collection.insert_one({'user_id': session['user']['_id'], 'text': text})
+        
+        job_info = extract_job_info(text)
+        job_id = create_or_get_job(session['user']['_id'], job_info)
+        print("job_id: ", job_id)
+        return jsonify({'message': 'File processed and text saved to database.', 'job_id': job_id})
     except Exception as e:
         import traceback
-        # print(f"Error in PDF to text conversion: {str(e)}")
-        # print(traceback.format_exc())  # This will print the full stack trace
-        return jsonify({'error': 'An error occurred during PDF processing'}), 500
+        print(f"Error in PDF to text conversion: {str(e)}")
+        print(traceback.format_exc())  # This will print the full stack trace
+        return jsonify({'error': 'An error occurred during file processing'}), 500
 
 @app.route('/save-resumes-embedding', methods=['GET'])
 def save_resumes():
@@ -344,8 +456,11 @@ def chat():
 def get_process_status(job_id):
     job = jobs_collection.find_one({'_id': ObjectId(job_id)})
     if job:
-        return job['process_status']
-    return None
+        if 'log_message' in job:
+            print("log_message: ", job['log_message'])
+            return job['process_status'], job['log_message']
+        return job['process_status'], None
+    return None, None
 
 def reset_process_status(job_id):
     process_status = {
@@ -361,7 +476,10 @@ def reset_process_status(job_id):
     )
 
 @app.route('/process')
-def demo():
+def process():
+    # Check if 'user' is in session to determine if the user is logged in
+    if 'user' not in session:
+        return redirect(url_for('login'))
     return render_template('process.html')
 
 @app.route('/get_jobdesc/<job_id>', methods=['GET'])
@@ -391,6 +509,16 @@ def update_jobdesc():
     else:
         return jsonify({'error': 'Job not found or no changes made.'}), 404
 
+@app.route('/re-run-process', methods=['POST'])
+def re_run_process():
+    data = request.get_json()
+    job_id = data.get('job_id')
+    end_date = datetime.now() - timedelta(days=1)
+    print(f"=== end_date: {end_date}")
+    update_getting_resumes_celery.apply_async((job_id,), eta=str(end_date))
+    job_data = jobs_collection.find_one({'_id': ObjectId(job_id)})
+    return jsonify({'matched_resumes': job_data['matched_resumes']})
+
 @app.route('/start-process', methods=['GET'])
 def start_process():
     # Get all jobs from the collection
@@ -405,7 +533,7 @@ def start_process():
     
     for job in all_jobs:
         job_id = str(job['_id'])
-        
+        print("job_id: ==>", job_id)
         # Check if the job is already completed or in progress
         if any(status == "done" for status in job['process_status'].values()) or job_id in active_tasks:
             print(f"Job {job_id} is already completed or in progress")
@@ -426,17 +554,43 @@ def start_process():
         )
         
         # Start the process as a Celery task
-        run_process.delay(job_id)
+        print(f"====================== \n\n statred")
+        try:
+            run_process.delay(job_id)
+        except Exception as e:
+            print(f"Error in run_process: {str(e)}")
+            print(traceback.format_exc())
 
     return jsonify({'message': 'Process started for all unprocessed jobs.'})
 
+@app.route('/get-matched-resumes/<job_id>', methods=['GET'])
+def get_matched_resumes(job_id):
+    job = jobs_collection.find_one({'_id': ObjectId(job_id)})
+    return jsonify({'matched_resumes': job['matched_resumes']})
+
 @celery.task
 def run_process(job_id):
-    update_job_description(job_id)
-    update_job_posting(job_id)
-    # update_getting_resumes(job_id)
-    # update_matching_resumes(job_id)
-    # update_sending_resumes(job_id)
+    try:
+        update_job_description(job_id)
+    except Exception as e:
+        import traceback
+        print("print traceback \n", traceback.print_exc())
+        print(f"Error in update_job_description: {str(e)}")
+
+    try:
+        update_job_posting(job_id)
+    except Exception as e:
+        print(f"Error in update_job_posting: {str(e)}")
+        
+    
+
+    job = jobs_collection.find_one({'_id': ObjectId(job_id)})
+    update_process_status(job_id, "Getting resumes from portal", "in_progress", log_message=f"This process will run on {job['end_date'].date()}")
+    try:
+        if 'end_date' in job:
+            update_getting_resumes_celery.apply_async((job_id,), eta=job['end_date'])
+    except Exception as e:
+        print(f"Error in update_getting_resumes: {str(e)}")
 
 def check_and_queue_in_progress_jobs():
     try:
@@ -480,6 +634,7 @@ def check_and_queue_in_progress_jobs():
             # Check if this job is already in the Celery queue or running
             if job_id not in all_task_ids:
                 # If not, add it to the Celery queue
+                print("============")
                 run_process.apply_async((job_id,), task_id=job_id)
                 print(f"Added job {job_id} to Celery queue")
             else:
@@ -493,40 +648,47 @@ def check_and_queue_in_progress_jobs():
 
 @app.route('/status/<job_id>', methods=['GET'])
 def get_status(job_id):
-    process_status = get_process_status(job_id)
+    process_status, log_message = get_process_status(job_id)
     if process_status:
-        return jsonify(process_status)
+        return jsonify({'process_status': process_status, 'log_message': log_message})
     return jsonify({'error': 'Job not found'}), 404
 
 @app.route('/save-text', methods=['POST'])
 def save_text():
     data = request.get_json()
+    
     if 'text' not in data:
         return jsonify({'error': 'No text provided'}), 400
 
     text = data['text']
-
     job_info = extract_job_info(text)
+    if not job_info:
+        return jsonify({'error': 'Failed to extract job information from text'}), 400
     
     # Create or get job ID
     job_id = create_or_get_job(session['user']['_id'], job_info)
 
     return jsonify({'message': 'PDF processed and text saved to database.', 'job_id': job_id})
 
-@app.route('/upload-file', methods=['POST'])
-def upload_file():
-    if 'file' not in request.files:
-        return jsonify({'error': 'No file part'})
-    file = request.files['file']
-    if file.filename == '':
-        return jsonify({'error': 'No selected file'})
-    if file:
-        file.save(os.path.join('uploads', file.filename))
-        return jsonify({'message': 'File uploaded successfully', 'filename': file.filename})
-    return jsonify({'error': 'File upload failed'})
+# @app.route('/upload-file', methods=['POST'])
+# def upload_file():
+#     if 'file' not in request.files:
+#         return jsonify({'error': 'No file part'})
+#     file = request.files['file']
+#     if file.filename == '':
+#         return jsonify({'error': 'No selected file'})
+#     if file:
+#         file.save(os.path.join('uploads', file.filename))
+#         return jsonify({'message': 'File uploaded successfully', 'filename': file.filename})
+#     return jsonify({'error': 'File upload failed'})
 
 @app.route('/jobs', methods=['GET'])
 def get_jobs():
+    if not 'user' in session:
+        return jsonify({'error': 'User not authenticated'}), 401
+    if '_id' not in session['user']:
+        return jsonify({'error': 'User not authenticated'}), 401
+    
     current_user = session['user']['_id']
     print(current_user)
     user = users_collection.find_one({'_id': ObjectId(current_user)})
@@ -560,7 +722,7 @@ def get_all_jobs_progress():
 
         for job in jobs:
             job_id = str(job['_id'])
-            process_status = get_process_status(job_id)
+            process_status, log_message = get_process_status(job_id)
             if process_status:
                 steps = list(process_status.values())
                 completed_steps = steps.count('done')
@@ -599,6 +761,22 @@ def delete_job(job_id):
     except Exception as e:
         return jsonify({'error': 'Invalid job ID format'}), 400
 
+@app.route('/test', methods=['GET'])
+def test():
+    return render_template('test.html')
+
+@app.route('/save-interview', methods=['POST'])
+def save_interview():
+    try:
+        data = request.json
+        filename = f"interview_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        
+        with open(filename, 'w') as f:
+            json.dump(data, f, indent=2)
+            
+        return {'status': 'success'}, 200
+    except Exception as e:
+        return {'status': 'error', 'message': str(e)}, 500
 
 if __name__ == '__main__':
     app.run(debug=True, host="0.0.0.0", port=8000)

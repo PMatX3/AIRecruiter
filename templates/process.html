@@ -4,6 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="./static/images/favion2.png" type="image/png" style="height:26px;width:26px">
+
     <title>Process Display</title>
     <style>
         body {
@@ -333,8 +335,28 @@
             transition: background-color 0.3s;
         }
 
+        #startProcessBtn:hover {
+            background-color: #e0e0e0;
+        }
+
+        #startProcessBtn {
+            display: none;
+            margin-bottom: 20px;
+            padding: 10px 20px;
+            background-color: #f0f0f0;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
         #backToJobsBtn:hover {
             background-color: #e0e0e0;
+        }
+        .processButtons {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
         }
 
         .job-item {
@@ -389,6 +411,34 @@
         .failed-overlay:hover .tooltip {
             opacity: 1;
         }
+
+        .modern-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 16px;
+            text-align: left;
+            color: #2e7d32;
+        }
+
+        .modern-table th, .modern-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e8f5e9;
+        }
+
+        .modern-table th {
+            background-color: #f4f4f4;
+            color: #2e7d32;
+            font-weight: bold;
+        }
+
+        .modern-table tr:hover {
+            background-color: #bbeebf;
+        }
+
+        /* .modern-table tr:nth-child(even) {
+            background-color: #bbeebf;
+        } */
     </style>
 </head>
 
@@ -398,7 +448,10 @@
     </a>
     <h1>Recruitment Process</h1>
     <div class="container">
-        <button id="backToJobsBtn">Back to Jobs List</button>
+        <div id="processButtons">
+            <button id="backToJobsBtn">Back to Jobs List</button>
+            <button id="startProcessBtn" onclick="reRunProcess()">Start 4 Step Process again</button>
+        </div>
         <div id="jobListContainer">
             <h2>Jobs</h2>
             <ul id="jobList" class="job-list">
@@ -417,13 +470,13 @@
             <div class="panel">
                 <p>Publish the job posting on relevant platforms and job boards to attract potential candidates.</p>
             </div>
-            <button class="accordion" data-step="Getting resumes from portal">Step 3: Getting candidate applications from portal</button>
+            <button class="accordion gettingResumesFromPortal" id="gettingResumesFromPortal" data-step="Getting resumes from portal">Step 3: Getting candidate applications from portal</button>
             <div class="panel">
                 <p>Collect and organize resumes submitted by applicants through the designated portal.</p>
             </div>
-            <button class="accordion" data-step="Matching resumes with job description">Step 4: Matching candidates with job description</button>
+            <button class="accordion gettingMatchedResumes" id="gettingMatchedResumes" data-step="Matching resumes with job description">Step 4: Matching candidates with job description</button>
             <div class="panel">
-                <p>Analyze and compare received resumes against the job description to identify suitable candidates.</p>
+                <p id="matchedResumesText">Analyze and compare received resumes against the job description to identify suitable candidates.</p>
             </div>
             <button class="accordion" data-step="Sending resumes to your email">Step 5: Sending the list of best candidates to your email</button>
             <div class="panel">
@@ -431,7 +484,7 @@
             </div>
         </div>
     </div>
-
+    
     <div id="jobDescPopup" class="popup">
         <span class="close-btn">&times;</span>
         <h3>Job Description</h3>
@@ -443,6 +496,20 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script>
+        let CurrentJobId = null;
+        async function reRunProcess() {
+            console.log("CurrentJobId: ", CurrentJobId);
+            response = await fetch('/re-run-process', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ job_id: CurrentJobId }),
+                });
+                const data = await response.json();
+                console.log("res data ==== data: ", data);
+                document.getElementsByClassName("accordion")[2].classList.add("running");
+            }
         // Defer non-critical JavaScript
         window.addEventListener('load', function () {
             const accordions = document.getElementsByClassName("accordion");
@@ -462,6 +529,7 @@
             // Use event delegation for dynamic elements
             jobList.addEventListener('click', function(e) {
                 if (e.target.classList.contains('job-title')) {
+                    CurrentJobId = e.target.closest('.job-item').dataset.jobId;
                     selectJob(e.target.closest('.job-item').dataset.jobId);
                 } else if (e.target.closest('.delete-job')) {
                     e.stopPropagation();
@@ -469,17 +537,28 @@
                 }
             });
 
-            function updateAccordionStatus(accordion, status) {
+            function updateAccordionStatus(accordion, status, log_message) {
                 accordion.classList.remove("running", "completed");
                 if (status === "in_progress") {
                     accordion.classList.add("running");
                     accordion.nextElementSibling.style.maxHeight = accordion.nextElementSibling.scrollHeight + "px";
                 } else if (status === "done") {
                     accordion.classList.add("completed");
-                    accordion.nextElementSibling.style.maxHeight = null;
+                    // accordion.nextElementSibling.style.maxHeight = null;
                 } else if (status === "failed") {
                     accordion.classList.add("failed");
-                    accordion.nextElementSibling.style.maxHeight = null;
+                    // accordion.nextElementSibling.style.maxHeight = null;
+                }
+
+                if (log_message && status != "done" && (accordion.textContent === log_message || accordion.textContent === 'Step 3: Getting candidate applications from portal')) {
+                    let data_div = document.getElementById('gettingResumesFromPortal')
+                    document.getElementById('gettingResumesFromPortal').textContent = log_message;
+                }                
+                if (status === "done" && accordion.textContent === log_message){
+                    document.getElementById('gettingResumesFromPortal').textContent = 'Step 3: Getting candidate applications from portal';
+                }
+                if (status === "done" && accordion.textContent === 'Step 4: Matching candidates with job description'){
+                    startProcessBtn.style.display = 'block';
                 }
             }
 
@@ -495,12 +574,28 @@
                             console.error('Error:', data.error);
                             return;
                         }
+                        if (data['process_status']['Matching resumes with job description'] === 'done'){
+                            fetch(`/get-matched-resumes/${selectedJobId}`)
+                                .then(response => response.json())
+                                .then(data => {
+                                    console.log("data ::: ", data);
+                                    let matchedResumesText = document.getElementById('matchedResumesText');
+                                    let html_content = '<table class="modern-table"><tr><th>Name</th><th>Score</th><th>Explanation</tr>';
+                                    data.matched_resumes.forEach(resume => {
+                                        html_content += `<tr><td>${resume.candidate_name}</td><td>${resume.score}</td><td>${resume.analysis.split('\n')[3].split(':')[1]}</td></tr>`;   
+                                    });
+                                    html_content += '</table>';
+                                    matchedResumesText.innerHTML = html_content;
+                                });
+                        }
+                        
                         for (let accordion of accordions) {
                             const step = accordion.getAttribute('data-step');
-                            updateAccordionStatus(accordion, data[step]);
+                            updateAccordionStatus(accordion, data['process_status'][step], data['log_message']);
                         }
                         const progress = calculateProgress(data);
                         updateJobProgress(selectedJobId, progress);
+                        
                     })
                     .catch(error => console.error('Error:', error))
                     .finally(() => {
@@ -508,7 +603,7 @@
                             loaderOverlay.style.display = 'none';
                         }
                     });
-            }
+                }
 
             function calculateProgress(data) {
                 const steps = Object.values(data);
@@ -564,6 +659,7 @@
                             jobList.innerHTML = 'No jobs found';
                             return;
                         }
+                        console.log("jobs: ", jobs);
                         jobs.forEach(job => {
                             const li = document.createElement('li');
                             li.className = 'job-item';
@@ -604,7 +700,6 @@
                 jobList.style.display = 'none';
                 processContainer.style.display = 'block';
                 backToJobsBtn.style.display = 'block';
-                
                 clearInterval(statusUpdateInterval);
                 statusUpdateInterval = setInterval(() => fetchStatus(), 5000);
             }
@@ -613,6 +708,7 @@
                 fetch(`/get_jobdesc/${jobId}`)
                     .then(response => response.json())
                     .then(data => {
+                        console.log("data: ", data);
                         jobDescMarkdown.innerHTML = data.description;
                         jobDescPopup.style.display = data.edited ? 'none' : 'block';
                     })

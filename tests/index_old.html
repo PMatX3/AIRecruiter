@@ -1,0 +1,1350 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="./static/images/favion2.png">
+    <title>Recruiter AI - Hiring with AI-powered Candidate Selection</title>
+    
+    <!-- Load Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+
+    <!-- SweetAlert2 CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@10/dist/sweetalert2.min.css">
+
+    <!-- SweetAlert2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    
+    <!-- Static CSS-->
+    <link rel="stylesheet" href="../static/CSS/style.css"/>
+    <style>
+        
+    </style>
+</head>
+
+<body>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
+    <nav class="navbar">
+        <h1 onclick="window.location.href='/'" >Recruiter AI</h1>
+        <div class="nav-links">
+            <a href="/process" class="nav-link">All Process</a>
+            <a href="/logout" class="logout-button">Logout</a>
+        </div>
+    </nav>
+
+    <div id="uploadData">
+        <h2>Upload Your Job Description</h2>
+        <p>You can upload your job description in three ways:</p>
+        <div>
+            <h3>1. Text Input</h3>
+            <input type="file" id="pdfInput" accept=".pdf,.txt">
+            <p style="font-size: 13px; color: gray;">
+                * Note: Only PDF and TXT file types are allowed for upload.
+            </p>
+            <button onclick="uploadPDF()">Process PDF/TXT</button>
+            
+        </div>
+
+        <div>
+            <h3>2. Voice Input</h3>
+            <div>
+                <div class="question" id="question">Talk to an avatar</div>
+                <div class="answer" id="answer"></div>
+                <button id="startButton">Start</button>
+            </div>
+            <div id="videoPopup">
+                <video id="questionVideo">
+                    <source src="../static/Untitled_Video.mp4" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+                <div id="instructions">
+                    Say "skip" to skip the question, "repeat" to repeat the question
+                </div>
+                <button id="cancelButtonVideo" onclick="closeVideoPopupAndRedirect()">Cancel</button>
+            </div>
+        </div>
+
+        <div>
+            <h3>3. Talk to AI</h3>
+            <button id="openAIChatBtn" class="primary-button">Chat with AI</button>
+        </div>
+    </div>
+    <div class="overlay" id="overlay"></div>
+    <div class="loader" id="loader"></div>
+    <div id="aiChatPopup" class="popup">
+        <span class="close-btn" onclick="openCenteredAlert()">&times;</span>
+        <h3>Interactive AI Assistant</h3>
+        <div class="chat-container" >
+            <div id="chat-output"></div>
+            <div class="status-indicator" id="status"></div>
+            <button id="voice-btn">Start Conversation</button>
+        </div>
+    </div>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"
+        integrity="sha384-2huaZvOR9iDzHqslqwpR87isEmrfxqyWOF7hr7BY6KG0+hVKLoEXMPUJw3ynWuhO"
+        crossorigin="anonymous"></script>
+    <script>
+        // document.getElementById('send-button').addEventListener('click', function () {
+        //     const userQuestion = document.getElementById('user-input').value;
+        //     displayUserMessage(userQuestion);
+        //     fetchBotResponse(userQuestion);
+        //     document.getElementById('user-input').value = '';
+        // });
+
+        // function displayUserMessage(message) {
+        //     const chatMessages = document.getElementById('chat-messages');
+        //     chatMessages.innerHTML += `<div class="user-message">${escapeHtml(message)}</div>`;
+        //     chatMessages.scrollTop = chatMessages.scrollHeight;
+        // }
+
+        // function updateBotMessage(message) {
+        //     const chatMessages = document.getElementById('chat-messages');
+        //     let lastBotMessage = chatMessages.querySelector('.bot-message:last-child');
+
+        //     if (lastBotMessage) {
+        //         // Accumulate the message content
+        //         lastBotMessage.dataset.content = (lastBotMessage.dataset.content || '') + message;
+        //         // Parse the entire accumulated content
+        //         lastBotMessage.innerHTML = marked.parse(lastBotMessage.dataset.content);
+        //     } else {
+        //         // Create a new bot message div
+        //         const newBotMessage = document.createElement('div');
+        //         newBotMessage.className = 'bot-message';
+        //         newBotMessage.dataset.content = message;
+        //         newBotMessage.innerHTML = marked.parse(message);
+        //         chatMessages.appendChild(newBotMessage);
+        //     }
+        //     chatMessages.scrollTop = chatMessages.scrollHeight;
+        // }
+
+        // async function fetchBotResponse(question) {
+        //     try {
+        //         const response = await fetch('/chat', {
+        //             method: 'POST',
+        //             headers: {
+        //                 'Content-Type': 'application/json',
+        //             },
+        //             body: JSON.stringify({ query: question }),
+        //         });
+
+        //         if (!response.ok) {
+        //             throw new Error(`HTTP error! status: ${response.status}`);
+        //         }
+
+        //         const reader = response.body.getReader();
+        //         const decoder = new TextDecoder();
+        //         let aiResponse = '';
+
+        //         function readStream() {
+        //             reader.read().then(({ done, value }) => {
+        //                 if (done) {
+        //                     return;
+        //                 }
+        //                 const chunk = decoder.decode(value);
+        //                 aiResponse += chunk;
+        //                 updateBotMessage(aiResponse);
+        //                 readStream();
+        //             });
+        //         }
+
+        //         readStream();
+        //     } catch (error) {
+        //         console.error('Error:', error);
+        //         updateBotMessage('An error occurred while fetching the response.');
+        //     }
+        // }
+
+        // Global variables
+        const questions = [
+            { text: "What is the name of your company?", start: 0, end: 2 },
+            { text: "What is your company's mission statement?", start: 2, end: 5 },
+            { text: "What are the core values of your company?", start: 5, end: 8 },
+            { text: "What is the job title?", start: 8, end: 10.5 },
+            { text: "What is the department the role belongs to?", start: 10.5, end: 14 },
+            { text: "What are the key responsibilities of the role? Be specific and list out the main tasks and duties.", start: 14, end: 21 }
+        ];
+        let currentQuestionIndex = 0;
+        let recognition;
+        let qaPairs = [];
+        let silenceTimer;
+        const SILENCE_THRESHOLD = 3000; // 10 seconds in milliseconds
+        let questionRepeatCount = 0;
+        const MAX_REPEATS = 1;
+
+        // Event Listeners
+        document.getElementById('startButton').addEventListener('click', function () {
+            askQuestion();
+        });
+
+        const preloadImage = new Image();
+            preloadImage.src = "../static/images/ai_img6.jpeg";
+            preloadImage.onload = function () {
+                document.querySelector('.chat-container').style.backgroundImage = `url(${preloadImage.src})`;
+        };
+
+        document.getElementById('cancelButtonVideo').addEventListener('click', function () {
+            if (recognition) {
+                closeVideoPopupAndRedirect();
+                recognition.stop();
+            }
+            document.getElementById('question').innerText = 'Conversation cancelled.';
+            document.getElementById('answer').innerText = '';
+            currentQuestionIndex = 0;
+        });
+
+        // File Upload Functions
+        function uploadAudio() {
+            var file = document.getElementById('audioInput').files[0];
+            if (!file) {
+                showFloatingMessage('Please choose a file first.');
+                return;
+            }
+            var formData = new FormData();
+            formData.append('file', file);
+            ajaxCall('/audio-to-text', formData);
+        }
+
+        function uploadPDF() {
+            var file = document.getElementById('pdfInput').files[0];
+            if (!file) {
+                showFloatingMessage('Please choose a file first.');
+                return;
+            }
+            var formData = new FormData();
+            console.log("file: ", file);
+            formData.append('file', file);
+            console.log("formData: ", formData);
+            ajaxCall('/pdf-to-text', formData);
+        }
+
+        function ajaxCall(url, formData) {
+            $('#overlay').show();
+            $('#loader').show();
+            $.ajax({
+                url: url,
+                type: 'POST',
+                data: formData,
+                contentType: false,
+                processData: false,
+                timeout: 60000, 
+                success: function (data, textStatus, xhr) {
+                    if (xhr.status === 200) {
+                        $('#loader').hide();
+                        $('#overlay').hide();
+                        window.location.href = '/process';
+                        $.ajax({
+                            url: '/save-resumes-embedding',
+                            type: 'GET',
+                            success: function (response) {
+                                // Handle success if needed
+                            },
+                            error: function () {
+                                // Handle errors if the request fails
+                            }
+                        });
+                    } else {
+                        showFloatingMessage('Error in conversion with status code: ' + xhr.status);
+                        $('#loader').hide();
+                        $('#overlay').hide();
+                    }
+                },
+                error: function (xhr) {
+                    showFloatingMessage('Error in conversion');
+                    $('#loader').hide();
+                    $('#overlay').hide();
+                }
+            });
+        }
+
+        function showFloatingMessage(message) {
+            const floatingMessage = $('<div class="floating-message"></div>').text(message);
+            $('body').append(floatingMessage);
+            setTimeout(function () {
+                floatingMessage.remove();
+            }, 3000);
+        }
+        function openCenteredAlert() {
+            Swal.fire({
+                title: 'Close AI Assistant?',
+                text: 'Are you sure you want to close the AI Assistant? Any unsaved progress will be lost.',
+                icon: 'warning',
+                showCancelButton: true, // Enables the Cancel button
+                confirmButtonText: 'Yes, Close',
+                cancelButtonText: 'Cancel',
+                reverseButtons: true, // Optional: swaps the order of the buttons
+                preConfirm: () => {
+                    // Action when "OK" is pressed
+                    closeAIChat();
+                }
+            });
+        }
+
+        // Voice Input Functions
+        function askQuestion() {
+            if (currentQuestionIndex < questions.length) {
+                const question = questions[currentQuestionIndex];
+
+                // Show video popup and play the video for the question duration
+                const videoPopup = document.getElementById('videoPopup');
+                const questionVideo = document.getElementById('questionVideo');
+                videoPopup.style.display = 'block';
+                questionVideo.currentTime = question.start;
+
+                // Add error handling for video playback
+                questionVideo.onerror = function() {
+                    console.error('Video playback error');
+                    handleVideoError();
+                };
+
+                // Ensure video is fully loaded before playing
+                questionVideo.oncanplay = function() {
+                    questionVideo.play().catch(function(error) {
+                        console.error('Video play error:', error);
+                        handleVideoError();
+                    });
+                };
+
+                questionVideo.ontimeupdate = function () {
+                    if (questionVideo.currentTime >= question.end) {
+                        questionVideo.pause();
+                        document.getElementById('question').innerText = 'Listening...';
+                        startListening(question.text);
+                    }
+                };
+
+                // Add a timeout in case the video doesn't trigger the timeupdate event
+                setTimeout(function() {
+                    if (questionVideo.paused && currentQuestionIndex === questions.indexOf(question)) {
+                        console.log('Video playback timed out');
+                        handleVideoError();
+                    }
+                }, (question.end - question.start + 2) * 1000); // Add 2 seconds buffer
+
+            } else {
+                document.getElementById('answer').innerText = '';
+                saveText();
+            }
+        }
+
+        function handleVideoError() {
+            document.getElementById('question').innerText = questions[currentQuestionIndex].text;
+            startListening(questions[currentQuestionIndex].text);
+        }
+
+        function startListening(question) {
+            if (recognition) {
+                recognition.stop();
+            }
+            recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+            recognition.lang = 'en-US';
+            recognition.interimResults = true;
+            recognition.continuous = true;
+            recognition.start();
+
+            let finalTranscript = '';
+            let isListening = true;
+            let hasStartedSpeaking = false;
+
+            recognition.onresult =  async function (event) {
+                let interimTranscript = '';
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    if (event.results[i].isFinal) {
+                        finalTranscript += event.results[i][0].transcript;
+                    } else {
+                        interimTranscript += event.results[i][0].transcript;
+                    }
+                }
+
+                // Reset the silence timer whenever we get a result
+                resetSilenceTimer();
+
+                // Set flag to indicate user has started speaking
+                hasStartedSpeaking = true;
+            };
+
+            recognition.onend = function () {
+                if (isListening) {
+                    recognition.start();
+                }
+            };
+
+            recognition.onerror = function (event) {
+                console.error('Speech recognition error:', event.error);
+                document.getElementById('answer').innerText = 'Sorry, I could not understand the audio. Please try again.';
+                isListening = false;
+                processAnswer(finalTranscript);
+            };
+
+            function resetSilenceTimer() {
+                clearTimeout(silenceTimer);
+                silenceTimer = setTimeout(() => {
+                    isListening = false;
+                    recognition.stop();
+                    if (hasStartedSpeaking) {
+                        processAnswer(finalTranscript);
+                    } else {
+                        handleNoResponse();
+                    }
+                }, SILENCE_THRESHOLD);
+            }
+
+            resetSilenceTimer();
+
+            function handleNoResponse() {
+                if (questionRepeatCount < MAX_REPEATS) {
+                    questionRepeatCount++;
+                    document.getElementById('answer').innerText = 'No response detected. Repeating the question.';
+                    setTimeout(() => {
+                        askQuestion();
+                    }, 2000);
+                } else {
+                    document.getElementById('answer').innerText = 'No response detected. Moving to the next question.';
+                    questionRepeatCount = 0;
+                    currentQuestionIndex++;
+                    setTimeout(() => {
+                        askQuestion();
+                    }, 2000);
+                }
+            }
+
+            function processAnswer(answer) {
+                questionRepeatCount = 0; // Reset repeat count for next question
+                if (answer.toLowerCase().includes('skip')) {
+                    document.getElementById('answer').innerText = 'Question skipped.';
+                    if (currentQuestionIndex < questions.length - 1) {
+                        currentQuestionIndex++;
+                        setTimeout(askQuestion, 2000);
+                    } else {
+                        saveText();
+                    }
+                } else if (answer.toLowerCase().includes('repeat')) {
+                    document.getElementById('answer').innerText = 'Repeating question...';
+                    setTimeout(askQuestion, 2000);
+                } else {
+                    qaPairs.push(`Question: ${question}\nAnswer: ${answer}`);
+                    currentQuestionIndex++;
+                    setTimeout(askQuestion, 2000);
+                }
+            }
+        }
+
+        function saveText() {
+            console.log ("qaPairs in save function: ", qaPairs);
+            text = qaPairs.map(pair => `Question: ${pair.question}\nAnswer: ${pair.answer}`).join('\n\n');
+            fetch('/save-text', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ text: text })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    closeAIChat(); // Close the popup
+                    window.location.href = '/process';
+                    $.ajax({
+                        url: '/save-resumes-embedding',
+                        type: 'GET',
+                        success: function (response) {
+                            console.log('Embeddings saved successfully');
+                        },
+                        error: function () {
+                            console.error('Error saving embeddings');
+                        }
+                    });
+                    console.log('Success:', data);
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
+                });
+        }
+
+        function closeVideoPopupAndRedirect() {
+            const videoPopup = document.getElementById('videoPopup');
+            videoPopup.style.display = 'none';
+            window.location.href = '/';
+        }
+
+        // Handle the runtime.lastError (if using Chrome extensions)
+        if (typeof chrome !== 'undefined' && chrome.runtime) {
+            chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+                if (chrome.runtime.lastError) {
+                    console.error('runtime.lastError:', chrome.runtime.lastError.message);
+                    sendResponse({ success: false, error: chrome.runtime.lastError.message });
+                    return true; // Indicate an asynchronous response
+                }
+                sendResponse({ success: true });
+                return true; // Indicate an asynchronous response
+            });
+        }
+
+        // new functionality
+
+        // Gemini API configuration (replace with your actual API key and endpoint)
+        const GEMINI_API_KEY = 'AIzaSyDJnRYm3-t06ks4zrBFyEglV6qJyFvn8Qo';
+        const GEMINI_API_ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent';
+
+        const voiceChatOutputElement = document.getElementById('chat-output');
+        const voiceChatBtn = document.getElementById('voice-btn');
+
+        /*
+        const voiceChatQuestions = [
+            "What is the name of your company?",
+            "What is your company's mission statement?",
+            "What are the core values of your company?",
+            "What is the job title?",
+            "What is the department the role belongs to?",
+            "What are the key responsibilities of the role? Be specific and list out the main tasks and duties.",
+        ];
+        */
+        
+        const voiceChatQuestions = [
+            "What is the job title or position you want to be filled?",
+            "What does your ideal candidate for this role look like?",
+            "What are the three most important characteristics or qualities you're looking for in the person filling this role?",
+            "What are the main responsibilities for this position?",
+            "What specific experiences are required or highly valued for the role?",
+            "Can you briefly describe the work environment?",
+            "Can you describe the company culture in a few sentences?",
+            "Is there a clear career progression or growth path for the candidates in this role?",
+            "What is the ideal starting date for this position?",
+            "What is the salary range for the role?",
+            "Are there any specific skills or qualifications the candidate must have?",
+            "Is the role hybrid? If so, how many days per week will the person be required to be in the office?",
+            "What are the key performance targets or milestones for the person in this role?"
+        ] 
+
+        // ques
+        /*
+        const voiceChatQuestions = [
+            "What is the job title or position you want to be filled?",
+            "Can you briefly describe the company information?",
+            "What are the three most important characteristics or qualities you're looking for in the person filling this role?",
+            "What are the main responsibilities for this position?",
+            "Can you briefly describe the work environment?",
+            "Can you describe the company culture in a few sentences?",
+            "What is the ideal starting date for this position?",
+            "What is the salary range for the role?",
+            "Are there any specific skills or qualifications the candidate must have?",
+            "Is the role hybrid? If so, how many days per week will the person be required to be in the office?",
+            "What are the key performance targets or milestones for the person in this role?"
+        ]*/
+
+        let voiceChatQuestionIndex = 0;
+        let voiceChatHistory = [];
+        let voiceChatRecognition = null;
+        const voiceChatSynth = window.speechSynthesis;
+        let isVoiceChatActive = false;
+        let recognitionTimeout = null;
+        let noSpeechCount = 0;
+        let MAX_NO_SPEECH_ATTEMPTS  = 2;
+        let isBotMessageAdded   = false;
+
+        let voiceChatData = {
+            timestamp: new Date().toISOString(),
+            responses: {}
+        };
+
+        // Function to update qapairs with new Q&A
+        function updateQAPairs(question, answer) {
+            qaPairs.push({
+                question: question,
+                answer: answer
+            });
+        }
+
+        function speakVoiceChat(text) {
+            isBotSpeaking  = true;
+            console.log('Speaking:', text);
+            
+            // Cancel any ongoing speech
+            if (voiceChatSynth.speaking) {
+                voiceChatSynth.cancel();
+            }
+
+            const utterance = new SpeechSynthesisUtterance(text);
+            const voices = speechSynthesis.getVoices();
+            
+            const studioVoice = voices.find(voice => voice.name === "Microsoft Zira - English (United States)");
+
+            if (studioVoice) {
+                utterance.voice = studioVoice;
+            }
+            
+            utterance.onstart = () => {
+                console.log('Speech started');
+                updateVoiceChatStatus('Speaking...');
+            };
+
+            utterance.onend = () => {
+                console.log('Speech ended');
+                updateVoiceChatStatus('');
+                startVoiceChatListening();
+                // Only start listening after the bot has finished speaking
+               /* setTimeout(() => {
+                    if (!isVoiceChatActive) {
+                        console.log(" 1153 startVoiceChatListening ")
+                        
+                    }
+                }, 1000); */
+            };
+
+            utterance.onerror = (event) => {
+                console.error('Speech error:', event);
+                updateVoiceChatStatus('Error speaking');
+            };
+
+            voiceChatSynth.speak(utterance);
+            // Only add bot message if it's not already displayed
+            if (!voiceChatHistory.includes(text)) {
+                addVoiceChatBotMessage(text);
+                voiceChatHistory.push(text);
+            }
+        }
+
+        function addVoiceChatMessage(message, isUser = false) {
+            const messageElement = document.createElement('div');
+            messageElement.textContent = message;
+            messageElement.className = isUser ? 'user-message' : 'bot-message';
+            voiceChatOutputElement.appendChild(messageElement);
+            voiceChatOutputElement.scrollTop = voiceChatOutputElement.scrollHeight;
+        }
+
+        async function addVoiceChatUserMessage(message) {
+            addVoiceChatMessage(message, true);
+        }
+
+        function addVoiceChatBotMessage(message) {
+            addMessage(message, false);  // Call the function to add bot message  // Resolve the promise after the bot message is added
+        }
+
+        async function callGeminiAPI(userResponse) {
+            // Don't process if interview is complete
+            if (voiceChatQuestionIndex >= voiceChatQuestions.length) {
+                return null;
+            }
+
+            try {
+                const prompt = {
+                    contents: [{
+                        parts: [{     // Prompt
+                            text: `You are a very helpful HR professional. Your goal is to have a natural conversation with the user
+to gather all the information needed for creating a comprehensive job description. Use
+open-ended questions and follow-up prompts to encourage detailed responses. After the
+conversation, summarize the gathered information in the dictated outline. This is the only goal
+you need to accomplish in this conversation. Do not allow the conversation steer away from
+extracting information.: Your objective is to extract information about:
+1. The role or position that the user wants to be filled
+2. The user’s ideal person for the role
+3. What are the top three characteristics in the person who the user looking for?
+4. What are the responsibilities of the role?
+5. What experiences are important?
+6. Can the user describe the work environment?
+7. Can the user describe the culture of the company?
+8. What are the perks of the role?
+9. Is there a clear career path for the person in the role?
+10. What is the ideal starting date for the position?
+11. What is the salary range for the role?
+12. Are there any specific skills that the person has to have?
+13. Is the role a hybrid role? If yes, how many days are they expected to be in the office?
+14. What are the major targets or milestones for the role?
+Be responsive to the user's answers, asking for clarification or more details when needed. If the
+user seems unsure about a topic, offer examples or suggestions  in very short line to help them think it through.
+Emphasize at the beginning of the conversation that the more detailed their responses are, the
+better their final content plan will be.
+
+Remember:
+- Adapt your language to the user's level of expertise. Explain concepts if they seem unfamiliar
+with content marketing terms.
+- ask only questions only which is defined didn't ask questions in detail.
+- If the user provides information that fits multiple categories, make note of it accordingly.
+- It's okay if you don't get perfect information for every category. Work with what the user
+provides.
+- You do not need to ask about exact dates or overly specific timings.
+- If the user provides a brief answer about the Role Information,work environment,company culture,etc do not ask for additional details
+- If a response from the user answers multiple questions from "Information to Gather," you may
+consider each of them answered. You do not need to ask questions that have already been
+answered.
+
+
+Language Guidelines:
+[1. Language should be incredibly straightforward and easy to understand.
+2. Write at a 3rd-5th grade reading level.
+3. Keep tone informal, unprofessional, colloquial, and light.
+4. Vary your sentence structure.
+5. You may use acknowledgements and affirmations after the user's responses, but vary them
+and don't use them every time. We don't want to sound robotic.
+6. Do not ask the questions from "Information to Gather" verbatim. Instead, edit the questions so
+they follow the language guidelines, but extract the same information.]
+
+Tone Guidelines:
+[
+1.Use straightforward, easy-to-understand language.
+2.Write at a 3rd-5th grade reading level.
+3.Maintain a friendly, informal, and conversational tone.
+4.Acknowledge answers naturally but don’t overuse affirmations.
+5.Use varied sentence structures to avoid sounding robotic.]
+
+Conversation Flow Guidelines:
+[1. Only ask one question at a time.
+2. Accept short or detailed responses without prompting for further clarification unless the answer is unclear.
+2. If the user doesn't know the answer to an individual question, that's ok. Just move on to the
+next bit of information to gather.
+3. If the user's answer doesn't make sense in the context of the question, Use concise language to explain questions or concepts when the user seems uncertain. Avoid lengthy examples.
+of the user's time.
+5. If the user is confused by a question and asks for clarification, clarify in short line.
+6. If the user provides a brief answer about the Role Information,work environment,company culture,etc do not ask for additional details
+7. If a response from the user answers multiple questions from "Information to Gather," you may
+consider each of them answered. You do not need to ask questions that have already been
+answered.
+8. When the user starts speaking, stop typing and only listen.
+9. After you have gathered ALL of the given "Information to gather," end the conversation by
+asking if the user has any other information they forgot to add. If not, thank the user for their
+time and politely sign off.]
+Outline to fill out at the end of the conversation
+Role Information
+[Summarise the ideal person for the role here]
+Company Information
+[Summarize the company information here]
+Expertise:
+[List the main areas of expertise for the role here]
+Roles & Responsibilities
+[List the roles and responsibilities here]
+Starting date
+[State the proposed starting date for the role here]
+Your conversation should feel natural and helpful, not like a rigid questionnaire. Adapt to the
+user’s needs and knowledge level throughout the interaction.
+
+Please evaluate the user's answer and respond in the following format:
+{
+    "isValid": boolean,
+    "feedback": "Single concise response with guidance if needed"
+}
+
+Question: ${voiceChatQuestions[voiceChatQuestionIndex]}
+User's Answer: ${userResponse}`
+                        }]
+                    }]
+                };
+
+                console.log('Request body:', JSON.stringify(prompt)); // Debug log
+
+                const response = await fetch(`${GEMINI_API_ENDPOINT}?key=${GEMINI_API_KEY}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(prompt)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    console.error('API Error Details:', errorData);
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                console.log(' 1228 API Response:', data);
+
+                if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
+                    throw new Error('Invalid API response format');
+                }
+
+                const botResponse = data.candidates[0].content.parts[0].text;
+                let parsedResponse;
+                try {
+                    // Clean the response by removing markdown code blocks and finding the JSON object
+                    const cleanedResponse = botResponse.replace(/```json\n|\n```/g, '').trim();
+                    parsedResponse = JSON.parse(cleanedResponse);
+                } catch (error) {
+                    console.error('Failed to parse API response:', error);
+                    console.log('Raw response:', botResponse); // Add this for debugging
+                    return {
+                        isValid: false,
+                        feedback: "I couldn't properly evaluate your response.",
+                        suggestion: "Could you please provide more details?"
+                    };
+                }
+
+                return parsedResponse;
+            } catch (error) {
+                console.error('Gemini API Error:', error);
+                return {
+                    isValid: false,
+                    feedback: "There was an error processing your response.",
+                    suggestion: "Could you please try again?"
+                };
+            }
+        }
+
+        function startVoiceChat() {
+            voiceChatBtn.disabled = true;
+            voiceChatQuestionIndex = 0;
+            voiceChatHistory = [];
+            askNextVoiceChatQuestion();
+        }
+        
+        
+
+        function askNextVoiceChatQuestion() {
+            let askedQuestions = []; // This array keeps track of asked questions
+            // Check if there are more questions to ask
+            if (voiceChatQuestionIndex < voiceChatQuestions.length) {
+                const question = voiceChatQuestions[voiceChatQuestionIndex];
+                
+                // Check if this question has already been asked
+                if (!askedQuestions.includes(question)) {
+                    askedQuestions.push(question); // Mark question as asked
+                    updateVoiceChatStatus('Speaking question...');
+                    let queTimeOut = calculateDynamicDelay(question); // Calculate the dynamic delay based on the question
+
+                    // Speak the question out loud
+                    speakVoiceChat(question);
+                } else {
+                    // If the question was already asked, skip it and move to the next
+                    voiceChatQuestionIndex++;
+                    askNextVoiceChatQuestion(); // Recursive call to ask the next question
+                }
+            } else {
+                // End the conversation once all questions are asked
+                speakVoiceChat("Thank you for providing all the information!");
+                voiceChatBtn.disabled = false;
+                updateVoiceChatStatus('Conversation complete');
+            }
+        }
+
+
+        function calculateDynamicDelay(userResponse) {
+            const responseLength = userResponse.length; 
+            const baseDelay = 1000; // Base delay of 500ms
+            const additionalDelay = responseLength * 10; // Adjust delay per character length (e.g., 10ms per character)
+            // Ensure the delay is within a reasonable range (minimum of 500ms)
+            const dynamicDelay = Math.max(baseDelay, additionalDelay);
+            console.log("Dynamic delay for processing: ", dynamicDelay); // For debugging
+            return dynamicDelay;
+        }
+
+        function processVoiceChatInput(userInput) {
+            console.log(" 1284 processVoiceChatInput Called ")
+            if (userInput.toLowerCase().includes("skip")) {
+                // Handle skipping the question
+                speakVoiceChat("Skipping this question.");
+                voiceChatQuestionIndex++; // Move to the next question
+                1284 // Delay before asking the next question
+            } else if (!userInput.trim()) {
+                // Handle no input case
+                speakVoiceChat("I’m sorry, I didn’t catch that. Could you please answer the question again?");
+                setTimeout(() => {
+                    console.log(" 1309  startVoiceChatListening ")
+                    startVoiceChatListening(); // Retry listening
+                }, 1000);
+            } 
+        }
+
+        function updateVoiceChatStatus(message) {
+            document.getElementById('status').textContent = message;
+        }
+
+        function clearNoSpeechTimeout() {
+            if (recognitionTimeout) {
+                clearTimeout(recognitionTimeout);
+                recognitionTimeout = null;
+                console.log("recognitionTimeout cleared");
+            }
+        }
+
+        function handleNoSpeechDetected() {
+            noSpeechCount++;
+
+            if (noSpeechCount >= 2) {
+                
+                speakVoiceChat("No speech detected. Closing the chat.");
+                voiceChatRecognition.stop();
+                setTimeout(() => {
+                    closeAIChat(); 
+                }, 5000); 
+            } else if (noSpeechCount < 2) {
+                console.log("I didn't catch your answer. Please repeat. ")
+                speakVoiceChat("I didn't catch your answer. Please repeat.");
+            }
+        }
+
+        let errorCount = 0;
+        let noSpeechTimeout = null;
+        let lastSpeechTime = null;
+        let silenceThreshold = 2000; // 2 seconds of silence to consider speech ended
+        let isSpeaking = false;
+        let retryCount = 0; // Track retry attempts
+        const maxRetries = 15; // Maximum retry attempts
+        let noResponseTimeout = null;
+        const NO_RESPONSE_TIMEOUT = 20000; // 15 seconds of no response
+        console.log(" 1436 startVoiceChatListening ")
+
+        function startNoResponseTimeout() {
+            clearNoResponseTimeout();
+            noResponseTimeout = setTimeout(() => {
+                if (isVoiceChatActive) {
+                    console.log('No response detected for too long, closing voice bot');
+                    closeVoiceBot();
+                }
+            }, NO_RESPONSE_TIMEOUT);
+        }
+
+        function clearNoResponseTimeout() {
+            if (noResponseTimeout) {
+                clearTimeout(noResponseTimeout);
+                noResponseTimeout = null;
+            }
+        }
+
+        function closeVoiceBot() {
+            if (voiceChatRecognition) {
+                voiceChatRecognition.stop();
+            }
+            if (voiceChatSynth.speaking) {
+                voiceChatSynth.cancel();
+            }
+            isVoiceChatActive = false;
+            isSpeaking = false;
+            clearNoResponseTimeout();
+            clearNoSpeechTimeout();
+            voiceChatBtn.disabled = false;
+            
+            // Close the AI Chat popup and overlay
+            const aiChatPopup = document.getElementById('aiChatPopup');
+            const overlay = document.getElementById('overlay');
+            if (aiChatPopup) {
+                aiChatPopup.style.display = 'none';
+            }
+            if (overlay) {
+                overlay.style.display = 'none';
+            }
+            
+            // Show stylish alert message
+            const message = document.createElement('div');
+            message.className = 'floating-message';
+            message.textContent = 'Voice chat closed due to inactivity';
+            document.body.appendChild(message);
+            
+            // Remove the message after animation
+            setTimeout(() => {
+                if (message && message.parentElement) {
+                    message.parentElement.removeChild(message);
+                }
+            }, 3000); // Remove after 3 seconds (matches the CSS animation duration)
+            
+            // Reset the chat state
+            resetChatState();
+        }
+
+        // Add this helper function to reset the chat state
+        function resetChatState() {
+            voiceChatQuestionIndex = 0;
+            voiceChatHistory = [];
+            voiceChatData = {
+                timestamp: new Date().toISOString(),
+                responses: {}
+            };
+            // Clear the chat output
+            const voiceChatOutput = document.getElementById('voice-chat-output');
+            if (voiceChatOutput) {
+                voiceChatOutput.innerHTML = '';
+            }
+        }
+        
+
+function startVoiceChatListening() {
+    if (isVoiceChatActive) {
+        console.log('Recognition already active, skipping start');
+        return;
+    }
+
+    if (voiceChatRecognition) {
+        try {
+            voiceChatRecognition.stop();
+        } catch (e) {
+            console.log('Error stopping recognition:', e);
+        }
+        voiceChatRecognition = null;
+    }
+
+    voiceChatRecognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    voiceChatRecognition.continuous = true;
+    voiceChatRecognition.interimResults = true;
+    voiceChatRecognition.lang = 'en-US';
+    voiceChatRecognition.maxAlternatives = 1;
+
+    voiceChatRecognition.onstart = () => {
+        isVoiceChatActive = true;   
+        isSpeaking = false;
+        console.log('Speech recognition started');
+        updateVoiceChatStatus('Listening...');
+        startNoSpeechTimeout();
+        startNoResponseTimeout(); // Start the no-response timeout
+    };
+
+    voiceChatRecognition.onend = () => {
+        console.log('Speech recognition ended');
+        clearNoSpeechTimeout();
+        clearNoResponseTimeout();
+        isVoiceChatActive = false;
+        isSpeaking = false;
+        // Only show processing if we're still actively handling a response
+        if (voiceChatRecognition && !voiceChatBtn.disabled) {
+            updateVoiceChatStatus('Processing...');
+            // Start no-response timeout for processing state
+            startNoResponseTimeout();
+        }
+    };
+
+    voiceChatRecognition.onaudiostart = () => {
+        console.log('Audio capturing started');
+        lastSpeechTime = Date.now();
+    };
+
+    voiceChatRecognition.onsoundstart = () => {
+        console.log('Sound detected');
+    };
+
+    voiceChatRecognition.onsoundend = () => {
+        console.log('Sound ended');
+        checkSpeechEnd();
+    };
+
+    voiceChatRecognition.onspeechstart = () => {
+        console.log('Speech started');
+        isSpeaking = true;
+        lastSpeechTime = Date.now();
+        clearNoSpeechTimeout();
+        updateVoiceChatStatus('Listening to speech...');
+    };
+
+    voiceChatRecognition.onspeechend = () => {
+        console.log('Speech ended');
+        isSpeaking = false;
+        checkSpeechEnd();
+    };
+
+    function checkSpeechEnd() {
+        if (isSpeaking) return;
+        
+        setTimeout(() => {
+            if (!isSpeaking && Date.now() - lastSpeechTime > silenceThreshold) {
+                console.log('Speech ended due to silence');
+                voiceChatRecognition.stop();
+            }
+        }, silenceThreshold);
+    }
+
+    voiceChatRecognition.onresult = async (event) => {
+        clearNoSpeechTimeout();
+        lastSpeechTime = Date.now();
+        
+        let finalTranscript = '';
+        let interimTranscript = '';
+
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+            const transcript = event.results[i][0].transcript;
+            if (event.results[i].isFinal) {
+                finalTranscript += transcript;
+            } else {
+                interimTranscript += transcript;
+                updateVoiceChatStatus('Listening...');
+            }
+        }
+
+        if (finalTranscript) {
+            console.log("Final transcript:", finalTranscript);
+            
+            if (voiceChatQuestionIndex >= voiceChatQuestions.length) {
+                voiceChatRecognition.stop();
+                isVoiceChatActive = false;
+                return;
+            }
+
+            const cleanTranscript = finalTranscript.trim();
+            if (!voiceChatHistory.includes(cleanTranscript) && cleanTranscript.length > 0) {
+                addVoiceChatUserMessage(cleanTranscript);
+                voiceChatHistory.push(cleanTranscript);
+
+                const evaluation = await callGeminiAPI(cleanTranscript);
+                if (!evaluation) return;
+
+                if (evaluation.isValid) {
+                    if (!voiceChatData.responses[voiceChatQuestions[voiceChatQuestionIndex]]) {
+                        voiceChatData.responses[voiceChatQuestions[voiceChatQuestionIndex]] = cleanTranscript;
+                        updateQAPairs(voiceChatQuestions[voiceChatQuestionIndex], cleanTranscript);
+                        voiceChatQuestionIndex++;
+                    }
+
+                    if (voiceChatQuestionIndex >= voiceChatQuestions.length) {
+                        saveText();
+                        speakVoiceChat("Thank you for providing all the information!");
+                        voiceChatBtn.disabled = false;
+                        updateVoiceChatStatus('Conversation complete');
+                        return;
+                    } else {
+                        setTimeout(() => {
+                            askNextVoiceChatQuestion();
+                        }, 2000);
+                    }
+                } else {
+                    speakVoiceChat(evaluation.feedback);
+                    if (evaluation.suggestion) {
+                        setTimeout(() => {
+                            speakVoiceChat(evaluation.suggestion);
+                            setTimeout(startVoiceChatListening, 2000);
+                        }, 2000);
+                    }
+                }
+            }
+        }
+    };
+
+    voiceChatRecognition.onerror = (event) => {
+        console.error('Speech recognition error:', event.error);
+        clearNoSpeechTimeout();
+        
+        switch (event.error) {
+            case 'no-speech':
+                console.log('No speech detected');
+                break;
+            case 'audio-capture':
+                updateVoiceChatStatus('No microphone detected');
+                break;
+            case 'not-allowed':
+                updateVoiceChatStatus('Microphone permission denied');
+                break;
+            default:
+                updateVoiceChatStatus('Error: ' + event.error);
+        }
+        
+        retryRecognition();
+    };
+
+    function startNoSpeechTimeout() {
+        clearNoSpeechTimeout();
+        noSpeechTimeout = setTimeout(() => {
+            if (isVoiceChatActive && !isSpeaking) {
+                console.log('No speech detected for a while, restarting recognition');
+                retryRecognition();
+            }
+        }, 10000); // 10 seconds timeout
+    }
+
+    function clearNoSpeechTimeout() {
+        if (noSpeechTimeout) {
+            clearTimeout(noSpeechTimeout);
+            noSpeechTimeout = null;
+        }
+    }
+
+    function retryRecognition() {
+        voiceChatRecognition.stop();
+        errorCount++;
+        if (errorCount < 3) {
+            console.log('Retrying speech recognition...');
+            setTimeout(startVoiceChatListening, 1000);
+        } else {
+            errorCount = 0;
+            isVoiceChatActive = false;
+            updateVoiceChatStatus('Speech recognition failed. Please try again.');
+            voiceChatBtn.disabled = false;
+        }
+    }
+
+    try {
+        voiceChatRecognition.start();
+    } catch (error) {
+        console.error('Error starting recognition:', error);
+        retryRecognition();
+    }
+}
+
+
+
+        function saveVoiceChatResults() {
+            const jsonData = JSON.stringify(voiceChatData, null, 2);
+            
+            // Using fetch to save the file to the server
+            fetch('/save-interview', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: jsonData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to save interview data');
+                }
+                console.log(' 1470 Interview data saved successfully');
+            })
+            .catch(error => {
+                console.error('Error saving interview data:', error);
+            });
+        }
+
+        const spokenErrors = new Map();
+
+        function speakErrors(text,times = 1 ) {
+
+            const count = spokenErrors.get(text) || 0;
+
+            if (count < times) {
+                const utterance = new SpeechSynthesisUtterance(text)
+
+                const voices = speechSynthesis.getVoices();
+                const studioVoice = voices.find( (voice) => voice.name === "Microsoft Zira - English (United States)");     
+                                                        // or voice.name === "Microsoft David - English (United States)"
+                if (studioVoice) {
+                utterance.voice = studioVoice;
+                }
+
+                voiceChatSynth.speak(utterance);
+            }
+        }
+
+        voiceChatBtn.addEventListener('click', startVoiceChat);
+
+        function addMessage(message, isUser = false) {
+            const messageElement = document.createElement('div');
+            messageElement.className = `message chat-bubble ${isUser ? 'user-message' : 'bot-message'}`;
+            
+            if (isUser) {
+                messageElement.textContent = message;
+                voiceChatOutputElement.appendChild(messageElement);
+                setTimeout(() => messageElement.classList.add('visible'), 100);
+                voiceChatOutputElement.scrollTop = voiceChatOutputElement.scrollHeight;
+            } else {
+                const typingElement = document.createElement('span');
+                typingElement.className = 'typing-effect';
+                messageElement.appendChild(typingElement);
+                voiceChatOutputElement.appendChild(messageElement);
+                
+                setTimeout(() => {
+                    messageElement.classList.add('visible');
+                    typeWriter(message, typingElement);
+                }, 100);
+            }
+
+            // Keep only the last 3 messages
+            while (voiceChatOutputElement.children.length > 13) {
+                voiceChatOutputElement.removeChild(voiceChatOutputElement.firstChild);
+            }
+        }
+
+        function typeWriter(text, element, index = 0) {
+            if (index < text.length) {
+                element.textContent += text.charAt(index);
+                voiceChatOutputElement.scrollTop = voiceChatOutputElement.scrollHeight;
+                setTimeout(() => typeWriter(text, element, index + 1), 45);
+                
+            }
+        }
+
+        // Get popup elements
+        const aiChatPopup = document.getElementById('aiChatPopup');
+        const openAIChatBtn = document.getElementById('openAIChatBtn');
+
+        // Open popup function
+        function openAIChat() {
+            document.getElementById('aiChatPopup').style.display = 'block';
+            document.getElementById('overlay').style.display = 'block';
+            // Reset chat
+            voiceChatQuestionIndex = 0;
+            voiceChatHistory = [];
+            qaPairs = [];
+            document.getElementById('chat-output').innerHTML = '';
+            document.getElementById('voice-btn').disabled = false;
+        }
+
+        // Close popup function
+        function closeAIChat() {
+            stopAI(); // Ensure AI synthesis is stopped if it was active
+            
+            document.getElementById('aiChatPopup').style.display = 'none';
+            document.getElementById('overlay').style.display = 'none';
+            
+           if (voiceChatRecognition) {
+                try {
+                    voiceChatRecognition.stop(); // Stop the recognition process
+                    voiceChatRecognition.onend = null; // Clear the `onend` event
+                    voiceChatRecognition.onerror = null; // Clear the `onerror` event
+                    voiceChatRecognition.onresult = null; // Clear the `onresult` event
+                    console.log("Voice chat recognition stopped.");
+                } catch (e) {
+                    console.error("Error stopping voice chat recognition:", e);
+                }
+            }
+            // Reset recognition state
+            isVoiceChatActive = false; // Mark AI interaction as inactive
+
+            // Call additional clean-up functions
+            
+            updateVoiceChatStatus('');
+            clearNoSpeechTimeout(); // Clear any active timeout
+            noSpeechCount = 0; // Reset the no-speech counter(); // Clear any ongoing timers
+            resetVoiceChatState(); // Reset all state variables to their initial values
+        }
+
+
+
+        function stopAI() {
+            if (voiceChatSynth) {
+                voiceChatSynth.cancel(); // Cancel ongoing speech synthesis
+            }
+            if (voiceChatRecognition) {
+                try {
+                    voiceChatRecognition.stop(); // Stop voice recognition
+                } catch (e) {
+                    console.error("Error stopping voice recognition:", e);
+                }
+            }
+            isVoiceChatActive = false; // Mark AI interaction as inactive
+            updateVoiceChatStatus("AI stopped. Interaction ended."); // Clear status
+        }
+
+        let noResponseTimer = null; // Global variable for managing no-response timers
+
+        function clearActiveTimers() {
+            if (noResponseTimer) {
+                clearTimeout(noResponseTimer); // Clear no-response timer
+                noResponseTimer = null; // Reset timer variable
+            }
+        }
+
+
+
+        function resetVoiceChatState() {
+            // Reset global variables tracking state
+            voiceChatQuestionIndex = 0; // Reset question index
+            voiceChatHistory = []; // Clear voice chat history
+            qaPairs = []; // Reset question-answer pairs
+            if (voiceChatRecognition) {
+                voiceChatRecognition.error = null; // Clear any previous errors
+            }
+            updateVoiceChatStatus(""); // Clear the status message
+        }
+
+        // Add overlay click handler
+        // document.getElementById('overlay').addEventListener('click', closeAIChat);
+
+        // Add click event listener to open button
+        openAIChatBtn.addEventListener('click', openAIChat);
+
+        // Close popup when clicking outside
+        /*aiChatPopup.addEventListener('click', (e) => {
+            if (e.target === aiChatPopup) {
+                closeAIChat();
+            }
+        });*/
+    </script>
+</body>
+
+</html>

@@ -4,6 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="./static/images/favion2.png" type="image/png" style="height:26px;width:26px">
+
     <title>Registration Page</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -196,33 +198,32 @@
         <div class="form-header">
             <h2>Create an Account</h2>
         </div>
-        <form id="registrationForm">
+        <form id="registrationForm" action="/register" method="POST">
             <div class="form-group">
-                <label for="username">Username</label>
+                <label for="username">Username<span style="color: red;">*</span></label>
                 <div class="input-icon">
                     <i class="fas fa-user"></i>
                     <input type="text" id="username" name="username" required placeholder="Choose a username">
                 </div>
+                <p id="usernameCriteria" class="password-criteria" style="color: red; font-size: 12px;"></p> <!-- Placeholder for username validation message -->
             </div>
             <div class="form-group">
-                <label for="phone">Phone</label>
+                <label for="phone">Phone<span style="color: red;">*</span></label>
                 <div class="input-icon">
                     <i class="fas fa-phone"></i>
-                    <input type="tel" id="phone" name="phone" required pattern="[0-9]{10}"
-                        title="Please enter a valid 10-digit phone number" 
-                        oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                    <input type="tel" id="phone" name="phone" required
                         placeholder="Enter your phone number">
                 </div>
             </div>
             <div class="form-group">
-                <label for="email">Email</label>
+                <label for="email">Email<span style="color: red;">*</span></label>
                 <div class="input-icon">
                     <i class="fas fa-envelope"></i>
                     <input type="email" id="email" name="email" required placeholder="Enter your email">
                 </div>
             </div>
             <div class="form-group">
-                <label for="password">Password</label>
+                <label for="password">Password<span style="color: red;">*</span></label>
                 <div class="input-icon">
                     <i class="fas fa-lock"></i>
                     <input type="password" id="password" name="password" required placeholder="Create a password">
@@ -235,52 +236,69 @@
                 </div>
             </div>
             <button type="submit">Register</button>
-            <a href="/login">Already have an account? <span>Login</span></a>
+            <a style="cursor: pointer;" onclick="goToLogin()">Already have an account? Login</a>
         </form>
     </div>
     <script>
         function validatePassword(password) {
-            const submitButton = document.querySelector('button[type="submit"]');
+            const lengthCriteria = document.getElementById('lengthCriteria');
+            const uppercaseCriteria = document.getElementById('uppercaseCriteria');
+            const numberCriteria = document.getElementById('numberCriteria');
+            const specialCharCriteria = document.getElementById('specialCharCriteria');
+
             let isValid = true;
 
-            // Length criteria
-            const lengthCriteria = document.getElementById('lengthCriteria');
-            if (password.length < 8) {
+            // Check length
+            if (password.length >= 8) {
+                lengthCriteria.className = 'valid';
+            } else {
                 lengthCriteria.className = 'invalid';
                 isValid = false;
-            } else {
-                lengthCriteria.className = 'valid';
             }
 
-            // Uppercase letter criteria
-            const uppercaseCriteria = document.getElementById('uppercaseCriteria');
-            if (!/[A-Z]/.test(password)) {
+            // Check for uppercase letter
+            if (/[A-Z]/.test(password)) {
+                uppercaseCriteria.className = 'valid';
+            } else {
                 uppercaseCriteria.className = 'invalid';
                 isValid = false;
-            } else {
-                uppercaseCriteria.className = 'valid';
             }
 
-            // Number criteria
-            const numberCriteria = document.getElementById('numberCriteria');
-            if (!/[0-9]/.test(password)) {
+            // Check for number
+            if (/[0-9]/.test(password)) {
+                numberCriteria.className = 'valid';
+            } else {
                 numberCriteria.className = 'invalid';
                 isValid = false;
-            } else {
-                numberCriteria.className = 'valid';
             }
 
-            // Special character criteria
-            const specialCharCriteria = document.getElementById('specialCharCriteria');
-            if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+            // Check for special character
+            if (/[^A-Za-z0-9]/.test(password)) {
+                specialCharCriteria.className = 'valid';
+            } else {
                 specialCharCriteria.className = 'invalid';
                 isValid = false;
-            } else {
-                specialCharCriteria.className = 'valid';
             }
 
-            submitButton.disabled = !isValid;
+            return isValid;
         }
+
+        function validateUsername(username) {
+            const usernameCriteria = document.getElementById('usernameCriteria');
+            if (!username.trim()) { // Check if username is not just spaces
+                usernameCriteria.className = 'invalid';
+                usernameCriteria.textContent = 'Username should not contain only space.';
+                return false;
+            } else {
+                usernameCriteria.className = 'valid';
+                usernameCriteria.textContent = '';
+                return true;
+            }
+        }
+
+        document.getElementById('username').addEventListener('input', function() {
+            validateUsername(this.value);
+        });
 
         document.getElementById('password').addEventListener('input', function() {
             validatePassword(this.value);
@@ -293,11 +311,12 @@
             let phone = document.getElementById('phone').value;
             let email = document.getElementById('email').value;
             let password = document.getElementById('password').value;
+            
+            // Validate password and username before submitting
+            const isPasswordValid = validatePassword(password);
+            const isUsernameValid = validateUsername(username);
 
-            // Validate password before submitting
-            validatePassword(password);
-
-            if (!document.querySelector('button[type="submit"]').disabled) {
+            if (isPasswordValid && isUsernameValid && !document.querySelector('button[type="submit"]').disabled) {
                 fetch('/register', {
                     method: 'POST',
                     headers: {
@@ -312,7 +331,7 @@
                 })
                 .then(response => {
                     if (response.ok) {
-                        window.location.href = '/';
+                        window.location.replace('/'); 
                     } else {
                         return response.json().then(data => {
                             alert('Registration failed: ' + data.message);
@@ -325,6 +344,10 @@
                 });
             }
         });
+
+        function goToLogin() {
+            window.location.replace('/login'); // Replace the current entry in the history
+        }
     </script>
 </body>
 
