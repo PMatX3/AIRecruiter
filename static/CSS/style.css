@@ -492,11 +492,29 @@ input[type="file"] {
 
 #voice-btn, #submit-answer-btn {
     cursor: pointer;
-    margin-bottom: -27px;
+    height: fit-content;
+    margin-right: 4px;
 }
 
 #voice-btn:active {
     transform: scale(0.98);
+}
+
+#stop-btn {
+    background: #d32f2f;
+}
+
+.event-btn{
+    justify-content: space-around;
+    width: fit-content;
+    display: flex;
+    width: auto;
+    margin: 5px;
+    
+}
+
+#stop-btn {
+
 }
 
 .disabled {
