@@ -8,6 +8,7 @@ from chromadb.utils import embedding_functions
 from dotenv import load_dotenv
 import uuid
 import google.generativeai as genai
+import re
 
 # Load environment variables
 load_dotenv()
@@ -44,6 +45,10 @@ def extract_text_from_pdf(file):
         extracted_text = page.extract_text()
         if extracted_text:
             text += extracted_text
+    
+    text = text.replace('\xa0', ' ')
+    text = text.strip()
+    text = re.sub(r'\s+', ' ', text)
     return text
 
 def save_resumes_embedding():

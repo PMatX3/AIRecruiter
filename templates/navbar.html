@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <link rel="stylesheet" href="static/CSS/header.css" />
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+
+<body>
+  <!-- navbar.html - Import this at the top of your pages -->
+  <nav class="navbar">
+    <div class="logo" onclick="window.location.href='/'">
+      <img class="logo-svg" src="static/images/yourbestrecruiter.png" alt="logo" />
+    </div>
+
+
+
+    <!-- Live Trial Countdown -->
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <div class="timer-container">
+        <span id="trial-timer" class="trial-info">Loading...</span>
+        <div>
+          <a href="/pricing " id="upgrade-plann-btn" class="upgrade-plann-btn nav-link">Upgrade</a>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="nav-links" id="navLinks">
+      <div class="nav-item">
+        <a href="/candidates" class="nav-link">Candidates</a>
+      </div>
+      <div class="nav-item">
+        <a href="/process" class="nav-link">All Process</a>
+      </div>
+      <div class="nav-item">
+        <a href="/interviews" class="nav-link">Interviews</a>
+      </div>
+
+      <div class="nav-item">
+        <div class="notification-container">
+          <button type="button" class="icon-button" onclick="toggleNotifications(event)" id="notification-btn">
+            <span class="material-icons">notifications</span>
+            <span class="icon-button__badge" id="notification-count">0</span>
+          </button>
+        </div>
+
+        <!-- Notifications Popup -->
+        <div class="notifications-popup" id="notification-popup"></div>
+      </div>
+
+      <div class="logout-dropdown">
+        <button class="dots-icon-button" id="menu-btn" onclick="toggleDropdown(event)">
+          <span class="material-icons">more_vert</span>
+        </button>
+        <div class="logout-dropdown-menu" id="dropdown-menu">
+          <a href="/profile" class="logout-dropdown-item">Profile</a>
+          <a href="/logout" class="logout-dropdown-item" id="logout-btn" onclick="handleLogout(event)">Logout</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+  <script>
+
+    const notificationCount = document.getElementById("notification-count");
+    const trialTimerEl = document.getElementById("trial-timer");
+    let notificationPopup = document.getElementById("notification-popup");
+    let timeoutId; // Store timeout globally
+
+    const expiryTimestamp = {{ expiry_timestamp | default (0) }};
+    const isSuperAdmin = {{ is_superadmin | lower }}; // Converts Python bool to JS bool
+    const notificationCounting = {{ notification_count | default (0) }};
+
+    updateNotifications({ count: notificationCounting });
+
+    updateTrialTimer(expiryTimestamp, isSuperAdmin);
+
+    function updateTrialTimer(expiryTimestamp, isSuperAdmin) {
+
+      console.log(" Is super admin :", isSuperAdmin);
+      if (isSuperAdmin) {
+        document.getElementById("trial-timer").innerHTML =
+          "<span>Welcome Super Admin!</span>"; // Super Admin UI
+        document.getElementById("upgrade-plann-btn").style.display = "none";
+        return;
+      }
+      function calculateRemainingTime() {
+        let now = Math.floor(Date.now() / 1000);
+        let remainingSeconds = expiryTimestamp - now;
+
+        if (remainingSeconds > 0) {
+          let days = Math.floor(remainingSeconds / (24 * 3600));
+          let hours = Math.floor((remainingSeconds % (24 * 3600)) / 3600);
+          let timerText = `Your Free Trial ends in ${days} days, ${hours} hours.`;
+          document.getElementById("trial-timer").textContent = timerText;
+        } else {
+          document.getElementById("trial-timer").textContent =
+            "Your subscription has expired.";
+        }
+      }
+
+      calculateRemainingTime();
+      setInterval(calculateRemainingTime, 60000);
+    }
+
+
+
+
+
+    function updateNotifications({ count }) {
+      const badge = document.getElementById("notification-count");
+
+      if (count === 0) {
+        badge.style.display = "none";
+      } else {
+        badge.textContent = count;
+        badge.style.display = "block";
+      }
+    }
+
+
+    function toggleNotifications(event) {
+      event.stopPropagation(); // Prevents closing when clicking the button
+
+      // Check if the popup is already open
+      if (notificationPopup.style.display === "block") {
+        closePopup();
+        return;
+      }
+
+      fetch("/get_notifications")
+        .then((response) => response.json())
+        .then((data) => {
+          let notifications = data.notifications; // Ensure it's an array
+          console.log(" notification s:  ", notifications);
+          updateNotificationBadge(data.count); // Update badge count
+
+          notificationPopup.innerHTML = ""; // Clear old notifications
+
+          if (data.length === 0) {
+            notificationPopup.innerHTML =
+              "<p class='notification-empty'>No new notifications</p>";
+          } else {
+            data.forEach((notification) => {
+              let div = document.createElement("div");
+              div.classList.add("notification-item");
+
+              const timeParts = notification.interview_time.split(":");
+              const hours = parseInt(timeParts[0], 10);
+              const minutes = parseInt(timeParts[1], 10);
+
+              // Create a new Date object for today at the specified time
+              const now = new Date();
+              const utcDate = new Date(
+                Date.UTC(
+                  now.getUTCFullYear(),
+                  now.getUTCMonth(),
+                  now.getUTCDate(),
+                  hours,
+                  minutes
+                )
+              );
+
+              // Convert to local time
+              const localTime = utcDate.toLocaleTimeString();
+
+              div.innerHTML = `
+                            </strong>
+                            <strong><span class="candidate-name">${notification.candidate_name}</span><br>
+                            <span class="job-title">Job: ${notification.job_title}</span>
+                            <span class="interview-time">${localTime}</span>
+                        `;
+              notificationPopup.appendChild(div);
+            });
+          }
+
+          // Update notification badge
+          document.getElementById("notification-count").innerText = data.length;
+
+          // Show the popup
+          notificationPopup.style.display = "block";
+
+          // Set auto-close timeout
+          timeoutId = setTimeout(closePopup, 3000);
+        });
+
+      // Close when clicking outside
+      document.addEventListener("click", outsideClickListener);
+    }
+
+    // Function to close the popup
+    function closePopup() {
+      notificationPopup.style.display = "none";
+      clearTimeout(timeoutId); // Clear timeout
+      document.removeEventListener("click", outsideClickListener);
+    }
+
+    // Function to detect outside clicks
+    function outsideClickListener(event) {
+      if (
+        !event.target.closest(".notification-container") &&
+        !event.target.closest("#notification-popup")
+      ) {
+        closePopup();
+      }
+    }
+
+    // Prevent auto-close when hovering
+    notificationPopup.addEventListener("mouseover", () =>
+      clearTimeout(timeoutId)
+    );
+    notificationPopup.addEventListener(
+      "mouseout",
+      () => (timeoutId = setTimeout(closePopup, 3000))
+    );
+
+    function updateNotificationBadge(count) {
+      const badge = document.getElementById("notification-count");
+      if (count == 0) {
+        badge.style.display = "none";
+      } else {
+        badge.textContent = count;
+      }
+    }
+
+    function toggleDropdown(event) {
+      event.stopPropagation(); // Prevent closing immediately after opening
+      const dropdownMenu = document.getElementById("dropdown-menu");
+
+      // Toggle visibility
+      dropdownMenu.style.display =
+        dropdownMenu.style.display === "block" ? "none" : "block";
+
+      // Close dropdown when clicking outside
+      document.addEventListener("click", function closeDropdown(e) {
+        if (!event.target.closest(".dropdown")) {
+          dropdownMenu.style.display = "none";
+          document.removeEventListener("click", closeDropdown);
+        }
+      });
+    }
+
+    function handleLogout(event) {
+      event.preventDefault(); // Prevent direct navigation
+      Swal.fire({
+        title: "Are you sure?",
+        text: "You will be logged out!",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#d33",
+        cancelButtonColor: "#3085d6",
+        confirmButtonText: "Yes, logout!",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          window.location.href = "/logout"; // Redirect to logout
+        }
+      });
+    }
+
+  </script>
+
+</body>
+
+</html>

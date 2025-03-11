@@ -114,21 +114,7 @@ function showFloatingMessage(message) {
     floatingMessage.remove();
   }, 3000);
 }
-function openCenteredAlert() {
-  Swal.fire({
-    title: "Close AI Assistant?",
-    text: "Are you sure you want to close the AI Assistant? Any unsaved progress will be lost.",
-    icon: "warning",
-    showCancelButton: true, // Enables the Cancel button
-    confirmButtonText: "Yes, Close",
-    cancelButtonText: "Cancel",
-    reverseButtons: true, // Optional: swaps the order of the buttons
-    preConfirm: () => {
-      // Action when "OK" is pressed
-      closeAIChat();
-    },
-  });
-}
+
 
 // Voice Input Functions
 function askNextQuestion() {

@@ -71,7 +71,7 @@ def send_mail(recipient_email, subject, body, attachment_paths=None):
         print(message)
         print("=============\n\n")
         server.send_message(message)
-
+        return True
     print("Email sent successfully")
 
 def send_email_2(recipients, subject, username, reset_link):
@@ -170,8 +170,6 @@ def extract_email_address(email_address_bytes):
     else:
         # If no angle brackets, assume it's a plain email address
         email_address = str(to).strip()
-    
-    print("Extracted email Address:", email_address)
     return email_address
 
 def get_resume(job_id):
@@ -206,7 +204,7 @@ def get_resume(job_id):
 
 
 # if __name__ == '__main__':
-#     get_resume("675c1596926db8aaa214e981")
+#     get_resume("job_6788b8bc07b84f78fd709c51")
 #     send_mail(
 #     'nak.logixbuilt@gmail.com',
 #     'this is Test Email Subject',

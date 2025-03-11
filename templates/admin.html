@@ -1,0 +1,2819 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title> Admin | YourBestRecruiter</title>
+    <link rel="stylesheet" href="../static/CSS/admin.css">
+    <script src="https://cdn.jsdelivr.net/npm/luxon@3.4.4/build/global/luxon.min.js"></script>
+
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.2.3/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --primary-light: #4895ef;
+            --primary-dark: #3f37c9;
+            --secondary-color: #f72585;
+            --success-color: #4cc9f0;
+            --warning-color: #f8961e;
+            --danger-color: #f94144;
+            --light-bg: #f8f9fa;
+            --dark-bg: #212529;
+            --text-color: #495057;
+            --border-radius: 12px;
+            --sidebar-width: 260px;
+            --sidebar-width-collapsed: 70px;
+            --card-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            --transition-speed: 0.3s;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+            background-color: #f5f7fa;
+            color: var(--text-color);
+            overflow-x: hidden;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            height: 100vh;
+            width: var(--sidebar-width);
+            background: linear-gradient(to bottom, var(--primary-color), var(--primary-dark));
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+            transition: width var(--transition-speed);
+            z-index: 1000;
+            overflow-x: hidden;
+        }
+
+        .sidebar.collapsed {
+            width: var(--sidebar-width-collapsed);
+        }
+
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 25px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar-header h3 {
+            color: white;
+            margin: 0;
+            font-weight: 600;
+            transition: opacity var(--transition-speed);
+        }
+
+        .sidebar.collapsed .sidebar-header h3 {
+            opacity: 0;
+            position: absolute;
+            display: none;
+        }
+
+        .toggle-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.3s;
+        }
+
+        .toggle-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .sidebar-menu {
+            padding: 20px 0;
+        }
+
+        .menu-item,
+        .sign-out-btn {
+            display: flex;
+            align-items: center;
+            padding: 15px 25px;
+            text-decoration: none;
+            color: rgba(255, 255, 255, 0.8);
+            transition: all var(--transition-speed);
+            position: relative;
+            border-left: 4px solid transparent;
+            margin-bottom: 5px;
+        }
+
+        .menu-item:hover {
+            color: white;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .sign-out-btn:hover {
+            color: white;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .menu-item.active {
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+            border-left: 4px solid var(--secondary-color);
+        }
+
+        .menu-item i {
+            font-size: 18px;
+            min-width: 30px;
+        }
+
+        .sign-out-btn i {
+            font-size: 18px;
+            min-width: 30px;
+        }
+
+        .sign-out-btn.active {
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+            border-left: 4px solid var(--secondary-color);
+        }
+
+        .menu-item span {
+            margin-left: 10px;
+            transition: opacity var(--transition-speed);
+            font-weight: 500;
+        }
+
+        .sign-out-btn span {
+            margin-left: 10px;
+            transition: opacity var(--transition-speed);
+            font-weight: 500;
+        }
+
+        .sidebar.collapsed .menu-item span {
+            opacity: 0;
+            position: absolute;
+        }
+
+        .sidebar.collapsed .sign-out-btn span {
+            opacity: 0;
+            position: absolute;
+        }
+
+
+        /* Main Content Styles */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            padding: 30px;
+            transition: margin-left var(--transition-speed);
+        }
+
+        .main-content.expanded {
+            margin-left: var(--sidebar-width-collapsed);
+        }
+
+        /* Header Styles */
+        .content-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            background-color: white;
+            padding: 12px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .content-header h1 {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--dark-bg);
+            margin: 0;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-profile img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--primary-light);
+        }
+
+        .user-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .user-name {
+            font-weight: 600;
+            color: var(--dark-bg);
+        }
+
+        .user-role {
+            font-size: 12px;
+            color: var(--text-color);
+        }
+
+        .notification-icon {
+            position: relative;
+            margin-right: 20px;
+            cursor: pointer;
+        }
+
+        .notification-icon i {
+            font-size: 20px;
+            color: #6c757d;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            width: 18px;
+            height: 18px;
+            background-color: var(--secondary-color);
+            color: white;
+            border-radius: 50%;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Card Styles */
+        .stat-card {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--card-shadow);
+            padding: 25px;
+            margin-bottom: 30px;
+            transition: transform 0.3s, box-shadow 0.3s;
+            border-left: 5px solid var(--primary-color);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .stat-card:nth-child(2) {
+            border-left-color: var(--secondary-color);
+        }
+
+        .stat-card:nth-child(3) {
+            border-left-color: var(--warning-color);
+        }
+
+        .stat-card-pattern {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100px;
+            height: 100px;
+            opacity: 0.05;
+            background-image: radial-gradient(circle, var(--primary-color) 10%, transparent 10.5%);
+            background-size: 20px 20px;
+        }
+
+        .stat-card-content {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+        }
+
+        .stat-card-icon {
+            background-color: rgba(67, 97, 238, 0.1);
+            color: var(--primary-color);
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-right: 20px;
+        }
+
+        .stat-card:nth-child(2) .stat-card-icon {
+            background-color: rgba(247, 37, 133, 0.1);
+            color: var(--secondary-color);
+        }
+
+        .stat-card:nth-child(3) .stat-card-icon {
+            background-color: rgba(248, 150, 30, 0.1);
+            color: var(--warning-color);
+        }
+
+        .stat-info {
+            flex: 1;
+        }
+
+        .stat-card-number {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 5px;
+            color: var(--dark-bg);
+        }
+
+        .stat-card-title {
+            color: var(--text-color);
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .stat-card-percent {
+            position: absolute;
+            right: 25px;
+            bottom: 25px;
+            background-color: rgba(76, 201, 240, 0.1);
+            color: var(--success-color);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .stat-card-percent.down {
+            background-color: rgba(249, 65, 68, 0.1);
+            color: var(--danger-color);
+        }
+
+        /* Table Styles */
+        .data-table-container {
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--card-shadow);
+            padding: 25px;
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .table-header h4 {
+            font-weight: 600;
+            color: var(--dark-bg);
+            margin: 0;
+        }
+
+        .search-filter {
+            display: flex;
+            gap: 15px;
+        }
+
+        .search-filter input,
+        .search-filter select {
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            padding: 8px 15px;
+            font-size: 14px;
+        }
+
+        .search-filter input:focus,
+        .search-filter select:focus {
+            border-color: var(--primary-light);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        .data-table th {
+            padding: 15px;
+            text-align: left;
+            background-color: #f8f9fa;
+            color: var(--dark-bg);
+            font-weight: 600;
+            border-bottom: 2px solid #e9ecef;
+            position: sticky;
+            top: 0;
+        }
+
+        .data-table td {
+            padding: 15px;
+            border-bottom: 1px solid #e9ecef;
+            color: var(--text-color);
+            vertical-align: middle;
+        }
+
+        .data-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .data-table tr {
+            transition: background-color 0.2s;
+        }
+
+        .data-table tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        /* Status Badges */
+        .status-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-align: center;
+            display: inline-block;
+        }
+
+        .status-pending {
+            background-color: rgba(248, 150, 30, 0.15);
+            color: var(--warning-color);
+        }
+
+        .status-approved {
+            background-color: rgba(76, 201, 240, 0.15);
+            color: var(--success-color);
+        }
+
+        .status-rejected {
+            background-color: rgba(249, 65, 68, 0.15);
+            color: var(--danger-color);
+        }
+
+        .status-open {
+            background-color: rgba(67, 97, 238, 0.15);
+            color: var(--primary-color);
+        }
+
+        .status-progress {
+            background-color: rgba(144, 224, 239, 0.15);
+            color: #0077b6;
+        }
+
+        .status-resolved {
+            background-color: rgba(76, 201, 240, 0.15);
+            color: var(--success-color);
+        }
+
+        /* Action Buttons */
+        .action-btns {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            cursor: pointer;
+            border: none;
+            font-size: 12px;
+            transition: transform 0.2s, opacity 0.2s;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-view {
+            background-color: var(--primary-color);
+        }
+
+        .btn-approve {
+            background-color: var(--success-color);
+        }
+
+        .btn-reject {
+            background-color: var(--danger-color);
+        }
+
+        .btn-extend {
+            background-color: var(--warning-color);
+        }
+
+        .btn-delete {
+            background-color: #6c757d;
+        }
+
+        /* User Type Badge */
+        .user-type {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .type-admin {
+            background-color: rgba(67, 97, 238, 0.15);
+            color: var(--primary-color);
+        }
+
+        .type-user {
+            background-color: rgba(108, 117, 125, 0.15);
+            color: #6c757d;
+        }
+
+        /* Chart Styles */
+        .chart-container {
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--card-shadow);
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .chart-header h4 {
+            margin: 0;
+            font-weight: 600;
+            color: var(--dark-bg);
+        }
+
+        .chart-filter {
+            display: flex;
+            gap: 10px;
+        }
+
+        .chart-filter button {
+            background: none;
+            border: 1px solid #e0e0e0;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            color: var(--text-color);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .chart-filter button.active {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            color: white;
+        }
+
+        .chart-canvas {
+            width: 100%;
+            height: 300px;
+        }
+
+        /* Settings Styles */
+        .settings-card {
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--card-shadow);
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+
+        .settings-header {
+            margin-bottom: 25px;
+            border-bottom: 1px solid #e9ecef;
+            padding-bottom: 15px;
+        }
+
+        .settings-header h4 {
+            margin: 0;
+            font-weight: 600;
+            color: var(--dark-bg);
+        }
+
+        .form-label {
+            font-weight: 500;
+            color: var(--dark-bg);
+            margin-bottom: 8px;
+        }
+
+        .form-control,
+        .form-select {
+            border-radius: 8px;
+            padding: 10px 15px;
+            border: 1px solid #e0e0e0;
+            transition: all 0.2s;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: var(--primary-light);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            border-radius: 8px;
+            padding: 10px 20px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+            border-color: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Notification Popups */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 10px;
+            color: white;
+            z-index: 9999;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            transform: translateX(150%);
+            transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .notification i {
+            font-size: 20px;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification-success {
+            background-color: #4cc9f0;
+        }
+
+        .notification-error {
+            background-color: #f94144;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(3px);
+        }
+
+        .modal-container {
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+            width: 90%;
+            max-width: 500px;
+            padding: 30px;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 15px;
+
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            font-weight: 600;
+            color: var(--dark-bg);
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #6c757d;
+            transition: color 0.2s;
+        }
+
+        .modal-close:hover {
+            color: var(--danger-color);
+        }
+
+        .modal-body {
+            margin-bottom: 25px;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+            margin-top: 1.5rem;
+        }
+
+        .btn-secondary {
+            background-color: #e9ecef;
+            border: none;
+            color: var(--text-color);
+            border-radius: 8px;
+            padding: 10px 20px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .btn-secondary:hover {
+            background-color: #dee2e6;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 992px) {
+            .sidebar {
+                width: var(--sidebar-width-collapsed);
+            }
+
+            .sidebar .sidebar-header h3,
+            .sidebar .menu-item span {
+                opacity: 0;
+                position: absolute;
+            }
+
+            .sidebar .sidebar-header h3,
+            .sidebar .sign-out-btn span {
+                opacity: 0;
+                position: absolute;
+            }
+
+            .main-content {
+                margin-left: var(--sidebar-width-collapsed);
+                padding: 20px;
+            }
+
+            .sidebar.expanded {
+                width: var(--sidebar-width);
+                z-index: 1500;
+            }
+
+            .sidebar.expanded .sidebar-header h3,
+            .sidebar.expanded .menu-item span {
+                opacity: 1;
+                position: relative;
+            }
+
+            .sidebar.expanded .sidebar-header h3,
+            .sidebar.expanded .sign-out-btn span {
+                opacity: 1;
+                position: relative;
+            }
+
+            .content-header {
+                flex-wrap: wrap;
+                gap: 15px;
+            }
+
+            .stat-card-content {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .stat-card-icon {
+                margin-right: 0;
+                margin-bottom: 15px;
+            }
+
+            .stat-card-percent {
+                position: relative;
+                right: auto;
+                bottom: auto;
+                margin-top: 10px;
+                display: inline-block;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                padding: 15px;
+            }
+
+            .content-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+                padding: 15px;
+            }
+
+            .search-filter {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .search-filter input,
+            .search-filter select {
+                width: 100%;
+            }
+
+            .user-profile {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .chart-container,
+            .data-table-container,
+            .settings-card,
+            .stat-card {
+                padding: 15px;
+            }
+        }
+
+
+        .approve-btn,
+        .edit-btn,
+        .delete-btn,
+        .reject-btn {
+            display: inline-block;
+            padding: 8px 16px;
+            font-size: 14px;
+            font-weight: bold;
+            text-align: center;
+            text-decoration: none;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100px;
+            margin: 2px;
+        }
+
+        .edit-btn {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .approve-btn {
+            background-color: #28a745;
+            /* Green color for approve */
+            color: white;
+            /* White text */
+        }
+
+        .reject-btn,
+        .delete-btn {
+            background-color: #dc3545;
+            /* Red color for reject */
+            color: white;
+            /* White text */
+        }
+
+        .approve-btn:hover,
+        .reject-btn:hover {
+            opacity: 0.9;
+            background-color: rgba(109, 109, 109, 0.932);
+            color: white;
+            /* Add a slight hover effect */
+        }
+
+        .toast-center {
+            top: 10% !important;
+            left: 50% !important;
+            transform: translate(-50%, -50%) !important;
+        }
+
+        .popup-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .popup-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .popup-buttons {
+            margin-top: 20px;
+        }
+
+        .popup-buttons button {
+            padding: 10px 20px;
+            margin: 0 10px;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+        }
+
+        .popup-buttons .ok-btn {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .popup-buttons .cancel-btn {
+            background-color: #f44336;
+            color: white;
+        }
+
+        .btn:disabled {
+            display: inline-block !important;
+            padding: 8px 16px !important;
+            font-size: 14px;
+            font-weight: bold;
+            text-align: center;
+            text-decoration: none;
+            background-color: lightgray;
+            border: none;
+            border-radius: 4px;
+            cursor: not-allowed;
+            pointer-events: none;
+            opacity: '0.7';
+            box-shadow: 'none';
+        }
+
+
+        .edit-user-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 800px;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            width: 100%;
+            margin-top: 4px;
+        }
+
+        .modal-title {
+            text-align: left;
+            color: #333;
+            margin-bottom: 12px;
+            font-size: 22px;
+            font-weight: 700;
+        }
+
+        .form-grid,
+        .subscription-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 0;
+        }
+
+        .form-group.full-width {
+            grid-column: span 3;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: 500;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="tel"],
+        input[type="date"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+
+        textarea {
+            min-height: 50px;
+            resize: vertical;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+        }
+
+        .subscription-section {
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            background-color: #f9f9f9;
+        }
+
+        .subscription-section legend {
+            font-size: 1.1em;
+            padding: 0 10px;
+            font-weight: 500;
+            color: #3498db;
+        }
+
+        .form-actions {
+            text-align: right;
+        }
+
+        .save-button {
+            background-color: #3498db;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .save-button:hover {
+            background-color: #2980b9;
+        }
+
+        .popup {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1001;
+        }
+
+        .popup-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+        }
+
+        .popup-content button {
+            margin: 0 5px;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .popup-content button:first-child {
+            background-color: #3498db;
+            color: white;
+        }
+
+        .popup-content button:last-child {
+            background-color: #e0e0e0;
+            color: #333;
+        }
+
+        .error-input {
+            border-color: #e74c3c !important;
+            box-shadow: 0 0 0 2px rgba(231, 76, 60, 0.2) !important;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 992px) {
+
+            .form-grid,
+            .subscription-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .form-group.full-width {
+                grid-column: span 2;
+            }
+        }
+
+        @media (max-width: 768px) {
+
+            .form-grid,
+            .subscription-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-group.full-width {
+                grid-column: span 1;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <script src="https://cdn.jsdelivr.net/npm/luxon@3.4.4/build/global/luxon.min.js"></script>
+
+    <!-- Sidebar Navigation -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h3>Admin Panel</h3>
+            <button class="toggle-btn" id="toggle-sidebar">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+        <div class="sidebar-menu">
+            <a href="#dashboard" class="menu-item active" data-page="dashboard">
+                <i class="fas fa-home"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="#verification" class="menu-item" data-page="verification">
+                <i class="fa-solid fa-user-tie"></i>
+                <span>User Verification</span>
+            </a>
+            <a href="#users" class="menu-item" data-page="users">
+                <i class="fas fa-users"></i>
+                <span>User Management</span>
+            </a>
+            <a href="#tickets" class="menu-item" data-page="tickets">
+                <i class="fas fa-ticket-alt"></i>
+                <span>Ticket System</span>
+            </a>
+            <!-- <a href="#reports" class="menu-item" data-page="reports">
+                <i class="fas fa-chart-bar"></i>
+                <span>Reports</span>
+            </a> -->
+            <a href="#settings" class="menu-item" data-page="settings">
+                <i class="fas fa-cog"></i>
+                <span>Settings</span>
+            </a>
+
+            <a href="#" class="sign-out-btn" id="signOutLink">
+                <i class="fas fa-sign-out"></i>
+                <span>Sign out</span>
+            </a>
+
+            <div class="popup-overlay" id="signOutPopup">
+                <div class="popup-content">
+                    <p>Are you sure you want to sign out?</p>
+                    <div class="popup-buttons">
+                        <button class="ok-btn" id="confirmSignOut">OK</button>
+                        <button class="cancel-btn" id="cancelSignOut">Cancel</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="popup-overlay" id="confirmationPopup">
+                <div class="popup-content">
+                    <p id="confirmationMessage">Are you sure you want to proceed?</p>
+                    <div class="popup-buttons">
+                        <button class="ok-btn" id="confirmAction">OK</button>
+                        <button class="cancel-btn" id="cancelAction">Cancel</button>
+                    </div>
+                </div>
+            </div>
+
+
+        </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="main-content" id="main-content">
+        <div class="content-header">
+            <h1 id="page-title">Dashboard</h1>
+            <div class="user-profile">
+                <!-- <div class="notification-icon">
+                    <i class="fas fa-bell"></i>
+                    <span class="notification-badge">5</span>
+                </div> -->
+                <img src="../static/images/user.png" alt="Admin Profile">
+                <div class="user-info">
+                    <span class="user-name">{{user.username}}</span>
+                    <span class="user-role">Admin</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dashboard Page -->
+        <div class="page-content" id="dashboard-page">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="stat-card">
+                        <div class="stat-card-pattern"></div>
+                        <div class="stat-card-content">
+                            <div class="stat-card-icon">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="stat-info">
+                                <div class="stat-card-number">{{ report.total_users }}</div>
+                                <div class="stat-card-title">Total Users</div>
+                            </div>
+                        </div>
+                        <div class="stat-card-percent">
+                            <i class="fas fa-arrow-up"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stat-card">
+                        <div class="stat-card-pattern"></div>
+                        <div class="stat-card-content">
+                            <div class="stat-card-icon">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div class="stat-info">
+                                <div class="stat-card-number">{{ report.active_trials }}</div>
+                                <div class="stat-card-title">Active Trials</div>
+                            </div>
+                        </div>
+                        <div class="stat-card-percent">
+                            <i class="fas fa-arrow-up"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stat-card">
+                        <div class="stat-card-pattern"></div>
+                        <div class="stat-card-content">
+                            <div class="stat-card-icon">
+                                <i class="fas fa-ticket-alt"></i>
+                            </div>
+                            <div class="stat-info">
+                                <div class="stat-card-number">{{ report.open_tickets }}</div>
+                                <div class="stat-card-title">Open Tickets</div>
+                            </div>
+                        </div>
+                        <div class="stat-card-percent down">
+                            <i class="fas fa-arrow-down"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="stat-card approvals">
+                        <div class="stat-card-pattern"></div>
+                        <div class="stat-card-content">
+                            <div class="stat-card-icon">
+                                <i class="fas fa-info"></i>
+                            </div>
+                            <div class="stat-info">
+                                <div class="stat-card-number">{{ report.pending_approvals }}</div>
+                                <div class="stat-card-title">Pending Approvals</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h4>User Activity</h4>
+                            <div class="chart-filter">
+                                <button class="active">Weekly</button>
+                                <button>Monthly</button>
+                                <button>Yearly</button>
+                            </div>
+                        </div>
+
+                        <canvas id="activityChart" class="chart-canvas full-width"></canvas>
+                    </div>
+                </div>
+                <!-- <div class="col-md-4">
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h4>User Status</h4>
+                        </div>
+                        <p>User Status chart</p>
+                        <canvas id="statusChart" class="chart-canvas"></canvas>
+                    </div>
+                </div> -->
+            </div>
+
+            <div class="row">
+                <div class="col-12">
+                    <div class="data-table-container">
+                        <div class="table-header">
+                            <h4>Recent User Activity</h4>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>User</th>
+                                        <th>Activity</th>
+                                        <th>Date</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Alice Smith</td>
+                                        <td>Updated profile</td>
+                                        <td>Today, 10:30 AM</td>
+                                        <td><span class="status-badge status-approved">Completed</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Bob Johnson</td>
+                                        <td>Created a new ticket</td>
+                                        <td>Today, 09:15 AM</td>
+                                        <td><span class="status-badge status-open">Open</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Carol Williams</td>
+                                        <td>Subscription renewed</td>
+                                        <td>Yesterday, 2:</td>
+                                        <td><span class="status-badge status-open">Open</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- User Verification Page -->
+        <div class="page-content" id="verification-page" style="display: none;">
+            <div class="data-table-container">
+                <div class="table-header">
+                    <h4>User Verification</h4>
+                    <div class="search-filter">
+                        <input type="text" class="form-control" placeholder="Search users..." id="user-search">
+                        <select class="form-select" id="status-filter">
+                            <option value="all">All Statuses</option>
+                            <option value="pending">Pending</option>
+                            <option value="approved">Approved</option>
+                            <option value="rejected">Rejected</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Company</th>
+                                <th>Email</th>
+                                <th>Status</th>
+                                <th>User Type</th>
+                                <th>Created At</th>
+                                <th>Notes</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="user-verification-body">
+                            <!-- User data will be populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- User Management Page -->
+        <!-- Userstable  -->
+
+        <div class="page-content" id="users-page" style="display: none;">
+            <div class="data-table-container">
+                <div class="table-header">
+                    <h4>User Management</h4>
+                    <div class="search-filter">
+                        <input type="text" class="form-control" placeholder="Search users..." id="user-search">
+                        <button id="addUserButton" class="btn btn-primary" onclick="showAddUserPage()">Add User</button>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Company</th>
+                                <th>Email</th>
+                                <th>User Type</th>
+                                <th>Created At</th>
+                                <th>Notes</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="user-table-body">
+                            <!-- User data will be populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add User Page -->
+        <form id="insert-user-form" action="/add-user" method="POST">
+            <div class="page-content" id="add-page" style="display: none;">
+                <div class="modal-dialog modal-dialog-centered" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">ADD USER</h5>
+                        </div>
+                        <div class="modal-body">
+                            <form id="addUserForm">
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label for="username">Username<span class="required">*</span></label>
+                                        <input type="text" id="username" name="username" autocomplete="nope"
+                                            class="form-control" placeholder="Enter username" />
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="email">Email<span class="required">*</span></label>
+                                        <input type="email" id="email" name="email" class="form-control"
+                                            placeholder="Enter email" />
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="password">Password<span class="required">*</span></label>
+
+                                        <input type="password" id="password" name="password" class="form-control"
+                                            placeholder="Create a password" oninput="this.value = this.value.trim();"
+                                            autocomplete="new-password">
+                                        <span>
+                                            <i class="fas fa-eye" id="togglePassword"
+                                                onclick="togglePasswordVisibility()"></i>
+                                        </span>
+
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="phone">Phone<span class="required">*</span></label>
+                                        <input type="tel" id="phone" name="phone" class="form-control"
+                                            placeholder="Enter phone number"
+                                            oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);" />
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="company">Company<span class="required">*</span></label>
+                                        <input type="text" id="company" name="company" class="form-control"
+                                            placeholder="Enter company" oninput="this.value = this.value.trim();" />
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="country">Country<span class="required">*</span></label>
+                                        <div class="input-icon">
+
+                                            <div class="country-select-container">
+
+                                                <select id="country" name="country" class="form-control">
+                                                    <option value="" selected>Select your country</option>
+                                                    <option value="United States">United States</option>
+                                                    <option value="Afghanistan">Afghanistan</option>
+                                                    <option value="Albania">Albania</option>
+                                                    <option value="Algeria">Algeria</option>
+                                                    <option value="American Samoa">American Samoa</option>
+                                                    <option value="Andorra">Andorra</option>
+                                                    <option value="Angola">Angola</option>
+                                                    <option value="Antarctica">Antarctica</option>
+                                                    <option value="Antigua and Barbuda">Antigua and Barbuda</option>
+                                                    <option value="Argentina">Argentina</option>
+                                                    <option value="Armenia">Armenia</option>
+                                                    <option value="Australia">Australia</option>
+                                                    <option value="Austria">Austria</option>
+                                                    <option value="Azerbaijan">Azerbaijan</option>
+                                                    <option value="Bahamas">Bahamas</option>
+                                                    <option value="Bahrain">Bahrain</option>
+                                                    <option value="Bangladesh">Bangladesh</option>
+                                                    <option value="Barbados">Barbados</option>
+                                                    <option value="Belarus">Belarus</option>
+                                                    <option value="Belgium">Belgium</option>
+                                                    <option value="Belize">Belize</option>
+                                                    <option value="Benin">Benin</option>
+                                                    <option value="Bermuda">Bermuda</option>
+                                                    <option value="Bhutan">Bhutan</option>
+                                                    <option value="Bolivia">Bolivia</option>
+                                                    <option value="Bosnia and Herzegovina">Bosnia and Herzegovina
+                                                    </option>
+                                                    <option value="Botswana">Botswana</option>
+                                                    <option value="Brazil">Brazil</option>
+                                                    <option value="Brunei Darussalam">Brunei Darussalam</option>
+                                                    <option value="Bulgaria">Bulgaria</option>
+                                                    <option value="Burkina Faso">Burkina Faso</option>
+                                                    <option value="Burundi">Burundi</option>
+                                                    <option value="Cambodia">Cambodia</option>
+                                                    <option value="Cameroon">Cameroon</option>
+                                                    <option value="Canada">Canada</option>
+                                                    <option value="Cape Verde">Cape Verde</option>
+                                                    <option value="Cayman Islands">Cayman Islands</option>
+                                                    <option value="Central African Republic">Central African Republic
+                                                    </option>
+                                                    <option value="Chad">Chad</option>
+                                                    <option value="Chile">Chile</option>
+                                                    <option value="China">China</option>
+                                                    <option value="Colombia">Colombia</option>
+                                                    <option value="Costa Rica">Costa Rica</option>
+                                                    <option value="Croatia">Croatia</option>
+                                                    <option value="Cuba">Cuba</option>
+                                                    <option value="Cyprus">Cyprus</option>
+                                                    <option value="Czech Republic">Czech Republic</option>
+                                                    <option value="Denmark">Denmark</option>
+                                                    <option value="Dominica">Dominica</option>
+                                                    <option value="Dominican Republic">Dominican Republic</option>
+                                                    <option value="Ecuador">Ecuador</option>
+                                                    <option value="Egypt">Egypt</option>
+                                                    <option value="El Salvador">El Salvador</option>
+                                                    <option value="Equatorial Guinea">Equatorial Guinea</option>
+                                                    <option value="Estonia">Estonia</option>
+                                                    <option value="Ethiopia">Ethiopia</option>
+                                                    <option value="Fiji">Fiji</option>
+                                                    <option value="Finland">Finland</option>
+                                                    <option value="France">France</option>
+                                                    <option value="Gabon">Gabon</option>
+                                                    <option value="Gambia">Gambia</option>
+                                                    <option value="Georgia">Georgia</option>
+                                                    <option value="Germany">Germany</option>
+                                                    <option value="Ghana">Ghana</option>
+                                                    <option value="Greece">Greece</option>
+                                                    <option value="Greenland">Greenland</option>
+                                                    <option value="Guatemala">Guatemala</option>
+                                                    <option value="Guinea">Guinea</option>
+                                                    <option value="Guyana">Guyana</option>
+                                                    <option value="Haiti">Haiti</option>
+                                                    <option value="Honduras">Honduras</option>
+                                                    <option value="Hungary">Hungary</option>
+                                                    <option value="Iceland">Iceland</option>
+                                                    <option value="India">India</option>
+                                                    <option value="Indonesia">Indonesia</option>
+                                                    <option value="Iran">Iran</option>
+                                                    <option value="Ireland">Ireland</option>
+                                                    <option value="Israel">Israel</option>
+                                                    <option value="Italy">Italy</option>
+                                                    <option value="Jamaica">Jamaica</option>
+                                                    <option value="Japan">Japan</option>
+                                                    <option value="Jordan">Jordan</option>
+                                                    <option value="Kazakhstan">Kazakhstan</option>
+                                                    <option value="Kenya">Kenya</option>
+                                                    <option value="Kuwait">Kuwait</option>
+                                                    <option value="Kyrgyzstan">Kyrgyzstan</option>
+                                                    <option value="Latvia">Latvia</option>
+                                                    <option value="Lebanon">Lebanon</option>
+                                                    <option value="Liberia">Liberia</option>
+                                                    <option value="Lithuania">Lithuania</option>
+                                                    <option value="Luxembourg">Luxembourg</option>
+                                                    <option value="Malaysia">Malaysia</option>
+                                                    <option value="Malta">Malta</option>
+                                                    <option value="Mexico">Mexico</option>
+                                                    <option value="Morocco">Morocco</option>
+                                                    <option value="Nepal">Nepal</option>
+                                                    <option value="Netherlands">Netherlands</option>
+                                                    <option value="New Zealand">New Zealand</option>
+                                                    <option value="Nigeria">Nigeria</option>
+                                                    <option value="Norway">Norway</option>
+                                                    <option value="Pakistan">Pakistan</option>
+                                                    <option value="Panama">Panama</option>
+                                                    <option value="Peru">Peru</option>
+                                                    <option value="Philippines">Philippines</option>
+                                                    <option value="Poland">Poland</option>
+                                                    <option value="Portugal">Portugal</option>
+                                                    <option value="Qatar">Qatar</option>
+                                                    <option value="Romania">Romania</option>
+                                                    <option value="Russia">Russia</option>
+                                                    <option value="Saudi Arabia">Saudi Arabia</option>
+                                                    <option value="Singapore">Singapore</option>
+                                                    <option value="South Africa">South Africa</option>
+                                                    <option value="Spain">Spain</option>
+                                                    <option value="Sri Lanka">Sri Lanka</option>
+                                                    <option value="Sweden">Sweden</option>
+                                                    <option value="Switzerland">Switzerland</option>
+                                                    <option value="Turkey">Turkey</option>
+                                                    <option value="Ukraine">Ukraine</option>
+                                                    <option value="United Kingdom">United Kingdom</option>
+                                                    <option value="United States">United States</option>
+                                                    <option value="Venezuela">Venezuela</option>
+                                                    <option value="Vietnam">Vietnam</option>
+                                                    <option value="Zambia">Zambia</option>
+                                                    <option value="Zimbabwe">Zimbabwe</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="verificationStatus">Verification Status<span
+                                                class="required">*</span></label>
+                                        <select id="verificationStatus" name="verificationStatus" class="form-control">
+                                            <option value="" selected>Not Selected</option>
+                                            <option value="Pending">Pending</option>
+                                            <option value="Approved">Approved</option>
+                                            <option value="Rejected">Rejected</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="userType">User Type<span class="required">*</span></label>
+                                        <select id="userType" name="userType" class="form-control">
+                                            <option value="">Not Selected</option>
+                                            <option value="user">User</option>
+                                            <option value="admin">Admin</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="isSuperadmin">Is Superadmin<span class="required">*</span></label>
+                                        <select id="isSuperadmin" name="isSuperadmin" class="form-control">
+                                            <option value="" selected>Not Selected</option>
+                                            <option value="true">True</option>
+                                            <option value="false">False</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="form-group full-width">
+                                    <label for="notes">Notes</label>
+                                    <textarea id="notes" name="notes" class="form-control"
+                                        placeholder="Enter notes"></textarea>
+                                </div>
+
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary"
+                                        onclick="document.getElementById('add-page').style.display = 'none'; document.getElementById('users-page').style.display = 'block';">Close</button>
+                                    <button type="submit" class="btn btn-primary">Save</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+
+
+
+        <!-- Edit User Page -->
+        <div class="page-content" id="edit-page" style="display: none;">
+            <div class="row">
+                <div class="modal-content">
+                    <h2 class="modal-title">Edit User</h2>
+
+                    <form id="editUserForm">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="username">Username</label>
+                                <input type="text" id="edit-username" name="username" placeholder="Enter username" />
+                            </div>
+
+                            <div class="form-group">
+                                <label for="email">Email</label>
+                                <input type="email" id="edit-email" name="email" placeholder="Enter email" />
+                            </div>
+
+                            <div class="form-group">
+                                <label for="phone">Phone</label>
+                                <input type="tel" id="edit-phone" name="phone" placeholder="Enter phone number" />
+                            </div>
+
+                            <div class="form-group">
+                                <label for="company">Company</label>
+                                <input type="text" id="edit-company" name="company" placeholder="Enter company" />
+                            </div>
+
+                            <div class="form-group">
+                                <label for="country">Country</label>
+                                <input type="text" id="edit-country" name="country" placeholder="Enter country" />
+                            </div>
+
+                            <div class="form-group">
+                                <label for="createdAt">User Created At</label>
+                                <input type="date" id="edit-createdAt" name="createdAt" readonly />
+                            </div>
+
+                            <div class="form-group">
+                                <label for="verificationStatus">Verification Status</label>
+                                <select id="edit-verificationStatus" name="verificationStatus">
+                                    <option value="" selected>Not Selected</option>
+                                    <option value="Pending">Pending</option>
+                                    <option value="Approved">Approved</option>
+                                    <option value="Rejected">Rejected</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="userType">User Type</label>
+                                <select id="edit-userType" name="userType">
+                                    <option value="" selected>Not Selected</option>
+                                    <option value="user">User</option>
+                                    <option value="admin">Admin</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="isSuperadmin">Is Superadmin</label>
+                                <select id="edit-isSuperadmin" name="isSuperadmin">
+                                    <option value="" selected>Not Selected</option>
+                                    <option value="true">True</option>
+                                    <option value="false">False</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <fieldset class="subscription-section">
+                            <legend>Subscription</legend>
+
+                            <div class="subscription-grid">
+                                <div class="form-group">
+                                    <label for="isSubscribed">Is Subscribed</label>
+                                    <select id="edit-isSubscribed" name="isSubscribed">
+                                        <option value="" selected>Not Selected</option>
+                                        <option value="true">True</option>
+                                        <option value="false">False</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="plan">Plan</label>
+                                    <select id="edit-plan" name="plan">
+                                        <option value="" selected>Not Selected</option>
+                                        <option value="trial">Trial</option>
+                                        <option value="silver">Silver</option>
+                                        <option value="gold">Gold</option>
+                                        <option value="platinum">Platinum</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="serviceUsed">Service Used</label>
+                                    <select id="edit-serviceUsed" name="serviceUsed">
+                                        <option value="" selected>Not Selected</option>
+                                        <option value="true">True</option>
+                                        <option value="false">False</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </fieldset>
+
+                        <div class="form-group full-width">
+                            <label for="notes">Notes</label>
+                            <textarea id="edit-notes" name="notes" placeholder="Enter notes"></textarea>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="button" class="save-button" onclick="saveUserData()">Save</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <!-- Ticket System Page -->
+        <div class="page-content" id="tickets-page" style="display: none;">
+            <div class="data-table-container">
+                <div class="table-header">
+                    <h4>Ticket System</h4>
+                    <div class="search-filter">
+                        <input type="text" class="form-control" placeholder="Search tickets..." id="ticket-search">
+                        <select class="form-select" id="ticket-status-filter">
+                            <option value="all">All Statuses</option>
+                            <option value="open">Open</option>
+                            <option value="progress">In Progress</option>
+                            <option value="resolved">Resolved</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Ticket ID</th>
+                                <th>User Id</th>
+                                <th>Issue Type</th>
+                                <th>Status</th>
+                                <th>Created At</th>
+                                <th>Updated At</th>
+                                <th>Notes</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ticket-table-body">
+                            <!-- Ticket data will be populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reports Page -->
+        <div class="page-content" id="reports-page" style="display: none;">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h4>User Growth</h4>
+                        </div>
+                        <canvas id="userGrowthChart" class="chart-canvas"></canvas>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h4>Ticket Resolution</h4>
+                        </div>
+                        <canvas id="ticketResolutionChart" class="chart-canvas"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h4>User Activity by Month</h4>
+                        </div>
+                        <canvas id="monthlyActivityChart" class="chart-canvas"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Page -->
+        <div class="page-content" id="settings-page" style="display: none;">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="settings-card">
+                        <div class="settings-header">
+                            <h4>Profile Settings</h4>
+                        </div>
+                        <form id="profile-settings-form">
+                            <div class="mb-3">
+                                <label for="admin-name" class="form-label">Full Name</label>
+                                <input type="text" class="form-control" id="admin-name" value="{{user.username}}">
+                            </div>
+                            <div class="mb-3">
+                                <label for="admin-email" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="admin-email" value="{{user.email}}">
+                            </div>
+                            <!-- <div class="mb-3">
+                                <label for="admin-password" class="form-label">Change Password</label>
+                                <input type="password" class="form-control" id="admin-password"
+                                    placeholder="Leave blank to keep current password">
+                            </div> -->
+                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                        </form>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="settings-card">
+                        <div class="settings-header">
+                            <h4>System Settings</h4>
+                        </div>
+                        <form id="system-settings-form">
+                            <div class="mb-3">
+                                <label for="default-trial-days" class="form-label">Default Trial Days</label>
+                                <input type="number" class="form-control" id="default-trial-days" value="10">
+                            </div>
+                            <div class="mb-3">
+                                <label for="notification-email" class="form-label">Notification Email</label>
+                                <input type="email" class="form-control" id="notification-email"
+                                    value="notifications@example.com">
+                            </div>
+                            <div class="mb-3 form-check">
+                                <input type="checkbox" class="form-check-input" id="email-notifications" checked>
+                                <label class="form-check-label" for="email-notifications">Enable Email
+                                    Notifications</label>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Save Settings</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+
+    <!-- Notification Popup -->
+    <div class="notification" id="notification"></div>
+
+    <!-- Modal for confirming actions -->
+    <div class="modal-overlay" id="confirm-modal">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 id="modal-title">Confirm Action</h3>
+                <button class="modal-close" id="modal-close">&times;</button>
+            </div>
+            <div class="modal-body" id="modal-body">
+                Are you sure you want to perform this action?
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="modal-cancel">Cancel</button>
+                <button class="btn btn-primary" id="modal-confirm">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ticket Response Modal -->
+    <div class="modal-overlay" id="ticket-modal">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 id="ticket-modal-title">Respond to Ticket</h3>
+                <button class="modal-close" id="ticket-modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="ticket-response" class="form-label">Your Response</label>
+                    <textarea class="form-control" id="ticket-response" rows="4"></textarea>
+                </div>
+                <div class="mb-3">
+                    <label for="ticket-status-update" class="form-label">Update Status</label>
+                    <select class="form-select" id="ticket-status-update">
+                        <option value="open">Open</option>
+                        <option value="progress">In Progress</option>
+                        <option value="resolved">Resolved</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="ticket-modal-cancel">Cancel</button>
+                <button class="btn btn-primary" id="ticket-modal-submit">Submit Response</button>
+            </div>
+        </div>
+    </div>
+
+
+
+    <div id="confirmationPopup" class="popup">
+        <div class="popup-content">
+            <p>Are you sure you want to save changes?</p>
+            <button onclick="saveUser()">Yes</button>
+            <button onclick="closePopup()">No</button>
+        </div>
+    </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.2.3/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        // DOM Elements
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.getElementById('main-content');
+        const toggleBtn = document.getElementById('toggle-sidebar');
+        const menuItems = document.querySelectorAll('.menu-item');
+        const pageTitle = document.getElementById('page-title');
+        const pages = document.querySelectorAll('.page-content');
+        const notification = document.getElementById('notification');
+        const confirmModal = document.getElementById('confirm-modal');
+        const modalClose = document.getElementById('modal-close');
+        const modalCancel = document.getElementById('modal-cancel');
+        const modalConfirm = document.getElementById('modal-confirm');
+        const ticketModal = document.getElementById('ticket-modal');
+        const ticketModalClose = document.getElementById('ticket-modal-close');
+        const ticketModalCancel = document.getElementById('ticket-modal-cancel');
+        const ticketModalSubmit = document.getElementById('ticket-modal-submit');
+        const userSearchInput = document.getElementById('user-search');
+        const statusFilterSelect = document.getElementById('status-filter');
+        const userVerificationBody = document.getElementById('user-verification-body');
+        let userData;
+
+        toastr.options = {
+            "positionClass": "toast-center",
+            "closeButton": true,
+            "progressBar": true
+        };
+
+        // Toggle Sidebar
+        toggleBtn.addEventListener('click', () => {
+            sidebar.classList.toggle('collapsed');
+            mainContent.classList.toggle('expanded');
+
+            // For mobile view
+            if (window.innerWidth <= 992) {
+                sidebar.classList.toggle('expanded');
+            }
+        });
+
+
+
+        // Navigation
+        menuItems.forEach(item => {
+            item.addEventListener('click', (e) => {
+                e.preventDefault();
+
+                // Update active state
+                menuItems.forEach(i => i.classList.remove('active'));
+                item.classList.add('active');
+
+                // Get page ID
+                const pageId = item.getAttribute('data-page');
+
+                // Update page title
+                pageTitle.textContent = item.querySelector('span').textContent;
+
+                // Show selected page, hide others
+                pages.forEach(page => {
+                    if (page.id === `${pageId}-page`) {
+                        page.style.display = 'block';
+                    } else {
+                        page.style.display = 'none';
+                    }
+                });
+
+                // For mobile: collapse sidebar after navigation
+                if (window.innerWidth <= 992) {
+                    sidebar.classList.remove('expanded');
+                    sidebar.classList.add('collapsed');
+                    mainContent.classList.add('expanded');
+                }
+            });
+        });
+
+        // view Insert user Page :
+        function showAddUserPage() {
+            document.getElementById('users-page').style.display = 'none';
+            document.getElementById('add-page').style.display = 'block';
+        }
+
+        // Show Notification
+        function showNotification(message, type) {
+            notification.textContent = message;
+            notification.className = `notification notification-${type}`;
+            notification.classList.add('show');
+
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        // Modal Handlers
+        modalClose.addEventListener('click', () => {
+            confirmModal.style.display = 'none';
+        });
+
+        modalCancel.addEventListener('click', () => {
+            confirmModal.style.display = 'none';
+        });
+
+        ticketModalClose.addEventListener('click', () => {
+            ticketModal.style.display = 'none';
+        });
+
+        ticketModalCancel.addEventListener('click', () => {
+            ticketModal.style.display = 'none';
+        });
+
+        const totalUsersCard = document.querySelector('.stat-card:nth-child(1)'); // Select the first stat card
+        const pendingApprovalsCard = document.querySelector('.approvals'); // Select the fourth stat card
+
+
+        if (totalUsersCard) {
+            totalUsersCard.addEventListener('click', function () {
+                // Navigate to user management page
+                const userManagementMenuItem = document.querySelector('[data-page="users"]');
+                if (userManagementMenuItem) {
+                    userManagementMenuItem.click();
+                } else {
+                    console.error("User management menu item not found.");
+                }
+            });
+        }
+
+        if (pendingApprovalsCard) {
+            pendingApprovalsCard.addEventListener('click', function () {
+
+                // Navigate to user verification page
+                const userVerificationMenuItem = document.querySelector('[data-page="verification"]');
+                if (userVerificationMenuItem) {
+                    userVerificationMenuItem.click();
+                } else {
+                    console.error("User verification menu item not found.");
+                }
+            });
+        }
+
+
+
+        document.addEventListener("DOMContentLoaded", function () {
+            fetchUsers();
+            showUserActivityChat();
+            fetchTickets();
+        });
+
+        function saveNewUserData() {
+            // Implement your logic to save the new user data
+            // After saving, you might want to hide the add-page and show the users-page
+            document.getElementById('add-page').style.display = 'none';
+            document.getElementById('users-page').style.display = 'block';
+        }
+
+        async function fetchUsers() {
+            try {
+
+                const response = await fetch("/get-users", {
+                    method: "GET",
+                    headers: {
+                        "Content-Type": "application/json",
+                    }
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    console.error("Failed to fetch users:", errorData.message);
+                    return;
+                }
+
+                const data = await response.json();
+                userData = data.users;
+                populateUserTable(data.users);
+                populateUserVerificationTable(data.users);
+                applyFilters();
+            } catch (error) {
+                console.error("Error fetching users:", error);
+            }
+        }
+
+        function populateUserTable(users) {
+            const tableBody = document.getElementById("user-table-body");
+            tableBody.innerHTML = ""; // Clear existing table data
+
+            // sort data newest first
+            users.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+            users.forEach(user => {
+                const utcDate = luxon.DateTime.fromFormat(user.created_at, "yyyy-MM-dd HH:mm:ss", { zone: 'utc' });
+                const localCreatedAtString = utcDate.setZone(luxon.DateTime.local().zoneName).toFormat("yyyy-MM-dd hh:mm a");
+                const row = document.createElement("tr");
+
+                row.innerHTML = `
+                <td>${user.username}</td>
+                <td>${user.company}</td>
+                <td>${user.email}</td>
+                <td>${user.user_type}</td>
+                <td>${localCreatedAtString}</td>
+                
+                <td>${user.notes}</td>
+                <td>
+                    <button class="btn btn-sm edit-btn" data-user-id="${user.user_id}">Edit</button>
+                    <button class="btn btn-sm delete-btn" data-user-id="${user.user_id}">Delete</button>
+                </td>
+                `;
+                tableBody.appendChild(row);
+            });
+
+            // Event listeners for Delete buttons
+            document.querySelectorAll('.delete-btn').forEach(button => {
+                button.addEventListener('click', () => {
+                    showConfirmationPopup("Do you want to delete this item?", function () {
+                        const userId = button.dataset.userId;
+                        deleteUser(userId);
+                    });
+
+                });
+            });
+
+            //Event listeners for edit buttons
+            document.addEventListener('click', function (event) {
+                if (event.target.classList.contains('edit-btn')) {
+                    const userId = event.target.dataset.userId;
+                    fetchUserData(userId);
+                    document.getElementById('edit-page').style.display = 'block';
+                    document.getElementById('users-page').style.display = 'none';
+
+                }
+            });
+        }
+
+        function showConfirmationPopup(message, onConfirm) {
+            document.getElementById("confirmationMessage").textContent = message;
+            document.getElementById("confirmationPopup").style.display = "flex";
+
+            document.getElementById("confirmAction").onclick = function () {
+                onConfirm();  // Execute callback function
+                closeConfirmationPopup();
+            };
+
+            document.getElementById("cancelAction").onclick = closeConfirmationPopup;
+        }
+
+        function closeConfirmationPopup() {
+            document.getElementById("confirmationPopup").style.display = "none";
+        }
+
+
+        async function fetchUserData(userId) {
+            try {
+                const response = await fetch(`/edit-user/${userId}`);
+                if (response.ok) {
+                    const userData = await response.json();
+                    populateEditForm(userData);
+                    document.getElementById('editUserForm').dataset.userId = userId;
+                } else {
+                    console.error('Failed to fetch user data:', response.status);
+                    alert('Failed to fetch user data.');
+                }
+            } catch (error) {
+                console.error('Error fetching user data:', error);
+                alert('An error occurred while fetching user data.');
+            }
+        }
+
+
+
+        function populateEditForm(userData) {
+            console.log("userData: \n", userData);
+            document.getElementById('edit-username').value = userData.username || '';
+            document.getElementById('edit-email').value = userData.email || '';
+            document.getElementById('edit-phone').value = userData.phone || '';
+            document.getElementById('edit-company').value = userData.company || '';
+            document.getElementById('edit-country').value = userData.country || '';
+
+            // Handle createdAt: Convert GMT string to date input value
+            if (userData.created_at) {
+                const date = new Date(userData.created_at);
+                const isoDate = date.toISOString().split('T')[0]; // Get YYYY-MM-DD
+                document.getElementById('edit-createdAt').value = isoDate;
+            } else {
+                document.getElementById('edit-createdAt').value = ''; // Or some default
+            }
+            document.getElementById('edit-verificationStatus').value = userData.verification_status || 'not-selected';
+            document.getElementById('edit-userType').value = userData.user_type.toLowerCase() || 'not-selected'; // Convert to lowercase for comparison
+            document.getElementById('edit-isSuperadmin').value = userData.is_superadmin ? 'true' : 'false';
+
+            // Handle subscription
+            if (userData.subscription) {
+                document.getElementById('edit-isSubscribed').value = userData.subscription.is_subscribed ? 'true' : 'false';
+                document.getElementById('edit-plan').value = userData.subscription.plan || 'not-selected'; // Corrected default to 'not-selected'
+            } else {
+                document.getElementById('edit-isSubscribed').value = 'not-selected';
+                document.getElementById('edit-plan').value = 'not-selected';
+            }
+
+            // Handle features.service_used
+            document.getElementById('edit-serviceUsed').value = userData.features && userData.features.service_used ? 'true' : 'false'; // Corrected access
+
+            document.getElementById('edit-notes').value = userData.notes || '';
+        }
+
+        async function updateUser(userId, userData) {
+            try {
+                const response = await fetch(`/edit-user/${userId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(userData),
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json(); // Attempt to get error details from response
+                    let errorMessage = `HTTP error! status: ${response.status}`;
+                    if (errorData && errorData.message) {
+                        errorMessage += ` - ${errorData.message}`; // Append server-side error message if available
+                    }
+                    throw new Error(errorMessage);
+                }
+
+                const result = await response.json(); // Get the response from the server
+
+                showNotification(result.message, 'success'); // Show success message or a message from the server.
+                // Optionally update the user list in the UI here
+
+                document.getElementById('edit-page').style.display = 'none';
+                document.getElementById('users-page').style.display = 'block';
+                fetchUsers();
+
+            } catch (error) {
+                console.error('Error updating user:', error);
+                alert('Failed to update user. Please check the console for details.');
+            }
+        }
+
+        async function saveUserData() {
+            const form = document.getElementById('editUserForm');
+            const userId = form.dataset.userId;
+
+            if (!userId) {
+                alert("User ID is missing. Please try again.");
+                return;
+            }
+
+            // Fetch the existing user data to preserve fields not in the form
+            let existingUserData;
+            try {
+                const response = await fetch(`/edit-user/${userId}`);
+                if (response.ok) {
+                    existingUserData = await response.json();
+                } else {
+                    alert('Failed to fetch existing user data.');
+                    return;
+                }
+            } catch (error) {
+                console.error('Error fetching existing user data:', error);
+                alert('An error occurred while fetching existing user data.');
+                return;
+            }
+
+            const userData = {
+                username: form.username.value,
+                email: form.email.value,
+                phone: form.phone.value,
+                company: form.company.value,
+                country: form.country.value,
+                verification_status: form.verificationStatus.value,
+                user_type: form.userType.value,
+                is_superadmin: form.isSuperadmin.value === 'true',
+                notes: form.notes.value,
+                subscription: {
+                    is_subscribed: form.isSubscribed.value === 'true',
+                    plan: form.plan.value,
+                    start_date: existingUserData.subscription.start_date,
+                    expiry_date: existingUserData.subscription.expiry_date,
+                    status: existingUserData.subscription.status,
+                },
+                features: {
+                    first_job_uploaded: form.serviceUsed.value === 'true'
+                }
+            };
+
+            showConfirmationPopup("Are you sure you want to save changes?", async function () {
+                await updateUser(userId, userData);
+            });
+        }
+
+        function populateUserVerificationTable(users) {
+            const tableBody = document.getElementById("user-verification-body");
+            tableBody.innerHTML = "";
+
+            users.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+
+            users.forEach(user => {
+                const utcDate = luxon.DateTime.fromFormat(user.created_at, "yyyy-MM-dd HH:mm:ss", { zone: 'utc' });
+                const localCreatedAtString = utcDate.setZone(luxon.DateTime.local().zoneName).toFormat("yyyy-MM-dd hh:mm a");
+
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${user.username}</td>
+                    <td>${user.company}</td>
+                    <td>${user.email}</td>
+                    <td><span class="status-label ${user.verification_status}">${user.verification_status}</span></td>
+                    <td>${user.user_type}</td>
+                    <td>${localCreatedAtString}</td>
+                    <td>${user.notes}</td>
+                    <td>
+                        <button class="btn btn-sm approve-btn" data-email="${user.email}" ${user.verification_status.toLowerCase() === 'approved' || user.verification_status.toLowerCase() === 'rejected' ? 'disabled' : ''}>Approve</button>
+                        <button class="btn btn-sm reject-btn" data-email="${user.email}" ${user.verification_status.toLowerCase() === 'approved' || user.verification_status.toLowerCase() === 'rejected' ? 'disabled' : ''}>Reject</button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+
+            // Add event listeners for approve/reject buttons
+            document.querySelectorAll('.approve-btn, .reject-btn').forEach(button => {
+                button.addEventListener('click', async function () {
+                    const email = this.dataset.email;
+                    const verification_status = this.classList.contains('approve-btn') ? "Approved" : "Rejected";
+                    const toast = toastr.info('Updating user status...', 'Processing', { timeOut: 0, extendedTimeOut: 0 });
+                    await updateUserStatus(email, verification_status);
+                });
+            });
+        }
+
+
+        async function fetchTickets() {
+            try {
+                const response = await fetch('/get-tickets', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                if (data.success) {
+                    displayTickets(data.tickets); // Call a function to display the tickets
+                } else {
+                    console.error('Failed to fetch tickets:', data.message);
+                    alert('Failed to fetch tickets. Please try again.');
+                }
+
+            } catch (error) {
+                console.error('Error fetching tickets:', error);
+                alert('An error occurred while fetching tickets.');
+            }
+        }
+
+        function displayTickets(tickets) {
+            const tableBody = document.getElementById("ticket-table-body");
+            tableBody.innerHTML = ""; // Clear existing table data
+
+            // sort data newest first
+            tickets.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+            tickets.forEach(data => {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                <td>${data.ticket_id}</td>
+                <td>${data.user_id}</td>
+                <td>${data.issue_type}</td>
+                <td>${data.status}</td>
+                <td>${data.created_at}</td>
+                <td>${data.updated_at}</td>
+                <td>${data.admin_response}</td>
+                <td>
+                    <button class="btn btn-sm edit-btn" >Resolve</button>
+                    <button class="btn btn-sm delete-btn">Delete</button>
+                </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+
+
+
+
+
+
+
+
+        function updateUserStatus(email, verification_status, toast) {
+            $.ajax({
+                url: "/update-user-status",
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify({ email: email, new_status: verification_status }),
+                success: function (response) {
+                    toastr.clear(toast); // Clear the processing toast
+
+                    if (verification_status.toLowerCase() === 'approved') {
+                        toastr.success('User request has been approved successfully!', 'Approval Successful');
+                        // Disable both buttons and add the 'disabled-action' class
+
+                    } else if (verification_status.toLowerCase() === 'rejected') {
+                        toastr.error('User request has been rejected.', 'Rejection');
+
+                    } else {
+                        toastr.success('User request updated successfully!', 'Update Successful');
+
+                    }
+
+                    // Immediately update the table (only on success)
+                    const statusLabel = $(`#user-verification-body tr td:nth-child(3):contains(${email}) + td .status-label`);
+                    if (statusLabel.length > 0) {
+                        statusLabel.text(verification_status);
+                        statusLabel.attr('class', `status-label ${verification_status.toLowerCase()}`);
+                    }
+
+                    fetchUsers(); // Refresh the whole table to ensure data consistency
+                },
+                error: function (xhr, status, error) {
+                    toastr.clear(toast); // Clear the processing toast
+
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        toastr.error(`Failed to update status: ${xhr.responseJSON.message}`, 'Update Failed');
+                    } else {
+                        toastr.error('Failed to update status. An unexpected error occurred.', 'Update Failed');
+                    }
+                    console.error("Error updating user status:", error);
+                }
+            });
+
+            applyFilters();
+            fetchUsers();
+        }
+
+        function applyFilters() {
+
+            if (!userData) {
+                return; // Exit if userData is not yet loaded
+            }
+
+            let filteredData = userData;
+            const searchTerm = userSearchInput.value.toLowerCase();
+
+            filteredData = filteredData.filter(user => {
+                return user.username.toLowerCase().includes(searchTerm) ||
+                    user.company.toLowerCase().includes(searchTerm) ||
+                    user.email.toLowerCase().includes(searchTerm);
+
+            });
+
+            const selectedStatus = statusFilterSelect.value;
+
+            if (selectedStatus !== 'all') {
+
+                filteredData = filteredData.filter(user => {
+                    if (user.verification_status) {
+                        return user.verification_status.toLowerCase() === selectedStatus.toLowerCase();
+                    } else {
+                        return false; // Or handle null values as needed
+                    }
+                });
+
+            }
+            populateUserTable(filteredData);
+            populateUserVerificationTable(filteredData);
+        }
+
+        userSearchInput.addEventListener('input', applyFilters);
+        statusFilterSelect.addEventListener('change', applyFilters);
+
+        // Add a custom selector to find the status label by email
+        jQuery.expr[':'].contains = function (a, i, m) {
+            return jQuery(a).text().toUpperCase()
+                .indexOf(m[3].toUpperCase()) >= 0;
+        };
+
+
+        async function deleteUser(userId) {
+            if (confirm("Are you sure you want to delete this user?")) {
+                try {
+                    const response = await fetch(`/delete-user/${userId}`, { method: 'DELETE' });
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.message || 'Failed to delete user');
+                    }
+                    toastr.success('User deleted successfully.', 'Delete Successful');
+                    fetchUsers(); // Refresh the table
+                } catch (error) {
+                    console.error('Error deleting user:', error);
+                    toastr.error(error.message || 'Failed to delete user.', 'Delete Failed');
+                }
+            }
+        }
+
+
+        function showUserActivityChat() {
+            // Sample data for monthly activity
+            const monthlyActivityData = {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                datasets: [{
+                    label: 'New Users',
+                    data: [50, 75, 90, 120, 150, 180, 200, 170, 140, 110, 80, 60],
+                    backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                }, {
+                    label: 'Active Users',
+                    data: [40, 60, 80, 100, 130, 160, 180, 150, 120, 90, 70, 50],
+                    backgroundColor: 'rgba(255, 99, 132, 0.5)',
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    borderWidth: 1
+                }]
+            };
+
+            // Get the canvas element
+            const ctx = document.getElementById('activityChart').getContext('2d');
+
+            // Create the chart
+            const monthlyActivityChart = new Chart(ctx, {
+                type: 'line', // or 'bar' for a bar chart
+                data: monthlyActivityData,
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Monthly User Activity',
+                            padding: {
+                                top: 10,
+                                bottom: 30
+                            },
+                            font: {
+                                size: 18
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        const signOutLink = document.getElementById('signOutLink');
+        const signOutPopup = document.getElementById('signOutPopup');
+        const confirmSignOut = document.getElementById('confirmSignOut');
+        const cancelSignOut = document.getElementById('cancelSignOut');
+
+        signOutLink.addEventListener('click', function (event) {
+            event.preventDefault(); // Prevent default link behavior
+            signOutPopup.style.display = 'flex'; // Show the popup
+        });
+
+        confirmSignOut.addEventListener('click', function () {
+            window.location.href = '/signout'; // Redirect to signout
+        });
+
+        cancelSignOut.addEventListener('click', function () {
+            signOutPopup.style.display = 'none'; // Hide the popup
+        });
+
+
+
+
+
+        /*----------------------------------- insert user ----------------------------*/
+
+
+        function validateForm() {
+            const username = document.getElementById("username").value.trim();
+            const phone = document.getElementById("phone").value.trim();
+            const email = document.getElementById("email").value.trim().toLowerCase();
+            const company = document.getElementById("company").value.trim();
+            const password = document.getElementById("password").value;
+            const country = document.getElementById("country").value;
+            const verificationStatus = document.getElementById("verificationStatus").value;
+            const userType = document.getElementById("userType").value;
+            const isSuperadmin = document.getElementById("isSuperadmin").value;
+
+            const validations = {
+                username: {
+                    isValid: username.length >= 3,
+                    message: "Username must be at least 3 characters.",
+                },
+                phone: {
+                    isValid: /^[0-9]{10}$/.test(phone),
+                    message: "Phone number must be 10 digits.",
+                },
+                email: {
+                    isValid: /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email),
+                    message: "Invalid email format.",
+                },
+                company: {
+                    isValid: company.length > 0,
+                    message: "Company is required.",
+                },
+                password: {
+                    isValid:
+                        password.length >= 8 &&
+                        /[A-Z]/.test(password) &&
+                        /[0-9]/.test(password) &&
+                        /[^A-Za-z0-9]/.test(password),
+                    message:
+                        "Password must be at least 8 characters with uppercase, number, and special character.",
+                },
+                country: {
+                    isValid: country !== "",
+                    message: "Country is required.",
+                },
+                verificationStatus: {
+                    isValid: verificationStatus !== "",
+                    message: "Verification status is required.",
+                },
+                userType: {
+                    isValid: userType !== "",
+                    message: "User type is required.",
+                },
+                isSuperadmin: {
+                    isValid: isSuperadmin !== "",
+                    message: "Superadmin status is required.",
+                },
+            };
+
+            let isValid = true;
+            for (const field in validations) {
+                const { isValid: fieldValid, message } = validations[field];
+                const inputElement = document.getElementById(field);
+
+                if (!fieldValid) {
+                    isValid = false;
+                    inputElement.classList.add("error-input");
+                    if (field === 'password') {
+                        toastr.error(message)
+                    }
+
+                } else {
+                    inputElement.classList.remove("error-input");
+                }
+            }
+
+            if (!isValid) {
+                toastr.error("Please correct the errors in the form.");
+            }
+
+            return isValid;
+        }
+
+        function togglePasswordVisibility() {
+            const passwordInput = document.getElementById("password");
+            const toggleIcon = document.getElementById("togglePassword");
+
+            if (passwordInput.type === "password") {
+                passwordInput.type = "text";
+                toggleIcon.classList.remove("fa-eye");
+                toggleIcon.classList.add("fa-eye-slash");
+            } else {
+                passwordInput.type = "password";
+                toggleIcon.classList.remove("fa-eye-slash");
+                toggleIcon.classList.add("fa-eye");
+            }
+        }
+
+        document.getElementById("insert-user-form").addEventListener("submit", function (event) {
+            event.preventDefault();
+
+            if (validateForm()) {
+                const username = document.getElementById("username").value.trim();
+                const phone = document.getElementById("phone").value.trim();
+                const email = document.getElementById("email").value.trim().toLowerCase();
+                const company = document.getElementById("company").value.trim();
+                const password = document.getElementById("password").value;
+                const country = document.getElementById("country").value;
+                const verificationStatus = document.getElementById("verificationStatus").value;
+                const userType = document.getElementById("userType").value;
+                const isSuperadmin = document.getElementById("isSuperadmin").value;
+                const notes = document.getElementById("notes").value;
+
+                fetch("/add-user", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        company: company,
+                        phone: phone,
+                        email: email,
+                        country: country,
+                        password: password,
+                        verification_status: verificationStatus,
+                        user_type: userType,
+                        is_superadmin: isSuperadmin === "true",
+                        notes: notes,
+                    }),
+                })
+                    .then((response) => {
+                        if (response.ok) {
+                            toastr.success("User added successfully!!");
+                            document.getElementById('add-page').style.display = 'none';
+                            document.getElementById('users-page').style.display = 'block';
+                            document.getElementById("insert-user-form").reset();
+                        } else {
+                            return response.json().then((data) => {
+                                toastr.error("Failed to add user: " + data.message);
+                            });
+                        }
+                    })
+                    .catch((error) => {
+                        console.error("Error:", error);
+                        toastr.error("An error occurred. Please try again.");
+                    });
+            }
+        });
+
+        // Add input event listeners to clear error classes on input
+        ["username", "phone", "email", "company", "password", "country", "verificationStatus", "userType", "isSuperadmin"].forEach((id) => {
+            document.getElementById(id).addEventListener("input", () => {
+                document.getElementById(id).classList.remove("error-input");
+            });
+        });
+
+
+    </script>
+
+
+
+
+</body>
+
+</html>

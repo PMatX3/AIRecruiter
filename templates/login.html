@@ -2,284 +2,459 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Hiring with AI-powered Candidate Selection</title>
-    <link rel="icon" href="./static/images/favion2.png" type="image/png" style="height:26px;width:26px">    
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        /* Base Styles */
-        body {
-            font-family: 'Poppins', sans-serif;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            color: #333;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            line-height: 1.6;
-            padding: 20px;
-            box-sizing: border-box;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login - Hiring with AI-powered Candidate Selection</title>
+  <link rel="icon" href="./static/images/favion2.png" type="image/png" style="height: 26px; width: 26px" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" />
 
-        /* Container Styling */
-        .container {
-            position: relative; /* Add this line */
-            background: #fff;
-            padding: 40px;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            width: 100%;
-            max-width: 800px;
-            text-align: center;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            transition: transform 0.3s ease;
-        }
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+  <style>
+    /* Base Styles */
+    body {
+      font-family: "Poppins", sans-serif;
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      color: #333;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      line-height: 1.6;
+      padding: 20px;
+      box-sizing: border-box;
+    }
 
-        .container:hover {
-            transform: translateY(-5px);
-        }
+    /* Container Styling */
+    .container {
+      position: relative;
+      /* Add this line */
+      background: #f6fbfe;
+      padding: 40px;
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 800px;
+      text-align: center;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: transform 0.3s ease;
+      z-index: 1;
+    }
 
-        .login_img img {
-            width: 400px;
-            border-radius: 10px;
-        }
+    .container:hover {
+      transform: translateY(-5px);
+    }
 
-        /* Header Styling */
-        h2 {
-            margin: 0 0 30px 0;
-            font-size: 28px;
-            color: #2c3e50;
-            font-weight: 600;
-        }
+    .login_img img {
+      width: 400px;
+      border-radius: 10px;
+    }
 
-        /* Form Group Styling */
-        .form-group {
-            margin-bottom: 25px;
-            text-align: left;
-        }
+    /* Header Styling */
+    h2 {
+      margin: 0 0 30px 0;
+      font-size: 28px;
+      color: #2c3e50;
+      font-weight: 600;
+    }
 
-        /* Label Styling */
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-size: 14px;
-            color: #34495e;
-            font-weight: 500;
-        }
+    /* Form Group Styling */
+    .form-group {
+      margin-bottom: 25px;
+      text-align: left;
+    }
 
-        /* Input Styling */
-        input {
-            width: 100%;
-            padding: 12px 15px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 14px;
-            background: #f9f9f9;
-            color: #333;
-            transition: all 0.3s ease;
-            box-sizing: border-box;
-        }
+    /* Label Styling */
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 14px;
+      color: #34495e;
+      font-weight: 500;
+    }
 
-        /* Input Focus Styling */
-        input:focus {
-            border-color: #3498db;
-            background: #fff;
-            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
-            outline: none;
-        }
+    /* Input Styling */
+    input {
+      width: 100%;
+      padding: 12px 15px;
+      border: none;
+      outline: none;
+      border-bottom: 2px solid #3498db;
+      border-radius: 4px;
 
-        /* Button Styling */
-        button {
-            width: 100%;
-            padding: 12px;
-            background-color: #3498db;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-weight: 600;
-            margin-top: 20px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
+      font-size: 14px;
+      background: #f9f9f9;
+      color: #333;
+      transition: all 0.3s ease;
+      box-sizing: border-box;
+    }
 
-        /* Button Hover and Active Styling */
-        button:hover {
-            background-color: #2980b9;
-            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
-        }
+    /* Input Focus Styling */
+    input:focus {
+      border-color: #3498db;
+      background: #fff;
+      box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+      outline: none;
+    }
 
-        button:active {
-            transform: scale(0.98);
-        }
+    /* Button Styling */
+    button {
+      width: 100%;
+      padding: 12px;
+      background-color: #3498db;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-weight: 600;
+      margin-top: 20px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
 
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .container {
-                flex-direction: column;
-                padding: 30px 20px;
-            }
-            .login_img img {
-                display: none;
-            }
-        }
+    /* Button Hover and Active Styling */
+    button:hover {
+      background-color: #2980b9;
+      box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
+    }
 
-        a {
-            color: #3498db;
-            text-decoration: none;
-            font-size: 14px;
-            margin-top: 20px;
-            display: inline-block;
-            transition: color 0.3s ease;
-        }
+    button:active {
+      transform: scale(0.98);
+    }
 
-        a:hover {
-            color: #2980b9;
-        }
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .container {
+        flex-direction: column;
+        padding: 30px 20px;
+      }
 
-        /* Keyframes for slide-down animation */
-        @keyframes slideDown {
-            0% {
-                opacity: 0;
-                transform: translateY(-20px);
-            }
-            100% {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
+      .login_img img {
+        display: none;
+      }
+    }
 
-        .message-container {
-            position: fixed;
-            top: 10px; 
-            left: 34%; 
-            transform: translateX(-50%); 
-            width: 50%; 
-            max-width: 400px; 
-            padding: 10px;
-            border-radius: 5px;
-            font-size: 14px;
-            display: none; 
-            text-align: center;
-            background-color: #f8d7da; 
-            color: #721c24; 
-            border: 1px solid #f5c6cb; 
-            animation: slideDown 0.5s ease-out forwards; 
-            z-index: 1000; 
-        }
+    a {
+      color: #3498db;
+      text-decoration: none;
+      font-size: 14px;
+      margin-top: 20px;
+      display: inline-block;
+      transition: color 0.3s ease;
+    }
 
-        .message-container.error {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }    
-        .message-container.success {
-            background-color: #dbf8d7;
-            color: green;
-            border: 1px solid #05a705;
-        }  
+    a:hover {
+      color: #2980b9;
+    }
 
-        .input-icon {
-            position: relative;
-        }
+    /* Keyframes for slide-down animation */
+    @keyframes slideDown {
+      0% {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
 
-        .input-icon input {
-            padding-left: 40px;
-        }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
 
-        .input-icon i {
-            position: absolute;
-            left: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #7f8c8d;
-        }
-    </style>
-    <script src="https://kit.fontawesome.com/your-fontawesome-kit.js" crossorigin="anonymous"></script>
+    .message-container {
+      position: fixed;
+      top: 10px;
+      left: 34%;
+      transform: translate(-50%, -50%);
+      width: 50%;
+      max-width: 400px;
+      padding: 10px;
+      border-radius: 5px;
+      font-size: 14px;
+      display: none;
+      text-align: center;
+      background-color: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+      animation: slideDown 0.5s ease-out forwards;
+      z-index: 1000;
+    }
+
+    .message-container.error {
+      background-color: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+
+    .message-container.success {
+      background-color: #dbf8d7;
+      color: green;
+      border: 1px solid #05a705;
+    }
+
+    .input-icon {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .input-icon input {
+      padding-left: 40px;
+    }
+
+    .input-icon i {
+      position: absolute;
+      left: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #7f8c8d;
+      cursor: pointer;
+    }
+
+    .fa-eye,
+    /* Target the eye icon specifically */
+    .fa-eye-slash {
+      /* Also target the slashed eye icon */
+      position: relative;
+      margin-left: 85%;
+      color: #7f8c8d;
+      cursor: pointer;
+    }
+
+    .social-login {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+
+    .social-login a {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 45px;
+      height: 45px;
+      border-radius: 12px;
+      background: #fff;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
+      z-index: 2;
+    }
+
+    .social-login a:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .social-login i {
+      font-size: 33px;
+      color: #3498db;
+      cursor: pointer;
+    }
+
+    .error-input {
+      border-color: #e74c3c !important;
+      box-shadow: 0 0 0 2px rgba(231, 76, 60, 0.2) !important;
+    }
+  </style>
 </head>
 
 <body>
-    <div class="container">
-        <div class="login_img">
-            <img src="static/images/login_bg.jpg" alt="logo">
-        </div>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
 
-        <div> 
-            <h2>Welcome Back</h2>
-            <form id="loginForm">
-                <div class="form-group">
-                    <label for="email">Email</label>
-                    <div class="input-icon">
-                        <i class="fas fa-envelope"></i>
-                        <input type="email" id="email" name="email" required placeholder="Enter your email">
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label for="password">Password</label>
-                    <div class="input-icon">
-                        <i class="fas fa-lock"></i>
-                        <input type="password" id="password" name="password" required placeholder="Enter your password">
-                    </div>
-                </div>
-                <button type="submit">Login</button>
-                <span>Don't have an account? <a href="/register">Sign up</a></span>
-                <br>
-                <a href="/forgot_password">Forgot password?</a>
-            </form>
-        </div>
+  <div class="container">
+    <div class="login_img">
+      <img src="static/images/login_bg.jpg" alt="logo" />
     </div>
-    <div id="messageContainer" class="message-container"></div>
-    <script>
-        document.getElementById('loginForm').addEventListener('submit', function (event) {
-            event.preventDefault();
 
-            let email = document.getElementById('email').value;
-            let password = document.getElementById('password').value;
+    <div>
+      <h2>Welcome Back</h2>
+      <form id="loginForm">
+        <div class="form-group">
+          <label for="email">Email <span style="color: red">*</span></label>
+          <div class="input-icon">
+            <i class="fas fa-envelope"></i>
+            <input type="text" id="email" oninput="this.value = this.value.trim();" name="email"
+              placeholder="Enter your email" autocomplete="username" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="password">Password <span style="color: red">*</span></label>
+          <div class="input-icon">
+            <i class="fas fa-lock"></i>
+            <input type="password" id="password" name="password" placeholder="Enter your password"
+              autocomplete="current-password" />
+            <i class="fas fa-eye" id="togglePassword" onclick="togglePasswordVisibility()"></i>
+          </div>
+        </div>
+        <button type="submit">Login</button>
+        <span>Don't have an account? <a href="/register">Sign up</a></span>
+        <br />
+        <a href="/forgot_password">Forgot password?</a>
+      </form>
+    </div>
+  </div>
+  <div id="messageContainer" class="message-container"></div>
+  <script>
+    toastr.options = {
+      closeButton: false,
+      debug: false,
+      newestOnTop: false,
+      progressBar: true, // Show a progress bar
+      preventDuplicates: false,
+      positionClass: "toast-top-right", // Adjust position as needed
+      onclick: null,
+      showDuration: "300",
+      hideDuration: "1000",
+      timeOut: "3000", // Duration toast is shown
+      extendedTimeOut: "1000",
+      showEasing: "swing",
+      hideEasing: "linear",
+      showMethod: "fadeIn",
+      hideMethod: "fadeOut",
+    };
 
-            fetch('/login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ email: email, password: password })
-            })
-                .then(response => {
-                    if (response.ok) {
-                        window.location.replace('/'); // Use replace() instead of href assignment
-                    } else {
-                        return response.json().then(data => {
-                            showMessage('Login failed: ' + data.message, 'error');
-                        });
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    showMessage('An error occurred. Please try again.', 'error');
-                });
-        });
+    function isValidEmail(email) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-        function showMessage(message, type) {
-            const messageContainer = document.getElementById('messageContainer');
-            messageContainer.textContent = message;
-            messageContainer.className = 'message-container ' + type;
-            messageContainer.classList.add('active'); // Add 'active' class to start animation
+      const normalizedEmail = email.trim().toLowerCase();
 
-            // Ensure the message container is visible
-            messageContainer.style.display = 'block';
+      // Check if the email is empty
+      if (normalizedEmail.trim() === "") {
+        return false;
+      }
 
-            // Optionally hide the message after some time
-            setTimeout(() => {
-                messageContainer.classList.remove('active'); // Remove 'active' class to end animation
-                messageContainer.style.display = 'none'; // Hide the container
-            }, 3000); // Adjust time as needed
+      // Validate the email format
+      if (!emailRegex.test(normalizedEmail)) {
+        return false;
+      }
+
+      return true;
+    }
+
+    function isPasswordValid(password) {
+      let isValid = true;
+      // Check if the password is empty
+      if (password.trim() === "") {
+        return false;
+      }
+
+      // Check length
+      if (
+        password.length < 8 ||
+        !/[A-Z]/.test(password) ||
+        !/[0-9]/.test(password) ||
+        !/[^A-Za-z0-9]/.test(password)
+      ) {
+        isValid = false;
+      }
+
+      return isValid;
+    }
+
+    window.onload = function () {
+      if (performance.navigation.type === 2) { // Check if user navigated back
+        location.reload(true); // Force reload from the server
+      }
+    };
+
+    function togglePasswordVisibility() {
+      const passwordInput = document.getElementById("password");
+      const toggleIcon = document.getElementById("togglePassword");
+
+      if (passwordInput.type === "password") {
+        passwordInput.type = "text";
+        toggleIcon.classList.remove("fa-eye");
+        toggleIcon.classList.add("fa-eye-slash");
+      } else {
+        passwordInput.type = "password";
+        toggleIcon.classList.remove("fa-eye-slash");
+        toggleIcon.classList.add("fa-eye");
+      }
+    }
+
+
+
+
+
+    function showMessage(message, type) {
+      const messageContainer = document.getElementById("messageContainer");
+      messageContainer.textContent = message;
+      messageContainer.className = `message-container ${type}`;
+      messageContainer.classList.add("active");
+
+      messageContainer.style.display = "block";
+
+      setTimeout(() => messageContainer.classList.remove("active"), 3000);
+      setTimeout(() => (messageContainer.style.display = "none"), 3000);
+
+    }
+
+
+
+    document
+      .getElementById("loginForm")
+      .addEventListener("submit", function (event) {
+        event.preventDefault();
+
+        let email = document.getElementById("email").value.toLowerCase();
+        let password = document.getElementById("password").value;
+
+        console.log(" Email : ", email);
+        console.log(" password: ", password);
+        // Reset error messages
+
+        const emailIsValid = isValidEmail(email); // Corrected variable name
+        const passwordIsValid = isPasswordValid(password); // Corrected variable name
+
+        if (!emailIsValid || !passwordIsValid) {
+          toastr.error("Invalid username or password. Please try again");
+          if (!emailIsValid)
+            document.getElementById("email").classList.add("error-input");
+          else
+            document.getElementById("email").classList.remove("error-input");
+          if (!passwordIsValid)
+            document.getElementById("password").classList.add("error-input");
+          else
+            document
+              .getElementById("password")
+              .classList.remove("error-input");
+          return;
         }
-    </script>
+
+        fetch("/login", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email: email, password: password }),
+        })
+          .then((response) => {
+            if (response.ok) {
+              toastr.success("Login Successful!");
+              window.location.replace("/");
+            } else {
+              return response.json().then((data) => {
+                if (data.message === 'Your account is pending for Approval. Please wait for admin Approval.') {
+                  showMessage(data.message, 'error'); // Show the centered error popup
+                } else {
+                  toastr.error(data.message || "Invalid username or password. Please try again");
+                }
+              });
+            }
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+            toastr.error("Invalid username or password. Please try again");
+          });
+      });
+  </script>
 </body>
 
 </html>
