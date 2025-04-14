@@ -1,6 +1,7 @@
 from flask import Flask,flash, request, jsonify, render_template, make_response,session, redirect, url_for, Response, send_from_directory,abort
 import speech_recognition as sr
 
+from pymongo.errors import PyMongoError
 
 from pydub import AudioSegment
 import openai
@@ -32,6 +33,7 @@ from pymongo import MongoClient
 from werkzeug.security import generate_password_hash, check_password_hash
 from bson.objectid import ObjectId
 from process import update_job_description,update_job_posting, update_process_status,update_getting_resumes_celery
+from process import get_organization_details, get_user_organizations
 from email_test import send_mail
 import base64
 import io
@@ -86,13 +88,20 @@ SCOPES = [
     'https://www.googleapis.com/auth/calendar.events'
 ]
 
+#  Linkedin Client
+CLIENT_ID = "78sqp6ad5vx02s"
+CLIENT_SECRET = "WPL_AP1.5M5XItSYHSCTpVUg.bXZYvQ=="
+REDIRECT_URI = "https://www.yourbestrecruiter.ai/auth/callback"
+
+
+
 mongo_client = get_mongo_client()
 db = mongo_client.get_database('recruiter')
 users_collection = db.get_collection('users') if db.get_collection('users') is not None else db.create_collection('users')
 text_data_collection = db.get_collection('text_data') if db.get_collection('text_data') is not None else db.create_collection('text_data')
 process_collection = db.get_collection('process') if db.get_collection('process') is not None else db.create_collection('process')
 jobs_collection = db.get_collection('jobs') if db.get_collection('jobs') is not None else db.create_collection('jobs')
- 
+linkedin_collection = db.get_collection('linkedin_users') if db.get_collection('linkedin_users') is not None else db.create_collection('linkedin_users')
 selected_collection = db.get_collection('selected_candidates') if db.get_collection('selected_candidates') is not None  else db.create_collection('selected_candidates')
     
 tickets_collection = db.get_collection('tickets')
@@ -148,9 +157,33 @@ def async_file_cleanup(filepath):
 def is_english(text):
     return bool(re.match(r'^[A-Za-z0-9\s.,!?\'\"()-]+$', text))
 
-@app.route('/nav', methods=['GET'])
+@app.route('/notifications_update', methods=['GET'])
 def navbar():
-    return render_template('navbar.html')
+    if 'user' in session:
+        current_user = session['user']['_id']
+        user = users_collection.find_one({'_id': ObjectId(current_user)})
+        notifications = get_todays_interviews()
+        notification_count = len(notifications) if notifications else 0
+        is_superadmin = user.get('is_superadmin', False) if user else False
+
+        # Construct the response dictionary correctly
+        response = {
+            'notification_count': notification_count,
+            'is_superadmin': is_superadmin
+        }
+        return jsonify(response)  # Return the response as JSON
+    else:
+        # Handle the case where the user is not logged in.
+        # You might return a default response or an error.
+        response = {
+            'notification_count': 0,
+            'is_superadmin': False
+        }
+        return jsonify(response) #Or some error message, or redirect.
+
+@app.route('/test', methods=['GET'])
+def index_testing():
+    return render_template('file4.html')
 
 @app.route('/transcribe', methods=['POST'])
 def transcribe_audio():
@@ -219,19 +252,24 @@ def extract_job_info(text):
         # Payload to be sent in the POST request
         payload = {"contents":[{"parts":[{"text":f"""Extract job information from the following text: {text}. Ensure to extract and include the following details but if not, don't include that section, formatted in markdown:
 
-        Job title:Provide the job title                                    
-        About the job: Provide the job introduction.
-        Who We Are: Offer a brief overview of the company.
-        Your New Role: Describe the job role.
-        Your Role Accountabilities: List the responsibilities and accountabilities.
-        Qualifications & Experience: Detail the required qualifications and experience.
-        Hybrid Working: Describe the working conditions.
-        How We Get Things Done: Summarize the company's guiding principles.
-        Championing Inclusion at [Company]: Include the company's diversity and inclusion statement.
+        📝 **Job Title**: 
+        🎯 *Provide the job title*                          
+        📢 **About the Job**: 
+        ℹ️ *Provide a brief introduction to the role ine new line*  
+        🏢 **Who We Are**: 
+        🌍 *Give a short overview of the company in new line*
+        💼 **Your New Role**:                                
+        🎭 *Describe the job role in detail in new line*
+        ✅ **Your Role Accountabilities**: 🏆 *List key responsibilities*
+        🎓 **Qualifications & Experience**:📚 *Detail the required qualifications and experience.*
+        🏠 **Hybrid Working**: 🏢🏡 *Describe the working conditions (onsite/hybrid/remote)*
+        🚀 **How We Get Things Done**: 🌟 *Summarize the company's guiding principles*
+        🤝 **Championing Inclusion at [Company]**: 🌍 *Highlight the company's diversity & inclusion efforts*  
         For inquiries mobile number if available.
         Ensure the output includes:
 
         Job title, bold and centered in content (if available)
+        Ensure that each section starts on a new line for better readability, leave a small padding between each section.
         Complete description with all specified sections
         If any of the sections are not specified in the text, don't include that respective section. The generated job description must contain all the points mentioned above and be presented in proper markdown format. I want to extract minimum text from the text provided."""}]}]}
         
@@ -249,37 +287,42 @@ def extract_job_info(text):
         return None
 
 SUPER_ADMIN_EMAILS =  ['super.admin@gmail.com']
+
+
 @app.route('/register', methods=['GET', 'POST'])
 def register():
+
+
     if request.method == 'GET':
         return render_template('registration.html')
     
     data = request.get_json()
     email = data["email"].lower()
 
-    if users_collection.find_one({"email": email}):
+    if users_collection.find_one({"registered_email": email}):
         return jsonify({"message": "User already exists"}), 400
     
     is_superadmin = email in SUPER_ADMIN_EMAILS
-    trial_start = datetime.utcnow()
-    trial_end = None if is_superadmin else trial_start + timedelta(days=10)
+   
     
     new_user = {
         "username": data["username"],
         "company": data["company"],
         "country": data.get("country", ""),
         "created_at": datetime.utcnow(),
-        "email": email,
+        "registered_email": email,
+        "profileUrl": data.get("profileUrl", ""),
         "phone": data["phone"],
         "notes": "",
         "verification_status": "Pending",
         "user_type": "User",
         "password": generate_password_hash(data["password"]),
+        "linkedin_id": None,  # Initially None until user connects LinkedIn
+        "linkedin_email": None,  # Will be set when LinkedIn is connected
+        "is_linkedin_connected": False,
         "subscription": {
             "is_subscribed": False,
-            "plan": "trial",
-            "start_date": trial_start,
-            "expiry_date": trial_end,
+            "plan": "trial",    
             "status": "active"
         },
         "features": {
@@ -287,23 +330,174 @@ def register():
         },
         "is_superadmin": is_superadmin
     }
-    
-    users_collection.insert_one(new_user)
+
+    users_collection.insert_one(new_user) #Replace with DB call      
+    session['registration_data'] = data # Store for LinkedIn auth
     email_body = f"""
-        Thank you for registering with YourBestRecruiterAI. Your request is under review and will be approved within 24 hours.
+        Dear Recruiter,
 
-        
-        You’ll receive an email once your account is activated.
+        Congratulations! Your registration with YourBestRecruiterAI was successful. 🎉  
 
-        Best,
-        Your Recruitment Team
-    """
-    send_mail(email, "Registration Received – Pending Approval",email_body , attachment_paths=None)
+        🚀 Explore our AI-powered recruitment tools:  
+        ✅ Post job listings and find the best-matched candidates effortlessly.  
+        ✅ Schedule interviews and manage hiring efficiently.  
+        ✅ Leverage AI to streamline your recruitment process.  
+
+        Start your journey now and experience smarter hiring!  
+
+        Best Regards,  
+        YourBestRecruiterAI Team  
+        """
+    # send_mail(email, "Welcome to YourBestRecruiterAI – Your Registration is Successful!",email_body , attachment_paths=None)
 
     return jsonify({
-        "message": "Super admin registered successfully" if is_superadmin else "User registered successfully",
-        "trial_expires": "unlimited" if is_superadmin else trial_end
+        "message": "Super admin registered successfully" if is_superadmin else "User registered successfully"
     }), 201
+
+
+
+@app.route("/login-linkedin")
+def linkedin_login():
+    
+    session.pop('user', None)   
+    print("Cleared existing session.")
+
+    state = generate_random_string()
+    session['state'] = state
+
+    auth_url = (
+        "https://www.linkedin.com/oauth/v2/authorization"
+        f"?response_type=code&client_id={CLIENT_ID}"
+        f"&redirect_uri={REDIRECT_URI}"
+        f"&state={state}"
+        f"&scope=profile email w_member_social w_organization_social r_organization_social rw_organization_admin openid" # added w_member_social
+        f"&prompt=login&force_account_selection=true"
+    )
+    return redirect(auth_url)
+
+
+@app.route("/auth/callback")
+def callback():
+    try:
+        session.pop('user', None)   
+        print("Cleared existing session at callback.")
+
+    
+        code = request.args.get("code")
+        state = request.args.get("state")
+        
+        if not code:
+            return jsonify({"error": "Missing LinkedIn authorization code."}), 400
+        if not state:
+            return jsonify({"error": "Invalid state parameter."}), 400
+
+    
+        data = {
+            "grant_type": "authorization_code",
+            "code": code,
+            "client_id": CLIENT_ID,
+            "client_secret": CLIENT_SECRET,
+            "redirect_uri": REDIRECT_URI,
+        }
+
+        token_res = requests.post('https://www.linkedin.com/oauth/v2/accessToken', data=data)
+        token_json = token_res.json()
+        access_token = token_json.get("access_token")
+
+        if not access_token:
+            return jsonify({"error": "Failed to retrieve access token", "details": token_json}), 400
+
+        registration_data = session.pop('registration_data', None)
+        registered_email = registration_data.get('email').lower()
+        
+
+        profile_data = get_user_info(access_token)  # Function to fetch user info
+        if not profile_data:
+            return jsonify({"error": "Failed to fetch profile data from LinkedIn"}), 400
+        
+
+
+        # Extract profile details
+        linkedin_email = profile_data.get("email")  
+        linkedin_id = profile_data.get("sub")
+        linkedin_username = f"{profile_data.get('given_name', '')} {profile_data.get('family_name', '')}".strip()
+        picture = profile_data.get("picture", "")
+        
+        if not linkedin_email:
+            return jsonify({"error": "LinkedIn did not return an email address."}), 400
+        
+        if users_collection.find_one({'linkedin_email': linkedin_email}):
+            last_registered_user = users_collection.find_one(
+                {"registered_email": registered_email}, sort=[("_id", -1)]
+            )
+
+            if last_registered_user:
+                users_collection.delete_one({"_id": last_registered_user["_id"]})
+
+            return jsonify({'error': 'This LinkedIn account is already linked to another user'}), 400
+
+        
+        if not registered_email:
+            return jsonify({'error': 'Registered email is missing'}), 400
+
+        update_data = {
+            "access_token": access_token,
+            "linkedin_email": linkedin_email,
+            "linkedin_id": linkedin_id,
+            "verification_status": "Approved",
+            "linkedin_username": linkedin_username,
+            "profile_picture": picture,
+            "is_linkedin_connected": True,
+            "user_linkedin_pages": get_user_organizations(access_token)
+        }
+            
+        result = users_collection.update_one({"registered_email": registered_email}, {"$set": update_data})
+
+
+        if result.modified_count == 1:
+            user = users_collection.find_one({"registered_email": registered_email})
+            session["user"] = {
+                "_id": str(user["_id"]), 
+                "email": user.get("linkedin_email"), 
+                "username": user.get("username"),
+                "is_superadmin": user.get("is_superadmin", False)
+            }
+        
+            token = create_access_token(identity=user["linkedin_email"])
+            return redirect(url_for("home", access_token=token, is_superadmin=user.get("is_superadmin", False)))
+
+        else:
+            return jsonify({"error": "Failed to update user data."}), 400
+
+    except Exception as e:
+        return jsonify({'error': 'Unexpected error occurred during LinkedIn callback', 'details': str(e)}), 500
+
+    
+
+
+    
+
+def generate_random_string(length=32):
+    """Generates a cryptographically secure random string."""
+    alphabet = string.ascii_letters + string.digits + "-._~"
+    random_string = ''.join(secrets.choice(alphabet) for _ in range(length))
+    return random_string
+
+
+def get_user_info(access_token):
+    url = "https://api.linkedin.com/v2/userinfo"
+    headers = {
+        "Authorization": f"Bearer {access_token}"
+    }
+
+    try:
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+        return response.json()
+    except requests.exceptions.RequestException as e:
+        print(f"Error getting user info: {e}")
+        return None
+    
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -311,29 +505,26 @@ def login():
         return render_template('login.html')
     
     data = request.get_json()
-    username = data.get('email').lower()
+    email = data.get('email').lower()
     password = data.get('password')
     
-    user = users_collection.find_one({'email': username})
+    user = users_collection.find_one({'registered_email': email})
     
     if not user or not check_password_hash(user['password'], password):
         return jsonify({'message': 'Invalid credentials'}), 401
     
-    # Check if the user's verification status is approved
-    if user.get('verification_status') != 'Approved':
+    verification_status = user.get('verification_status', '')
+
+    if verification_status == 'Pending':
         return jsonify({'message': 'Your account is pending for Approval. Please wait for admin Approval.'}), 403
+    elif verification_status == 'Rejected':
+        return jsonify({'message': 'Your account has been Rejected. Please contact support for assistance.'}), 403
     
+    # Create session and JWT token
     user['_id'] = str(user['_id'])
     session['user'] = user
-    access_token = create_access_token(identity=username)
-    
-    # Check if the subscription is expired (excluding super admins)
-    if not user.get('is_superadmin', False):
-        expiry_date = user.get('subscription', {}).get('expiry_date')
-        if expiry_date:
-            expiry_date = expiry_date if isinstance(expiry_date, datetime) else datetime.strptime(expiry_date, "%Y-%m-%dT%H:%M:%S.%fZ")
-            if expiry_date < datetime.utcnow():
-                return redirect(url_for('pricing'))  # Redirect expired users after login
+    access_token = create_access_token(identity=email)
+
     
     job = jobs_collection.find_one({'userid': user['_id'], 'process_status': {'$elemMatch': {'$eq': 'in_progress'}}})
     if job:
@@ -341,14 +532,10 @@ def login():
     
     return jsonify({'access_token': access_token, 'is_superadmin': user.get('is_superadmin', False)}), 200
 
-# @app.route('/forgot_password_template', methods=['GET'])
-# def forgot_password():
-
 @app.context_processor
 def inject_navbar_data():
     return {
         "user": session.get("user"),  # Fetch user from session
-        "expiry_timestamp": session.get("expiry_timestamp"),
         "notification_count": session.get("notification_count", 0),
         "is_superadmin": session.get("is_superadmin", False),
     }
@@ -365,16 +552,6 @@ def viewprofile():
     if not user:
         return jsonify({'error': 'User not found'}), 404
 
-    # Get subscription expiry timestamp
-    expiry_date = user.get('subscription', {}).get('expiry_date')
-    
-    if expiry_date:
-        expiry_date = expiry_date if isinstance(expiry_date, datetime) else datetime.strptime(expiry_date, "%Y-%m-%dT%H:%M:%S.%fZ")
-
-        if expiry_date < datetime.utcnow():
-            return redirect(url_for('pricing'))  # Redirect expired users
-    
-    expiry_timestamp = int(expiry_date.timestamp()) if expiry_date else None
 
     # Fetch notifications
     notifications = get_todays_interviews()
@@ -385,11 +562,11 @@ def viewprofile():
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         return jsonify({
             'username': user.get('username', ''),
-            'email': user.get('email', ''),
+            'email': user.get('registered_email', ''),
+            'linkedin_email': user.get('linkedin_email', 'Not available'),
             'phone': user.get('phone', ''),
             'company': user.get('company', ''),
             'country': user.get('country', ''),
-            'expiry_timestamp': expiry_timestamp,
             'notification_count': notification_count,
             'is_superadmin': is_superadmin
         })
@@ -398,7 +575,6 @@ def viewprofile():
     return render_template(
         'profile.html',
         user=user,
-        expiry_timestamp=expiry_timestamp,
         notification_count=notification_count,
         is_superadmin=is_superadmin
     )
@@ -478,7 +654,7 @@ def change_password():
                 decoded_token = jwt.decode(token, app.secret_key, algorithms=['HS256'])
                 email = decoded_token.get('user_id')
                 print("email: ", email)
-                user = users_collection.find_one({'email': email})
+                user = users_collection.find_one({'registered_email': email})
                 print("user: ", user)
                 if user:
                     return render_template('change_password.html', user_id=email)
@@ -526,16 +702,20 @@ def send_otp():
     
     return jsonify({'message': 'OTP sent to email'}), 200
 
-@app.route('/logout')
+@app.route('/logout', methods=['GET', 'POST'])
 def logout():
+    # Clear user session
+    session.pop("user", None)
+    session.pop("access_token", None)
     session.clear()
-    response = make_response(redirect(url_for("login")))  # Create response
 
-    # Force browser to not cache the page
+    # LinkedIn logout URL (redirects to login after logout)
+   
+    # Create response and prevent caching
+    response = make_response(redirect('/login'))
     response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
     response.headers["Pragma"] = "no-cache"
-    response.headers["Expires"] = "-1"
-    response.headers["Cache-Control"] = "post-check=0, pre-check=0"
+    response.headers["Expires"] = "0"
 
     return response
     
@@ -546,44 +726,36 @@ def pricing():
         return render_template('pricing.html')
     else:
         return redirect(url_for('login'))
-    
-    
-
 
 @app.route('/')
 def home():
-
     if 'user' in session:
         current_user = session['user']['_id']
+        print(" line 748 user is in the session : ", current_user)
         user = users_collection.find_one({'_id': ObjectId(current_user)})
-
         if user:
-            expiry_date = user.get('subscription', {}).get('expiry_date')
+            verification_status = user.get('verification_status', '')
+            if verification_status in ['Pending', 'Rejected']:
+                requests.post(url_for('logout', _external=True))
+                return redirect(url_for('login'))
             
-            if expiry_date:
-                expiry_date = expiry_date if isinstance(expiry_date, datetime) else datetime.strptime(expiry_date, "%Y-%m-%dT%H:%M:%S.%fZ")
-                
-                
-                if expiry_date < datetime.utcnow():
-                    print(" ============= expirydate is les then time.now ============")
-                    print(" ========== Reduirecting ")
-                    return redirect(url_for('pricing'))  # Redirect expired users
-            
-            expiry_timestamp = int(expiry_date.timestamp()) if expiry_date else None
             notifications = get_todays_interviews()
-            print(" Todays Notifications : ", notifications)
             notification_count = len(notifications) if notifications else 0
             is_superadmin = user.get('is_superadmin', False)
-            service_used = user["features"]["service_used"]
+            first_job_uploaded = user["features"]["first_job_uploaded"]
             is_subscribed = user["subscription"]["is_subscribed"]
+            access_token = user.get('access_token', 'not foound')
 
-           
-            return render_template('index.html', notification_count=notification_count, expiry_timestamp=expiry_timestamp, is_superadmin=is_superadmin, service_used = service_used, is_subscribed=is_subscribed )
+            print(" line 762 Access_token :  : ", access_token)
+            return render_template('index.html', notification_count=notification_count, notifications=notifications, is_superadmin=is_superadmin, first_job_uploaded = first_job_uploaded, is_subscribed=is_subscribed )
         else:
+            
+            session.pop('user', None)
+            print(" line 767 user is not in the session : ")
             return render_template('home.html')
-
-    elif 'user' not in session:
-        return render_template('home.html')
+        
+    print(" line 768 user is not in the session : ")
+    return render_template('home.html')
 
 def create_or_get_job(user_id, job_info):
     # Find the highest job number for this user
@@ -602,10 +774,10 @@ def create_or_get_job(user_id, job_info):
     else:
         job_number = 1
 
-    existing_job = jobs_collection.find_one({
-        'userid': user_id,
-        'process_status.Creating Job description': 'not_started'
-    })
+    # existing_job = jobs_collection.find_one({
+    #     'userid': user_id,
+    #     'process_status.Creating Job description': 'not_started'
+    # })
 
     if job_info:
         match = re.search(r'# \*\*(.*?)\*\*', job_info)
@@ -625,40 +797,40 @@ def create_or_get_job(user_id, job_info):
     
     print("job_title is:", job_title)
     
-    if existing_job:
-        updated_job_info = job_info.replace("job_id", f"job_{str(existing_job['_id'])}")
-        jobs_collection.update_one(
-            {'_id': existing_job['_id']},
-            {'$set': {
-                'job_info': updated_job_info, 
-                'job_title': job_title,
-                'job_id': str(existing_job['_id']),
-                'edited': False
-            }}
-        )
-        return str(existing_job['_id'])
-    else:
-        new_job = {
-            'userid': user_id,
-            'created_at': datetime.utcnow(),
-            'job_info': job_info,
-            'job_title': job_title,
-            'edited': False,
-            'process_status': {
-                "Creating Job description": "not_started",
-                "Job posting": "not_started",
-                "Getting resumes from portal": "not_started",
-                "Matching resumes with job description": "not_started",
-                "Sending resumes to your email": "not_started"
-            }
+    # if existing_job:
+    #     updated_job_info = job_info.replace("job_id", f"job_{str(existing_job['_id'])}")
+    #     jobs_collection.update_one(
+    #         {'_id': existing_job['_id']},
+    #         {'$set': {
+    #             'job_info': updated_job_info, 
+    #             'job_title': job_title,
+    #             'job_id': str(existing_job['_id']),
+    #             'edited': False
+    #         }}
+    #     )
+    #     return str(existing_job['_id'])
+    # else:
+    new_job = {
+        'userid': user_id,
+        'created_at': datetime.utcnow(),
+        'job_info': job_info,
+        'job_title': job_title,
+        'edited': False,
+        'process_status': {
+            "Creating Job description": "not_started",
+            "Job posting": "not_started",
+            "Getting resumes from portal": "not_started",
+            "Matching resumes with job description": "not_started",
+            "Sending resumes to your email": "not_started"
         }
-        result = jobs_collection.insert_one(new_job)
-        updated_job_info = job_info.replace("job_id", f"job_{str(result.inserted_id)}")
-        jobs_collection.update_one(
-            {'_id': result.inserted_id},
-            {'$set': {'job_info': updated_job_info}}
-        )
-        return str(result.inserted_id)
+    }
+    result = jobs_collection.insert_one(new_job)
+    updated_job_info = job_info.replace("job_id", f"job_{str(result.inserted_id)}")
+    jobs_collection.update_one(
+        {'_id': result.inserted_id},
+        {'$set': {'job_info': updated_job_info}}
+    )
+    return str(result.inserted_id)
 
 @app.route('/audio-to-text', methods=['POST'])
 def audio_to_text():
@@ -730,10 +902,11 @@ def pdf_to_text():
         if not user:
             return jsonify({'error': 'User not found'}), 404
         
-        # Check if the user has already used the free trial feature
-        if not user['subscription']['is_subscribed'] and user['features'].get('service_used', False):
-            print('Free Trial limit reached. Please subscribe to continue.')
-            return jsonify({'error': 'Trial limit reached. Please subscribe to continue.'}), 403
+        if not user.get('is_superadmin', False):    
+            # Check if the user has already used the free trial feature
+            if not user['subscription']['is_subscribed'] and user['features'].get('first_job_uploaded', False):
+                print('Free Trial limit reached. Please subscribe to continue.')
+                return jsonify({'error': 'Trial limit reached. Please subscribe to continue.'}), 403
         
         
         # Check if a file is uploaded     
@@ -760,7 +933,7 @@ def pdf_to_text():
         if not user['subscription']['is_subscribed']:
             users_collection.update_one(
                 {"_id": ObjectId(user_id)},
-                {"$set": {"features.service_used": True}}
+                {"$set": {"features.first_job_uploaded": True}}
             )
 
         result = text_data_collection.insert_one({'user_id': session['user']['_id'], 'text': text})
@@ -784,15 +957,16 @@ def check_upload_status():
             return jsonify({'error': 'Unauthorized access'}), 401
 
         user_id = session['user']['_id']
-        user = users_collection.find_one({"_id": ObjectId(user_id)}, {"features.service_used": 1, "subscription.is_subscribed": 1})
+        user = users_collection.find_one({"_id": ObjectId(user_id)}, {"features.first_job_uploaded": 1, "subscription.is_subscribed": 1,"is_superadmin":1})
 
         if not user:
             return jsonify({'error': 'User not found'}), 404
 
         # Return upload status
         return jsonify({
-            "service_used": user.get('features', {}).get('service_used', False),
-            "is_subscribed": user.get('subscription', {}).get('is_subscribed', False)
+            "first_job_uploaded": user.get('features', {}).get('first_job_uploaded', False),
+            "is_subscribed": user.get('subscription', {}).get('is_subscribed', False),
+            "is_superadmin": user.get('is_superadmin', False)
         })
     
 
@@ -853,11 +1027,66 @@ def process():
     if 'user' not in session:
         return redirect(url_for('login'))
     
-    return render_template('process.html')
+    return render_template('process.html', organizations=session.get('organizations', []))
+
+@app.route('/help')
+def help_center():
+    # Check if 'user' is in session to determine if the user is logged in
+    if 'user' not in session:
+        return redirect(url_for('login'))
+
+    loggedinUser = session['user']['_id']
+    user = users_collection.find_one({'_id': ObjectId(loggedinUser)})
+
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+
+    return render_template('help.html', user=user, username=user.get('username', ''), email=user.get('email', ''))
+
+@app.route('/submit_ticket', methods=['POST'])
+def submit_ticket():
+    if 'user' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+
+    data = request.get_json()
+    print(" Ticket Data: ", data)
+    username = data.get('username')
+    email = data.get('email')
+    subject = data.get('subject')
+    message = data.get('message')
+    userId = session['user']['_id']
+
+    if not username or not email or not subject or not message:
+        return jsonify({'error': 'Missing fields'}), 400
+    
+    ticket_id = str(uuid.uuid4())
+    created_at = datetime.utcnow()
+    updated_at = ''
+
+    ticket = {
+        'ticketId': ticket_id,
+        'userId': ObjectId(userId),
+        'username': username,
+        'email': email,
+        'subject': subject,
+        'message': message,
+        'createdAt': created_at,
+        'updatedAt': updated_at,
+        'status': 'Open',
+        'admin_response': '',
+    }
+
+    tickets_collection.insert_one(ticket)
+
+    return jsonify({'success': True, 'ticketId': ticket_id}), 200
+
+
 
 @app.route('/get_jobdesc/<job_id>', methods=['GET'])
 def get_jobdesc(job_id):
     job = jobs_collection.find_one({'_id': ObjectId(job_id)})
+
     if job:
         return jsonify({'description': md.render(job['job_info']), 'edited': job['edited']})
     else:
@@ -905,12 +1134,15 @@ def clean_all_jobs():
         print(f"Error cleaning all jobs: {str(e)}")
         return jsonify({'error': 'An error occurred while cleaning all jobs.'}), 500
 
-@app.route('/start-process', methods=['GET'])
+@app.route('/start-process', methods=['GET','POST'])
 def start_process():
     # Get all jobs from the collection
     all_jobs = jobs_collection.find({})
+    data = request.get_json()
     
-    # Get the list of job IDs that are currently being processed
+   
+    selected_orgs = data.get('selected_orgs', [])
+    
     active_tasks = []
     active_dict = celery.control.inspect().active()
     if active_dict:
@@ -935,7 +1167,8 @@ def start_process():
                     "Getting resumes from portal": "not_started",
                     "Matching resumes with job description": "not_started",
                     "Sending resumes to your email": "not_started"
-                }
+                },
+                'selected_orgs': selected_orgs
             }}
         )
         
@@ -948,6 +1181,8 @@ def start_process():
             print(traceback.format_exc())
 
     return jsonify({'message': 'Process started for all unprocessed jobs.'})
+
+
 
 @app.route('/get-matched-resumes/<job_id>', methods=['GET'])
 def get_matched_resumes(job_id):
@@ -973,7 +1208,8 @@ def run_process(job_id):
 
     job = jobs_collection.find_one({'_id': ObjectId(job_id)})
     
-    update_process_status(job_id, "Getting resumes from portal", "in_progress", log_message=f"This process will run on {job['end_date'].date()}")
+    
+    update_process_status(job_id, "Getting resumes from portal", "in_progress", log_message=f"This process will run")
     try:
         if 'end_date' in job:
             update_getting_resumes_celery.apply_async((job_id,), eta=job['end_date'])
@@ -1050,13 +1286,13 @@ def save_text():
         user_id = session['user']['_id']
 
         # Check if the user has already used the service
-        user = users_collection.find_one({"_id": ObjectId(user_id)}, {"features.service_used": 1, "subscription.is_subscribed": 1})
+        user = users_collection.find_one({"_id": ObjectId(user_id)}, {"features.first_job_uploaded": 1, "subscription.is_subscribed": 1})
 
         if not user:
             return jsonify({'error': 'User not found'}), 404
         
         # If service has already been used and user is not subscribed, restrict access
-        if user.get('features', {}).get('service_used', False) and not user.get('subscription', {}).get('is_subscribed', False):
+        if user.get('features', {}).get('first_job_uploaded', False) and not user.get('subscription', {}).get('is_subscribed', False):
             return jsonify({'error': 'Trial limit reached. Please subscribe to continue.'}), 403
         
         data = request.get_json()
@@ -1076,7 +1312,7 @@ def save_text():
         # Mark the feature as used after first successful access
         users_collection.update_one(
             {"_id": ObjectId(user_id)},
-            {"$set": {"features.service_used": True}}
+            {"$set": {"features.first_job_uploaded": True}}
         )
         return jsonify({'message': 'PDF processed and text saved to database.', 'job_id': job_id})
     
@@ -1104,13 +1340,14 @@ def get_jobs():
         return jsonify({'error': 'User not authenticated'}), 401
     
     current_user = session['user']['_id']
-    print("Current user : ",current_user)
+   
     user = users_collection.find_one({'_id': ObjectId(current_user)})
+    print("Current user : ", user.get('username'))
+    print("user_organizations: ", session.get('organizations', []))
     if not user:
         return jsonify({'error': 'User not found'}), 404
 
     jobs = jobs_collection.find({'userid': str(user['_id'])})
-    print(" Jobs  = : ", jobs)
     job_list = []
     for job in jobs:
         job['_id'] = str(job['_id'])  # Convert ObjectId to string
@@ -1187,16 +1424,6 @@ def interview():
     if not user:
         return jsonify({'error': 'User not found'}), 404
 
-    # Get subscription expiry timestamp
-    expiry_date = user.get('subscription', {}).get('expiry_date')
-    
-    if expiry_date:
-        expiry_date = expiry_date if isinstance(expiry_date, datetime) else datetime.strptime(expiry_date, "%Y-%m-%dT%H:%M:%S.%fZ")
-
-        if expiry_date < datetime.utcnow():
-            return redirect(url_for('pricing'))  # Redirect expired users
-    
-    expiry_timestamp = int(expiry_date.timestamp()) if expiry_date else None
 
     # Fetch notifications
     notifications = get_todays_interviews()
@@ -1206,13 +1433,9 @@ def interview():
     return render_template(
         "interviews.html",
         user=user,
-        expiry_timestamp=expiry_timestamp,
         notification_count=notification_count,
         is_superadmin=is_superadmin
     )
-
-    
-
 
 
 @app.route('/candidates', methods=['GET'])
@@ -1226,19 +1449,7 @@ def getCandidates():
     if not user:
         return jsonify({'error': 'User not found'}), 404
 
-    # Get subscription expiry timestamp
-    expiry_date = user.get('subscription', {}).get('expiry_date')
-    
-    if expiry_date:
-        expiry_date = expiry_date if isinstance(expiry_date, datetime) else datetime.strptime(expiry_date, "%Y-%m-%dT%H:%M:%S.%fZ")
-
-        if expiry_date < datetime.utcnow():
-            return redirect(url_for('pricing'))  # Redirect expired users
-    
-    expiry_timestamp = int(expiry_date.timestamp()) if expiry_date else None
-
-
-    return render_template('new_candidates.html', expiry_timestamp = expiry_timestamp)
+    return render_template('new_candidates.html')
 
         
 
@@ -1308,52 +1519,6 @@ def serve_file(job_id, filename):
         abort(404) 
 
     return send_from_directory(directory, filename)
-
-
-
-# def get_credentials(host_email):
-
-#     creds = None
-#     token_file = f'token_{host_email.replace("@", "_at_")}.pickle'
-    
-    
-#     if os.path.exists(token_file):
-#         with open(token_file, 'rb') as token:
-#             creds = pickle.load(token)
-    
-#     try:
-#         if not creds or not creds.valid:
-#             if creds and creds.expired and creds.refresh_token:
-#                 creds.refresh(Request())
-#             else:
-#                 flow = InstalledAppFlow.from_client_secrets_file(
-#                     'static/json/credentials.json', 
-#                     SCOPES,
-#                     redirect_uri='urn:ietf:wg:oauth:2.0:oob'
-#                 )
-#                 print(f'\nPlease sign in with the host account ({host_email})')
-#                 auth_url, _ = flow.authorization_url(prompt='consent')
-#                 print('\nPlease visit this URL to authorize this application:')
-#                 print(auth_url)
-#                 print('\nAfter authorization, you will get a code. Enter it below:')
-#                 code = input('Enter the authorization code: ')
-#                 flow.fetch_token(code=code)
-#                 creds = flow.credentials
-                
-#                 with open(token_file, 'wb') as token:
-#                     pickle.dump(creds, token)
-
-#     except Exception as e:
-#         print(f"Authentication error: {str(e)}")
-#         print("Make sure you:")
-#         print(f"1. Are signing in with the host account ({host_email})")
-#         print("2. Have added the host email as a test user in Google Cloud Console")
-#         print("3. Are accepting the unverified app warning (if shown)")
-#         return None
-        
-#     return creds
-
- 
 
 def create_google_meet_event(datetime_str, candidate_email, recruiter_email):
     try:
@@ -1588,14 +1753,17 @@ def schedule_meeting():
         # Find the candidate document (as before) ...
 
         if action == "schedule":
+            print("------------- schedule meeting --------------")
             # --- Scheduling Logic ---
             return handle_schedule(user_id, job_id, candidate_id, candidate_name, candidate_email, recruiter_email, datetime_str, user_timezone_str)
 
         elif action == "reschedule":
+            print("<><><><><><> Re-schedule meeting <><><><><><>")
             # --- Reschedule Logic ---
             return handle_reschedule(user_id, job_id, candidate_id, candidate_name, candidate_email, recruiter_email, datetime_str, user_timezone_str)
 
         elif action == "cancel":
+            print("============= cancel meeting =============")
             # --- Cancel Logic ---
             return handle_cancel(user_id, job_id, candidate_id, candidate_name, candidate_email, recruiter_email, datetime_str, user_timezone_str)
 
@@ -1760,6 +1928,45 @@ def getAll_ScheduledInterviews():
 
     return jsonify(interviews)
 
+# ------------------------------------------ Candidate feedback Routes ----------------------------------------------- #
+
+@app.route('/save_feedback/<candidate_id>', methods=['POST'])
+def save_feedback(candidate_id):
+    if 'user' not in session:
+        return redirect(url_for('login'))
+    try:
+        print(" Candidate id :========= ", candidate_id)
+        if not candidate_id:
+            return jsonify({'error': 'Invalid candidate ID'}), 400
+        
+        data = request.get_json()
+        print(" Data ::: ", data)
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+        
+        next_round = data.get('nextRound')
+        feedback = data.get('feedback')
+        selection_status = data.get('selectionStatus')
+
+        print (f" Data : {next_round}, {feedback}, {selection_status  } ")
+
+        if not next_round or not feedback or not selection_status:
+            return jsonify({'error':'Missing require fields'}), 400
+        
+        selected_collection.update_one(
+            {'selected_candidates.candidate_id': candidate_id},
+            {'$set': {
+                'selected_candidates.$.next_round': next_round,
+                'selected_candidates.$.interviwer_feedback': feedback,
+                'selected_candidates.$.selection_status': selection_status
+            }})
+        
+        return jsonify({'message': 'Feedback saved successfully'}), 200
+    
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+    data = request.get_json()
+
 
 # ------------------------------------------ Admin Routes -----------------------------------------------
 
@@ -1781,7 +1988,7 @@ def admin_panel():
             print("admin_panel: Email or password missing")
             return jsonify({'message': 'Email and password are required'}), 400
 
-        user = users_collection.find_one({"email": email})
+        user = users_collection.find_one({"registered_email": email})
 
         if not user:
             print(f"admin_panel: User not found: {email}")
@@ -1833,7 +2040,7 @@ def update_report():
     total_users = users_collection.count_documents({})
     active_trials = users_collection.count_documents({"subscription.status": "active", "subscription.is_subscribed": False})
     subscribed_users = users_collection.count_documents({"subscription.is_subscribed": True})
-    open_tickets = tickets_collection.count_documents({"status": "open"})
+    open_tickets = tickets_collection.count_documents({"status": "Open"})
     pending_approvals = users_collection.count_documents({"verification_status": "Pending"})
     report_data = {
         "report_type": "User Activity",
@@ -1861,7 +2068,7 @@ def get_users():
             "user_id": str(user.get("_id", "")),
             "username": user.get("username", "N/A"),
             "company": user.get("company", "N/A"),
-            "email": user.get("email", "N/A"),
+            "registered_email": user.get("email", "N/A"),
             "verification_status": user.get("verification_status", "Pending"),
             "user_type": user.get("user_type", "User"),
             "created_at": user.get("created_at", datetime.utcnow()).strftime('%Y-%m-%d %H:%M:%S'),
@@ -1884,30 +2091,44 @@ def update_user_status():
     new_status = data.get("new_status")
 
 
-    result = users_collection.update_one({"email": user_email}, {"$set": {"verification_status": new_status}})
+    result = users_collection.update_one({"registered_email": user_email}, {"$set": {"verification_status": new_status}})
 
     if result.modified_count > 0:
 
-        send_mail(user_email, "Your request has been Approved", " We are pleased to inform you that your registration request has been approved.")
+        send_mail(user_email, "Your request has been Approved", " We are pleased to inform you that your registration request has been approved.\n ")
         return jsonify({"success": True, "message": f"User status updated to {new_status} "}), 200
     else:
         return jsonify({"success": False, "message": "No changes made"}), 400
 
+
 @app.route('/get-tickets', methods=['GET'])
 def get_tickets():
     try:
-        tickets = list(tickets_collection.find({}))  # Fetch all tickets
+        tickets = list(tickets_collection.find({}))
 
-        # Convert ObjectId and datetime objects to strings for JSON serialization
+        serialized_tickets = []
         for ticket in tickets:
-            ticket["_id"] = str(ticket["_id"])
-            ticket["created_at"] = ticket["created_at"].isoformat()
-            ticket["updated_at"] = ticket["updated_at"].isoformat()
+            serialized_ticket = {
+                "_id": str(ticket["_id"]),
+                "createdAt": ticket.get("createdAt",''),
+                "updated_at": ticket.get("updated_at",''),
+                "ticketId": ticket.get("ticketId",'Not available'),
+                "userId": str(ticket.get("userId")),
+                "username": ticket.get("username"),
+                "emailAddress": ticket.get("email",'email not found'),
+                "subject": ticket.get("subject",'No subject'),
+                "message": ticket.get("message",'No message'),
+                "status": ticket.get("status"),
+                "admin_notes": ticket.get("admin_notes",'')
+            }
+            serialized_tickets.append(serialized_ticket)
 
-        return jsonify({"success": True, "tickets": tickets}), 200
+        return jsonify({"success": True, "tickets": serialized_tickets}), 200
 
     except Exception as e:
+        print(f"Error retrieving tickets: {e}")
         return jsonify({"success": False, "message": str(e)}), 500
+    
 
 @app.route('/delete-user/<user_id>', methods=['DELETE'])
 def delete_user(user_id):
@@ -1954,17 +2175,41 @@ def edit_user(user_id):
         print(f"Error deleting user: {e}")  # Log the error
         return jsonify({'message': 'Internal server error'}), 500 
 
+
 @app.route('/edit-user/<user_id>', methods=['PUT'])
 def update_user_route(user_id):
     try:
         object_id = ObjectId(user_id)
         data = request.get_json()
+
         if not data:
-            raise InvalidRequestData()
+            return jsonify({'message': 'Invalid request data'}), 400
+        
+        update_fields = {}
+
+        # Update basic user fields
+        for field in ['username', 'email', 'phone', 'company', 'country', 'verification_status', 'user_type', 'is_superadmin', 'notes', 'features']:
+            if field in data:
+                update_fields[field] = data[field]
+
+        # Update subscription fields and convert date strings to datetime
+        if 'subscription' in data:
+            subscription = data['subscription']
+            sub_update = {}
+
+            for field in ['is_subscribed', 'plan', 'status']:
+                if field in subscription:
+                    sub_update[field] = subscription[field]
+
+            if sub_update:
+                update_fields['subscription'] = sub_update
+
+        if not update_fields:
+            return jsonify({'message': 'No valid fields provided for update'}), 400
 
         update_result = users_collection.update_one(
             {'_id': object_id},
-            {'$set': data}
+            {'$set': update_fields}
         )
 
         if update_result.modified_count == 1:
@@ -1972,17 +2217,11 @@ def update_user_route(user_id):
         elif update_result.matched_count == 1 and update_result.modified_count == 0:
             return jsonify({'message': 'User data was the same, no changes made'}), 200
         else:
-            raise UserNotFound()
+            return jsonify({'message': 'User not found'}), 404
 
-    except InvalidUserId:
-        return jsonify({'message': 'Invalid user ID'}), 400
-    except InvalidRequestData:
-        return jsonify({'message': 'Invalid request data'}), 400
-    except UserNotFound:
-        return jsonify({'message': 'User not found'}), 404
     except Exception as e:
         print(f"Error updating user: {e}")
-        return jsonify({'message': 'Internal server error'}), 500  
+        return jsonify({'message': 'Internal server error'}), 500
 
 @app.route('/add-user', methods=['POST'])
 def add_user():
@@ -1999,7 +2238,7 @@ def add_user():
 
         email = data["email"]
 
-        if users_collection.find_one({"email": email}):
+        if users_collection.find_one({"registered_email": email}):
             return jsonify({"message": "User with this email already exists"}), 400
 
         is_superadmin = data.get("is_superadmin", False)  # Default to False if not provided
@@ -2052,6 +2291,30 @@ class UserNotFound(Exception):
 class InvalidRequestData(Exception):
     pass
 
+
+import secrets
+import string
+
+
+@app.route('/check-linkedin-pages')
+def check_linkedin_pages():
+    if 'user' not in session:
+        return jsonify({'error': 'User not logged in'}), 401
+    
+    user_id = session['user']['_id']
+    user = users_collection.find_one({'_id': ObjectId(user_id)})
+
+
+    
+    if not user or 'user_linkedin_pages' not in user or not user['user_linkedin_pages']:
+        return jsonify({'pages': []})
+    
+    return jsonify({'pages': user['user_linkedin_pages']})
+
+
+
+
 if __name__ == '__main__':
+    
     app.run(debug=True, host="0.0.0.0", port=8000)
     #socketio.run(app, debug=True)

@@ -1,5 +1,6 @@
 // Use modern async/await pattern with Promise caching for data fetching
 let cachedCandidateData = null;
+
 // Fetch data once and cache it
 async function fetchCandidateData() {
   if (cachedCandidateData) return cachedCandidateData;
@@ -29,127 +30,436 @@ function createJobElements(data) {
   }
 
   data.jobs.forEach((job) => {
-    if (!job.selected_candidates || job.selected_candidates.length === 0)
+    if (!job.selected_candidates || job.selected_candidates.length === 0) {
       return;
+    }
 
-    // Sort candidates by score (using stable sort for consistent results)
-    job.selected_candidates.sort(
-      (a, b) =>
+    // Sort candidates by score (using stable sort)
+    job.selected_candidates.sort((a, b) => {
+      return (
         b.score - a.score || a.candidate_name.localeCompare(b.candidate_name)
-    );
-    console.log(" job. selected candidates : ", job.selected_candidates);
+      );
+    });
 
     const jobItem = document.createElement("div");
     jobItem.classList.add("job-item");
 
-    // Use template literals for cleaner HTML generation
+    // Job Header with Candidate Count
     jobItem.innerHTML = `
-      <button class="job-header" data-target="job-${job.job_id}-candidates">
-        <div class="job-title-container">
-          <h2>${escapeHTML(job.job_title)}</h2>
-          <p class="candidate-count text-sm text-gray">${
-            job.selected_candidates.length
-          } candidates</p>
-        </div>
-        <div class="accordion-icon"></div>
-      </button>
-      <div id="job-${job.job_id}-candidates" class="job-content"></div>
+        <button class="job-header" data-target="job-${job.job_id}-candidates">
+            <div class="job-title-container">
+               
+                <span><h2>${escapeHTML(job.job_title)}</h2></span>
+                
+            </div>
+            
+            <div class="accordion-icon"></div>
+        </button>
+        <div id="job-${job.job_id}-candidates" class="job-content"></div>
     `;
 
     const jobContent = jobItem.querySelector(".job-content");
 
-    // Use DocumentFragment for better performance when adding multiple candidates
-    const candidatesFragment = document.createDocumentFragment();
-
+    // Candidate Cards
     job.selected_candidates.forEach((candidate) => {
-      const candidateRow = document.createElement("div");
-      candidateRow.classList.add("candidate-card");
-
-      // Generate candidate info
-      const candidateInfo = document.createElement("div");
-      candidateInfo.classList.add("candidate-info");
-      candidateInfo.innerHTML = `<h3>${escapeHTML(
-        candidate.candidate_name
-      )}</h3>`;
-      candidateRow.appendChild(candidateInfo);
-
-      // Generate candidate actions
-      const candidateActions = document.createElement("div");
-      candidateActions.classList.add("candidate-actions");
-
-      // Score badge with class determined by score
-      const scoreBadgeClass =
-        candidate.score >= 85
-          ? "score-high"
-          : candidate.score >= 70
-          ? "score-medium"
-          : "";
-
-      candidateActions.innerHTML = `
-        <div class="score-badge ${scoreBadgeClass}">
-          Score: ${candidate.score}
-        </div>
-      `;
-
-      // Handle interview date display or schedule button
-      if (candidate.interview_date) {
-        const interviewUTC = luxon.DateTime.fromISO(candidate.interview_date);
-        const userLocalDate = interviewUTC.toLocaleString(
-          luxon.DateTime.DATETIME_MED
-        );
-
-        if (interviewUTC < luxon.DateTime.now()) {
-          // Interview date in the past - show reschedule button
-          const rescheduleButton = document.createElement("button");
-          rescheduleButton.textContent = "Reschedule";
-          rescheduleButton.classList.add("reschedule-btn");
-          rescheduleButton.addEventListener("click", (event) => {
-            showDatePopup(
-              event,
-              candidate.candidate_id,
-              candidate.candidate_name,
-              candidate.email,
-              job.job_id,
-              candidate
-            );
-          });
-          candidateActions.appendChild(rescheduleButton);
-        } else {
-          // Interview date in the future - show date
-          const dateDisplay = document.createElement("span");
-          dateDisplay.textContent = userLocalDate;
-          candidateActions.appendChild(dateDisplay);
-        }
-      } else {
-        // No interview date - show date picker button
-        const datePickerBtn = document.createElement("button");
-        datePickerBtn.classList.add("date-picker-btn");
-        datePickerBtn.innerHTML = '<i class="far fa-calendar-alt fa-lg"></i>';
-        datePickerBtn.addEventListener("click", (event) => {
-          showDatePopup(
-            event,
-            candidate.candidate_id,
-            candidate.candidate_name,
-            candidate.email,
-            job.job_id
-          );
-        });
-        candidateActions.appendChild(datePickerBtn);
-      }
-
-      candidateRow.appendChild(candidateActions);
-      candidatesFragment.appendChild(candidateRow);
+      const candidateCard = createCandidateCard(candidate, job); // Pass job to createCandidateCard
+      jobContent.appendChild(candidateCard);
     });
 
-    jobContent.appendChild(candidatesFragment);
     fragment.appendChild(jobItem);
+  });
+
+  // Accordion functionality for job headers
+  var headers = document.querySelectorAll(".job-header");
+  headers.forEach((header) => {
+    header.addEventListener("click", () => {
+      const target = header.getAttribute("data-target");
+      const content = document.getElementById(target);
+      if (content) {
+        content.classList.toggle("active");
+      }
+    });
   });
 
   return fragment;
 }
+function getScoreBadgeClass(score) {
+  if (score >= 80) return "score-high";
+  if (score >= 60) return "score-medium";
+  return "score-low";
+}
+
+function formatDate(dateString) {
+  if (!dateString) return "Not Scheduled";
+  var date = new Date(dateString);
+  return date.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function createCandidateCard(candidate, job) {
+  var card = document.createElement("div");
+  card.className = "candidate-accordion";
+
+  const candidateString = JSON.stringify(candidate).replace(/'/g, "&#39;");
+
+  // Check if interview is past
+  var isPastInterview =
+    candidate.interview_date && new Date(candidate.interview_date) < new Date();
+
+  // Determine scheduling button
+  var schedulingButton = "";
+  if (!candidate.interview_date) {
+    schedulingButton = `
+
+          <button class="btn btn-schedule" data-candidate-id="${candidate.candidate_id}"  onclick="showDatePopup(event, '${candidate.candidate_id}', '${candidate.candidate_name}', '${candidate.candidate_email}', '${job.job_id}')">
+        <svg xmlns="http://www.w3.org/2000/svg" class="icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                d="M8 7V3m8 4V3m-9 8h10M5 11h14a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2z" />
+        </svg>
+              Schedule Interview
+          </button>
+      `;
+  } else if (isPastInterview) {
+    schedulingButton = `
+          <button class="btn btn-schedule">
+              <svg xmlns="http://www.w3.org/2000/svg" class="icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 11h14a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2z" />
+              </svg>
+              Reschedule
+          </button>
+      `;
+  }
+
+  card.innerHTML = `
+      <div class="accordion-header" data-id="${
+        candidate?.candidate_id || "Not Available"
+      }">
+    <div class="candidate-info">
+    <div style="display: flex; align-items: center; gap: 10px;">
+        <span class="candidate-name">${
+          candidate?.candidate_name || "Not Available"
+        }</span>
+        <span class="score-badge ${getScoreBadgeClass(candidate?.score || 0)}">
+            ${candidate?.score ?? "Not Available"}
+        </span>
+    </div>
+</div>
+    <div class="status-indicator ${
+      candidate?.selection_status === "Selected"
+        ? "status-selected"
+        : "status-rejected"
+    }">
+        ${candidate?.selection_status || "Pending"}
+    </div>
+</div>
+<div class="accordion-content">
+    <div class="feedback-grid">
+        <div class="feedback-section">
+            <div class="feedback-label">Interview Date</div>
+            <div class="feedback-value int-date">${
+              formatDate(candidate?.interview_date) || "Not Available"
+            }</div>
+        </div>
+        <div class="feedback-section">
+            <div class="feedback-label">Interview Round</div>
+            <div class="feedback-value int-round ${
+              candidate?.next_round === "Yes"
+                ? "status-selected"
+                : "status-rejected"
+            }">
+                ${candidate?.next_round || "Pending Interview Round"}
+            </div>
+        </div>
+    </div>
+    <div class="feedback-grid">
+      <div class="feedback-section">
+          <div class="feedback-label">Interviewer Message</div>
+          <div class="feedback-value int-feedback">${
+            candidate?.interviwer_feedback || "Not Available"
+          }</div>
+      </div>
+      <div class="feedback-section">
+          <div class="feedback-label">Selection Status</div>
+          <div class="feedback-value int-status"> ${
+            candidate?.selection_status || "Pending"
+          }</div>
+      </div>
+
+    </div>
+    <div class="action-buttons">
+        <button class="btn btn-edit" 
+                        onclick="editCandidate(event, this, '${
+                          candidate.candidate_id || ""
+                        }', '${job?.job_id || ""}')"
+                        data-candidate='${JSON.stringify(candidate).replace(
+                          /'/g,
+                          "&#39;"
+                        )}' >
+              <svg xmlns="http://www.w3.org/2000/svg" class="icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+              Edit Feedback
+          </button>
+        ${schedulingButton}
+    </div>
+</div>
+
+  `;
+  return card;
+}
+
+function editCandidate(event, button, candidateId, jobId) {
+  if (event) {
+    event.preventDefault(); // Prevent default action
+  }
+
+  const candidateString = button.dataset.candidate;
+  const candidate = JSON.parse(candidateString);
+
+  // Find the accordion header based on candidateId
+  var headerDiv = document.querySelector(`[data-id="${candidateId}"]`);
+
+  if (!headerDiv) {
+    console.error(`Error: Candidate ID ${candidateId} not found.`);
+    return; // Exit function if the element does not exist
+  }
+
+  // Get the next sibling (accordion content)
+  var contentDiv = headerDiv.nextElementSibling;
+
+  if (!contentDiv || !contentDiv.classList.contains("accordion-content")) {
+    console.error(
+      `Error: Accordion content not found for candidate ID ${candidateId}.`
+    );
+    return; // Exit function if contentDiv does not exist or has the wrong class
+  }
+
+  // Store the existing content before modifying it (for cancel action)
+  contentDiv.setAttribute("data-original-content", contentDiv.innerHTML);
+
+  // Remove the "active" class and add the "edit-mode" class
+  contentDiv.classList.remove("active");
+  contentDiv.classList.add("edit-mode");
+
+  // Render the edit form inside the accordion-content
+  contentDiv.innerHTML = renderEditForm(candidate, candidateId, jobId);
+}
+
+// Function to render the edit form
+function renderEditForm(candidate, candidateId, jobId) {
+  const candidateString = JSON.stringify(candidate).replace(/'/g, "&#39;");
+
+  console.log("^^^^^^^^^^^^^^^^^^ candidate", candidateString);
+  return `
+      <div class="feedback-grid">
+          <div class="feedback-section">
+              <div class="feedback-label">Selection Status
+</div>
+              <select class="selection" id="edit-selection-status-${candidateId}">
+                  
+                  <option value="Selected" ${
+                    candidate?.selection_status === "Selected" ? "selected" : ""
+                  }>Selected</option>
+                  <option value="Rejected" ${
+                    candidate?.selection_status === "Rejected" ? "selected" : ""
+                  }>Rejected</option>
+                  <option value="On Hold" ${
+                    candidate?.selection_status === "On Hold" ? "selected" : ""
+                  }>On Hold</option>
+                  <option value="Pending" ${
+                    candidate?.selection_status === "Pending" ? "selected" : ""
+                  }>Pending</option>
+                  <option value="Shortlisted" ${
+                    candidate?.selection_status === "Shortlisted"
+                      ? "selected"
+                      : ""
+                  }>Shortlisted</option>
+                  <option value="Under Review" ${
+                    candidate?.selection_status === "Under Review"
+                      ? "selected"
+                      : ""
+                  }>Under Review</option>
+                  <option value="Hired" ${
+                    candidate?.selection_status === "Hired" ? "selected" : ""
+                  }>Hired</option>
+                  <option value="Offer Declined" ${
+                    candidate?.selection_status === "Offer Declined"
+                      ? "selected"
+                      : ""
+                  }>Offer Declined</option>
+              </select>
+          </div>
+          <div class="feedback-section">
+              <div class="feedback-label">Interview Round</div>
+              <select class="selection" id="edit-next-status-${candidateId}">
+                  <option value="" ${
+                    !candidate?.next_round ? "selected" : ""
+                  }>No Round Assigned</option>
+                  <option value="Round 1" ${
+                    candidate?.next_round === "round_1" ? "selected" : ""
+                  }>Round 1</option>
+                  <option value="Round 2" ${
+                    candidate?.next_round === "round_2" ? "selected" : ""
+                  }>Round 2</option>
+                  <option value="Round 3" ${
+                    candidate?.next_round === "round_3" ? "selected" : ""
+                  }>Round 3</option>
+              </select>
+          </div>
+      </div>
+      <div class="feedback-grid">
+          <div class="feedback-section">
+              <div class="feedback-label">Interviewer Message</div>
+              <textarea class="message" id="edit-feedback-${candidateId}" rows="3">${
+    candidate?.interviwer_feedback || ""
+  }</textarea>
+          </div>
+      </div>
+      <div class="action-buttons">
+          <button class="btn btn-save" onclick="saveFeedback('${candidateId}')">Save Feedback</button>
+          <button class="btn btn-cancel" onclick="cancelEdit('${candidateId}')">Cancel</button>
+      </div>
+  `;
+}
+
+function cancelEdit(candidateId) {
+  // Find the accordion content using candidateId
+  var contentDiv = document.querySelector(
+    `[data-id="${candidateId}"]`
+  ).nextElementSibling;
+
+  if (!contentDiv || !contentDiv.classList.contains("accordion-content")) {
+    console.error(
+      `Error: Accordion content not found for candidate ID ${candidateId}.`
+    );
+    return; // Exit function if contentDiv is not found
+  }
+
+  // Restore the original content (before editing)
+  var originalContent = contentDiv.getAttribute("data-original-content");
+  if (originalContent) {
+    contentDiv.innerHTML = originalContent;
+  }
+
+  // Remove the "edit-mode" class and add back the "active" class
+  contentDiv.classList.remove("edit-mode");
+  contentDiv.classList.add("active");
+}
+
+function saveFeedback(candidateId) {
+  // Find elements
+  var nextRoundElement = document.getElementById(
+    `edit-next-status-${candidateId}`
+  );
+  var selectionStatusElement = document.getElementById(
+    `edit-selection-status-${candidateId}`
+  );
+  var messageElement = document.getElementById(`edit-feedback-${candidateId}`);
+
+  // Safety check for missing elements
+  if (!nextRoundElement || !selectionStatusElement || !messageElement) {
+    console.error(
+      `Error: One or more form fields are missing for candidate ID ${candidateId}.`
+    );
+    return;
+  }
+
+  // Get values
+  var nextRound = nextRoundElement.value;
+  var selectionStatus = selectionStatusElement.value;
+  var feedback = messageElement.value;
+
+  // Simulate database update (Replace with actual API call)
+  console.log("Saving feedback for candidate", candidateId, {
+    nextRound,
+    selectionStatus,
+    feedback,
+  });
+
+  fetch(`/save_feedback/${candidateId}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      nextRound: nextRound,
+      selectionStatus: selectionStatus,
+      feedback: feedback,
+    }),
+  })
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    })
+    .then((data) => {
+      console.log("Feedback saved:", data);
+
+      // Update UI
+
+      var contentDiv = document.querySelector(
+        `[data-id="${candidateId}"]`
+      ).nextElementSibling;
+
+      if (!contentDiv || !contentDiv.classList.contains("accordion-content")) {
+        console.error(
+          `Error: Accordion content not found for candidate ID ${candidateId}.`
+        );
+        return; // Exit function if contentDiv is not found
+      }
+
+      var originalContent = contentDiv.getAttribute("data-original-content");
+      if (originalContent) {
+        contentDiv.innerHTML = originalContent;
+      }
+
+      // Update content
+      contentDiv.querySelector(".int-feedback").textContent = feedback; // Example update
+      contentDiv.querySelector(".int-status").textContent = selectionStatus; // Example update
+      contentDiv.querySelector(".int-round").textContent = nextRound; // Example update
+
+      // Remove "edit-mode" class and add "active" class
+      contentDiv.classList.remove("edit-mode");
+      contentDiv.classList.add("active");
+    })
+    .catch((error) => {
+      console.error("Error saving feedback:", error);
+    });
+}
+
+// Initialize accordion functionality
+function initAccordion() {
+  // Clear any existing content
+  container.innerHTML = "";
+
+  // Create and append candidate cards
+  candidateData.forEach(function (candidate) {
+    var card = createCandidateCard(candidate);
+    container.appendChild(card);
+  });
+
+  // Add click event to accordion headers
+  var headers = document.querySelectorAll(".accordion-header");
+  headers.forEach(function (header) {
+    header.addEventListener("click", function () {
+      var content = this.nextElementSibling;
+      content.classList.toggle("active");
+    });
+  });
+}
 
 // Utility function to prevent XSS attacks
 function escapeHTML(str) {
+  if (typeof str !== "string") {
+    return ""; // Return an empty string if str is not a valid string
+  }
   return str
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
@@ -370,23 +680,6 @@ function showDatePopup(
     minDate: "today",
     dateFormat: "Y-m-d H:i",
     disableMobile: "true",
-    onOpen: function (selectedDates, dateStr, instance) {
-      const calendarPopup = document.querySelector(".flatpickr-calendar");
-      if (calendarPopup) {
-        // Adjust the position of the calendar popup to ensure it stays within the viewport
-        const rect = calendarPopup.getBoundingClientRect();
-        const windowWidth = window.innerWidth;
-        const windowHeight = window.innerHeight;
-
-        if (rect.right > windowWidth) {
-          calendarPopup.style.left = windowWidth - rect.width - 10 + "px"; // 10px margin
-        }
-
-        if (rect.bottom > windowHeight) {
-          calendarPopup.style.top = windowHeight - rect.height - 10 + "px";
-        }
-      }
-    },
     onClose: function () {
       // Clean up the calendar container when closed
       if (calendarContainer) {
@@ -404,16 +697,18 @@ function showDatePopup(
       const calendarPopup = document.querySelector(".flatpickr-calendar");
       let scheduleButton = calendarPopup.querySelector(".schedule-meeting-btn");
 
-      if (scheduleButton) {
-        if (selectedDate.getTime() < new Date().getTime()) {
-          showErrorPopup(
-            "You cannot schedule a meeting in the past. Please select a valid date and time."
-          );
+      if (selectedDate.getTime() < new Date().getTime()) {
+        showErrorPopup(
+          "You cannot schedule a meeting in the past. Please select a valid date and time."
+        );
 
+        if (scheduleButton) {
           scheduleButton.disabled = true;
           scheduleButton.style.cursor = "not-allowed";
           scheduleButton.style.opacity = "0.6";
-        } else {
+        }
+      } else {
+        if (scheduleButton) {
           scheduleButton.disabled = false;
           scheduleButton.style.cursor = "pointer";
           scheduleButton.style.opacity = 1;
@@ -425,61 +720,118 @@ function showDatePopup(
         scheduleButton.textContent = "Schedule Meeting";
         scheduleButton.classList.add("schedule-meeting-btn");
         calendarPopup.appendChild(scheduleButton);
+
+        // Add the click event listener ONCE when the button is created
+        scheduleButton.addEventListener("click", async () => {
+          const selectedDate = fp.selectedDates[0];
+          const isoDateTime = selectedDate.toISOString();
+          const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+          showLoadingOverlay(true);
+
+          try {
+            const response = await fetch("/schedule_meeting", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                action: "schedule",
+                candidate_id: candidate_id,
+                candidate_name: candidateName,
+                candidate_email: "devradhekrishna1@gmail.com",
+                recruiter_email: "yourbestrecruiterai@gmail.com",
+                datetime: isoDateTime,
+                timezone: userTimezone,
+                job_id: jobId,
+              }),
+            });
+            console.log(
+              " ==== <><><> Schedule meeting Api called <><><> ========="
+            );
+            const data = await response.json();
+
+            if (data.success) {
+              showPopup("Interview is scheduled successfully!", true);
+              const utcDateTime = luxon.DateTime.fromISO(
+                data.scheduled_datetime
+              );
+              const localDateTime = utcDateTime.toLocaleString(
+                luxon.DateTime.DATETIME_MED
+              );
+              window.location.reload();
+            } else {
+              const errorMessage =
+                data.message || "Error: Failed to schedule the interview.";
+              showPopup(errorMessage, false);
+            }
+          } catch (error) {
+            console.error("Error scheduling interview:", error);
+          } finally {
+            showLoadingOverlay(false);
+
+            if (fp) {
+              fp.close();
+            }
+          }
+        });
+      }
+    },
+    onOpen: function () {
+      setMinTime();
+      const buttonRect = event.target.getBoundingClientRect();
+      const calendarPopup = document.querySelector(".flatpickr-calendar");
+
+      const screenWidth = window.innerWidth;
+      const screenHeight = window.innerHeight;
+      const calendarWidth = calendarPopup.offsetWidth;
+      const calendarHeight = calendarPopup.offsetHeight;
+
+      let left = buttonRect.left;
+      let top = buttonRect.bottom + window.scrollY; // Consider scrolling
+
+      // Check available space and adjust position
+      const spaceBelow = screenHeight - buttonRect.bottom;
+      const spaceAbove = buttonRect.top;
+      const spaceRight = screenWidth - buttonRect.right;
+      const spaceLeft = buttonRect.left;
+
+      // Prefer bottom placement, otherwise place based on available space
+      if (spaceBelow >= calendarHeight) {
+        top = buttonRect.bottom + window.scrollY; // Below the button
+      } else if (spaceAbove >= calendarHeight) {
+        top = buttonRect.top - calendarHeight + window.scrollY; // Above the button
       }
 
-      // // Enable the button if the selected date and time are valid
-      // scheduleButton.disabled = false;
-      // scheduleButton.classList.remove("disabled");
+      // Adjust left position to prevent overflow
+      if (spaceRight < calendarWidth && spaceLeft >= calendarWidth) {
+        left = buttonRect.right - calendarWidth; // Move left if right space is small
+      }
 
-      // Add a click event listener to the "Schedule Meeting" button
-      scheduleButton.addEventListener("click", async () => {
-        const selectedDate = fp.selectedDates[0];
-        const isoDateTime = selectedDate.toISOString();
-        const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-
-        showLoadingOverlay(true);
-
-        try {
-          const response = await fetch("/schedule_meeting", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              action: "schedule",
-              candidate_id: candidate_id,
-              candidate_name: candidateName,
-              candidate_email: "devradhekrishna1@gmail.com",
-              recruiter_email: "yourbestrecruiterai@gmail.com",
-              datetime: isoDateTime,
-              timezone: userTimezone,
-              job_id: jobId,
-            }),
-          });
-
-          const data = await response.json();
-
-          if (data.success) {
-            showPopup("Interview is scheduled successfully!", true); // Success message
-            const utcDateTime = luxon.DateTime.fromISO(data.scheduled_datetime);
-            const localDateTime = utcDateTime.toLocaleString(
-              luxon.DateTime.DATETIME_MED
-            );
-            window.location.reload();
-          } else {
-            showPopup("Error: Failed to schedule the interview.", false); // Error message
-          }
-        } catch (error) {
-          console.error("Error scheduling interview:", error);
-        } finally {
-          // Hide the loader
-          showLoadingOverlay(false);
-
-          // Close the calendar popup
-          if (fp) {
-            fp.close();
-          }
-        }
-      });
+      // Apply final positioning
+      calendarPopup.style.left = `${left}px`;
+      calendarPopup.style.top = `${top}px`;
+      calendarPopup.style.position = "absolute";
+      calendarPopup.style.zIndex = "1000";
     },
+  });
+
+  function setMinTime() {
+    const now = new Date();
+    const currentDate = flatpickr.formatDate(now, "Y-m-d");
+    const selectedDate = fp.selectedDates[0]
+      ? flatpickr.formatDate(fp.selectedDates[0], "Y-m-d")
+      : null;
+
+    if (selectedDate === currentDate || !selectedDate) {
+      const hours = now.getHours().toString().padStart(2, "0");
+      const minutes = now.getMinutes().toString().padStart(2, "0");
+      fp.set("minTime", `${hours}:${minutes}`);
+    } else {
+      fp.set("minTime", null);
+    }
+  }
+
+  fp.config.onChange.push(function (selectedDates) {
+    setMinTime();
   });
 
   const calendarPopup = document.querySelector(".flatpickr-calendar");
@@ -645,6 +997,17 @@ async function initApp() {
     showErrorPopup("Failed to initialize the application.");
   }
 }
+
+document.addEventListener("click", function (event) {
+  const header = event.target.closest(".accordion-header");
+  if (!header) return; // Exit if click is not on an accordion-header
+
+  const content = header.nextElementSibling; // Get the corresponding content section
+
+  if (content && content.classList.contains("accordion-content")) {
+    content.classList.toggle("active"); // Toggle active class
+  }
+});
 
 // Start the application
 initApp();

@@ -16,6 +16,7 @@ from celery import Celery
 from PyPDF2 import PdfMerger
 import uuid
 
+
 load_dotenv()
 
 app = Flask(__name__)
@@ -98,12 +99,23 @@ def update_job_posting(job_id):
 
         if not job:
             raise ValueError(f"Job {job_id} not found")
+        
+        job_title = job['job_title']
         job_description = job['job_info']
+        user_id = job['userid']
+        selected_orgs = job.get('selected_orgs', None)  # Get selected organizations if any
 
+        logging.info(f"Job title: {job_title}")
         logging.info(f"Job description: {job_description}")
-        status = 201            # post_job_description_to_linkedin(job_description)
+        logging.info(f"User ID updated : {user_id}")
+        logging.info(f"Selected organizations: {selected_orgs}")
+
+        status = post_job_on_linkedin(user_id, job_id, job_title, job_description, selected_orgs)
+
+        print(" ------ linkedin job posting Status: ------ ", status)
+
         logging.info(f"Status: {status}")
-        if status == 201:
+        if status.get('status') == 200:
             logging.info(f"Job {job_id} posted successfully to LinkedIn")
             update_process_status(job_id, "Job posting", "done")
 
@@ -119,13 +131,163 @@ def update_job_posting(job_id):
                 }}
             )
             logging.info(f"Updated posting dates for job {job_id}")
+            return {"status": "success", "message": "Job posted successfully"} # return success message
         else:
             logging.error(f"Error posting job {job_id} to LinkedIn: status code {status}")
             update_process_status(job_id, "Job posting", "failed")
+            return {"status": "error", "message": f"Failed to post job"} 
     except Exception as e:
         logging.info(f"Error in job posting process for job {job_id}: {str(e)}")
         update_process_status(job_id, "Job posting", "failed")
+        return {"status": "error", "message": f"Failed to post job : {str(e)}"}
 
+def get_user_info(access_token):
+    url = "https://api.linkedin.com/v2/userinfo"
+    headers = {
+        "Authorization": f"Bearer {access_token}"
+    }
+
+    try:
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+        return response.json()
+    except requests.exceptions.RequestException as e:
+        print(f"Error getting user info: {e}")
+        return None
+
+def get_user_organizations(access_token):
+    headers = {'Authorization': f'Bearer {access_token}', 'X-Restli-Protocol-Version': '2.0.0'}
+    orgs_res = requests.get("https://api.linkedin.com/v2/organizationalEntityAcls?q=roleAssignee&role=ADMINISTRATOR&state=APPROVED&projection=(elements*(organizationalTarget))", headers=headers)
+    orgs = []
+
+    for element in orgs_res.json().get('elements', []):
+        urn = element['organizationalTarget']
+        details = get_organization_details(access_token, urn)
+        if details:
+            orgs.append(details)
+    return orgs
+
+def get_organization_details(access_token, urn):
+    headers = {'Authorization': f'Bearer {access_token}'}
+    org_res = requests.get(f"https://api.linkedin.com/v2/organizations/{urn.split(':')[-1]}?projection=(localizedName)", headers=headers)
+    if org_res.ok:
+        return {'urn': urn, 'name': org_res.json().get('localizedName')}
+    return None    
+
+def post_job_on_linkedin(user_id, job_id, job_title, job_description, selected_orgs=None):
+    try:
+        print(f"Starting LinkedIn job posting for Job ID: {job_id}")
+        user_data = users_collection.find_one({'_id': ObjectId(user_id)})
+
+        if not user_data:
+            return {"status": 404, "error": "User not found in database"}
+
+        access_token = user_data.get("access_token")
+        if not access_token:
+            return {"status": 401, "error": "LinkedIn access token missing. Please reconnect."}
+
+        profile_data = get_user_info(access_token)
+        if not profile_data or not profile_data.get("sub"):
+            return {"status": 400, "error": "LinkedIn profile info not available"}
+
+        linkedin_user_id = profile_data["sub"]
+
+        post_text = f"""🚀 Hiring Now: {job_title} – Apply Now!
+        
+{job_description}
+
+📢 Apply Here: 
+Send your resume to yourbestrecruiterai@gmail.com  and  [ must use 'job_{job_id}' in the email subject line; otherwise, it will not be considered ].
+
+📝 Subject Line: job_{job_id} (⚠️ Applications without this will NOT be considered)
+
+#Hiring #JobOpening #CareerOpportunity #JoinOurTeam #TechJobs #NowHiring
+"""
+
+        headers = {
+            "Authorization": f"Bearer {access_token}",
+            "Content-Type": "application/json",
+            "X-Restli-Protocol-Version": "2.0.0",
+        }
+
+        results = []
+        print(f"===========  selected_orgs: {selected_orgs}")
+        if selected_orgs:
+            for org in selected_orgs:
+                
+               
+                if isinstance(org, str):
+                    author_urn = org
+                elif isinstance(org, dict):
+                    author_urn = org.get("urn")
+                else:
+                    continue  # Skip unexpected format
+
+                if not author_urn:
+                    continue  # Skip if URN is empty or invalid
+
+                payload = {
+                    "author": author_urn,
+                    "lifecycleState": "PUBLISHED",
+                    "specificContent": {
+                        "com.linkedin.ugc.ShareContent": {
+                            "shareCommentary": {"text": post_text},
+                            "shareMediaCategory": "NONE"
+                        }
+                    },
+                    "visibility": {"com.linkedin.ugc.MemberNetworkVisibility": "PUBLIC"}
+                }
+
+                print(f" author_urn is ====  {author_urn} payload is : {payload}")
+
+                response = requests.post("https://api.linkedin.com/v2/ugcPosts", json=payload, headers=headers)
+                print(f"Post to  multiple pages {author_urn} response: {response.status_code} - {response.text}")
+
+                if response.status_code == 201:
+                    results.append({"urn": author_urn, "status": "success"})
+                else:
+                    results.append({
+                        "urn": author_urn,
+                        "status": "failed",
+                        "error": response.text,
+                        "code": response.status_code
+                    })
+        else:
+            print("Posting on USER's PERSONAL  PROFILE !!")
+            # Post to user's personal profile
+            author_urn = f"urn:li:person:{linkedin_user_id}"
+            payload = {
+                "author": author_urn,
+                "lifecycleState": "PUBLISHED",
+                "specificContent": {
+                    "com.linkedin.ugc.ShareContent": {
+                        "shareCommentary": {"text": post_text},
+                        "shareMediaCategory": "NONE"
+                    }
+                },
+                "visibility": {"com.linkedin.ugc.MemberNetworkVisibility": "PUBLIC"}
+            }
+
+            response = requests.post("https://api.linkedin.com/v2/ugcPosts", json=payload, headers=headers)
+            print(f"Post to single profile  {author_urn} response: {response.status_code} - {response.text}")
+
+            if response.status_code == 201:
+                results.append({"urn": author_urn, "status": "success"})
+            else:
+                results.append({
+                    "urn": author_urn,
+                    "status": "failed",
+                    "error": response.text,
+                    "code": response.status_code
+                })
+
+        return {"status": 200, "results": results}
+
+    except requests.exceptions.RequestException as req_err:
+        return {"status": 500, "error": f"Request error: {req_err}"}
+
+    except Exception as e:
+        return {"status": 500, "error": f"Unexpected error: {str(e)}"}
 
 
 @celery_app.task
@@ -148,7 +310,7 @@ def update_getting_resumes(job_id):
     if not job:
         print(f"Job {job_id} not found")
         return
-    if job['process_status']['Job posting'] != "done":
+    if job['process_status']['Job posting'] != "done" or  job['process_status']['Job posting'] == "failed" :
         print(f"Job posting not completed for job {job_id}. Skipping resume retrieval.")
         return
 
@@ -271,10 +433,23 @@ def update_matching_resumes(job_id):
                         "candidate_id": str(uuid.uuid4()),
                         "candidate_name": name,
                         "email": email,
+                        "resume_filename": resume,
                         "score": score,
-                        "filename": resume,
-                        "status": "Pending",  # Default status
-                        "interview_date": None
+                        "status": "Application Received",
+                        "selection_status": "Pending",
+                        "interviwer_feedback": "No Feedback",
+                        "next_round": None,
+                        "interview_date": None,
+                        "history": [
+                        {
+                            "date": datetime.utcnow().isoformat(),
+                            "status": "Application Received",
+                            "updated_by": "System"
+                        }
+                    ]
+
+    
+                        
                     }
                     top_candidates.append(candidate)
 

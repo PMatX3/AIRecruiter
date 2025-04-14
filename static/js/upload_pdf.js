@@ -1,28 +1,27 @@
 toastr.options = {
-  "closeButton": false,
-  "debug": false,
-  "newestOnTop": false,
-  "progressBar": true,
-  "preventDuplicates": false,
-  "positionClass": "toast-top-right",
-  "onclick": null,
-  "showDuration": "300",
-  "hideDuration": "1000",
-  "timeOut": "3000",
-  "extendedTimeOut": "1000",
-  "showEasing": "swing",
-  "hideEasing": "linear",
-  "showMethod": "fadeIn",
-  "hideMethod": "fadeOut"
+  closeButton: false,
+  debug: false,
+  newestOnTop: false,
+  progressBar: true, // Show a progress bar
+  preventDuplicates: false,
+  positionClass: "toast-top-right", // Adjust position as needed
+  onclick: null,
+  showDuration: "300",
+  hideDuration: "1000",
+  timeOut: "3000", // Duration toast is shown
+  extendedTimeOut: "1000",
+  showEasing: "swing",
+  hideEasing: "linear",
+  showMethod: "fadeIn",
+  hideMethod: "fadeOut",
 };
-
 
 function uploadPDF() {
   var file = document.getElementById("pdfInput").files[0];
   if (!file) {
-    toastr.error('Please upload job description to proceed');
+    toastr.error("Please upload job description to proceed");
     return;
-  }
+}
   var formData = new FormData();
   console.log("file: ", file);
   formData.append("file", file);
@@ -56,9 +55,7 @@ function ajaxCall(url, formData) {
           },
         });
       } else {
-        toastr.error(
-          "Error in conversion with status code: " + xhr.status
-        );
+        toastr.error("Error in conversion with status code: " + xhr.status);
         $("#loader").hide();
         $("#overlay").hide();
       }

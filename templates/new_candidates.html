@@ -11,29 +11,136 @@
     <script src="https://cdn.jsdelivr.net/npm/luxon@2.x/build/global/luxon.min.js"></script>
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="../static/CSS/candidate-styles.css">
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <title>Candidates Page</title>
 
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        .search-filters {
+        /* General Styles */
+        .accordion-content.edit-mode {
+            /* background-color: #f9f9f9; */
+            /* Light background */
+            padding: 16px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
 
-            /* Use flexbox for layout */
-            justify-content: space-between;
-            /* Space between header and search box */
+        .accordion-content.edit-mode {
+    
+                max-height: 500px;
+                /* Adjust based on your content size */
+                padding: 10px;
+        }
+
+        /* Grid Layout */
+        .accordion-content.edit-mode .feedback-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+
+        /* Labels */
+        .accordion-content.edit-mode label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: #4a4a4a;
+            margin-bottom: 6px;
+        }
+
+        /* Select & Textarea Fields */
+        .selection {
+            width: 50%;
+            padding: 8px;
+            border: none;
+            border-bottom: 1px solid #397bdd;
+            border-radius: 6px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+            transition: border-color 0.2s ease-in-out;
+            margin-top: 8px;
+            background: transparent;
+            /* Added for better spacing */
+        }
+
+
+        .message {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+            transition: border-color 0.2s ease-in-out;
+            margin-top: 8px;
+            /* Added for better spacing */
+        }
+
+        .accordion-content.edit-mode select:focus,
+        .accordion-content.edit-mode textarea:focus {
+            border-color: #2563eb;
+            /* Blue border on focus */
+            outline: none;
+        }
+
+        /* Textarea */
+        .message {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        /* Button Container */
+        .accordion-content.edit-mode .button-container {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 12px;
+        }
+
+        /* Buttons */
+        .accordion-content.edit-mode .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s ease-in-out;
+        }
+
+        /* Cancel Button */
+        .btn-cancel {
+            background: rgb(252, 246, 246);
+            color: #4a4a4a;
+        }
+
+        .btn-cancel:hover {
+            background: #f3f4f6;
+        }
+
+        /* Save Button */
+        .btn-save {
+            background: #2563eb;
+            color: white;
+        }
+
+        .btn-cancel {
             align-items: center;
-            /* Center items vertically */
-            padding: 10px;
-            /* Optional: Adds some padding */
+            justify-content: left;
+        }
+
+        .accordion-content.edit-mode .btn-save:hover {
+            background: #1e40af;
         }
     </style>
 </head>
 
 <body>
     <script src="static/js/luxon.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/luxon@3.4.4/build/global/luxon.min.js"></script>
 
-
+    <a href="/" class="back-link">
+        <span style="margin-right: 5px">&#8592;</span> Back to Home
+    </a>
     <main class="container">
 
         <div class="search-filter-container">
@@ -49,6 +156,8 @@
                 </div>
 
             </div>
+
+
 
             <div class="filters-container">
                 <!-- <button class="filter-button">

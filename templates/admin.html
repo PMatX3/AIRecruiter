@@ -648,6 +648,32 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
 
+        /* Verification status styles */
+
+        .status-label {
+            font-size: 0.8rem;
+            font-weight: 500;
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            text-transform: uppercase;
+            margin-left: 1rem;
+        }
+
+        .Approved {
+            background-color: #e6f4ea;
+            color: #34a853;
+        }
+
+        .Pending {
+            background-color: #fef7e0;
+            color: var(--warning-color);
+        }
+
+        .Rejected {
+            background-color: #fce8e6;
+            color: var(--danger-color);
+        }
+
         /* Notification Popups */
         .notification {
             position: fixed;
@@ -1273,7 +1299,7 @@
                     </div>
                 </div>
                 <div class="col-md-4">
-                    <div class="stat-card">
+                    <div class="stat-card open-tickets">
                         <div class="stat-card-pattern"></div>
                         <div class="stat-card-content">
                             <div class="stat-card-icon">
@@ -1384,7 +1410,8 @@
                 <div class="table-header">
                     <h4>User Verification</h4>
                     <div class="search-filter">
-                        <input type="text" class="form-control" placeholder="Search users..." id="user-search">
+                        <input type="text" class="form-control" placeholder="Search users..."
+                            id="user-verification-search">
                         <select class="form-select" id="status-filter">
                             <option value="all">All Statuses</option>
                             <option value="pending">Pending</option>
@@ -1772,7 +1799,7 @@
                                 </div>
 
                                 <div class="form-group">
-                                    <label for="serviceUsed">Service Used</label>
+                                    <label for="serviceUsed">First Job Uploaded</label>
                                     <select id="edit-serviceUsed" name="serviceUsed">
                                         <option value="" selected>Not Selected</option>
                                         <option value="true">True</option>
@@ -1815,7 +1842,9 @@
                             <tr>
                                 <th>Ticket ID</th>
                                 <th>User Id</th>
-                                <th>Issue Type</th>
+                                <th>User Email</th>
+                                <th>Issue Subject</th>
+                                <th>Issue Description</th>
                                 <th>Status</th>
                                 <th>Created At</th>
                                 <th>Updated At</th>
@@ -2004,6 +2033,7 @@
         const ticketModalCancel = document.getElementById('ticket-modal-cancel');
         const ticketModalSubmit = document.getElementById('ticket-modal-submit');
         const userSearchInput = document.getElementById('user-search');
+        const userVerificationPageSearch = document.getElementById('user-verification-search');
         const statusFilterSelect = document.getElementById('status-filter');
         const userVerificationBody = document.getElementById('user-verification-body');
         let userData;
@@ -2038,6 +2068,8 @@
 
                 // Get page ID
                 const pageId = item.getAttribute('data-page');
+
+                console.log("  -: Page ID :- ", pageId);
 
                 // Update page title
                 pageTitle.textContent = item.querySelector('span').textContent;
@@ -2096,7 +2128,7 @@
 
         const totalUsersCard = document.querySelector('.stat-card:nth-child(1)'); // Select the first stat card
         const pendingApprovalsCard = document.querySelector('.approvals'); // Select the fourth stat card
-
+        const tickitsCard = document.querySelector('.open-tickets');
 
         if (totalUsersCard) {
             totalUsersCard.addEventListener('click', function () {
@@ -2121,6 +2153,18 @@
                     console.error("User verification menu item not found.");
                 }
             });
+        }
+
+        if (tickitsCard) {
+            tickitsCard.addEventListener('click', function () {
+                // Navigate to tickets page
+                const ticketsMenuItem = document.querySelector('[data-page="tickets"]');
+                if (ticketsMenuItem) {
+                    ticketsMenuItem.click();
+                } else {
+                    console.error("Tickets menu item not found.");
+                }
+            })
         }
 
 
@@ -2280,8 +2324,8 @@
                 document.getElementById('edit-plan').value = 'not-selected';
             }
 
-            // Handle features.service_used
-            document.getElementById('edit-serviceUsed').value = userData.features && userData.features.service_used ? 'true' : 'false'; // Corrected access
+            // Handle features.first_job_uploaded
+            document.getElementById('edit-serviceUsed').value = userData.features && userData.features.first_job_uploaded ? 'true' : 'false'; // Corrected access
 
             document.getElementById('edit-notes').value = userData.notes || '';
         }
@@ -2329,48 +2373,52 @@
                 return;
             }
 
-            // Fetch the existing user data to preserve fields not in the form
-            let existingUserData;
             try {
                 const response = await fetch(`/edit-user/${userId}`);
-                if (response.ok) {
-                    existingUserData = await response.json();
-                } else {
-                    alert('Failed to fetch existing user data.');
-                    return;
+                if (!response.ok) {
+                    throw new Error('Failed to fetch existing user data.');
                 }
+                const existingUserData = await response.json();
+
+                const userData = {
+                    username: form.username.value,
+                    email: form.email.value,
+                    phone: form.phone.value,
+                    company: form.company.value,
+                    country: form.country.value,
+                    verification_status: form.verificationStatus.value,
+                    user_type: form.userType.value,
+                    is_superadmin: form.isSuperadmin.value === 'true',
+                    notes: form.notes.value,
+                    subscription: {
+                        is_subscribed: form.isSubscribed.value === 'true',
+                        plan: form.plan.value,
+                        start_date: formatDateToISO(existingUserData.subscription.start_date), // Handle potential null values
+                        expiry_date: formatDateToISO(existingUserData.subscription.expiry_date), // Handle potential null values
+                        status: existingUserData.subscription.status,
+                    },
+                    features: {
+                        first_job_uploaded: form.serviceUsed.value === 'true'
+                    }
+                };
+
+                showConfirmationPopup("Are you sure you want to save changes?", async function () {
+                    await updateUser(userId, userData);
+                });
             } catch (error) {
-                console.error('Error fetching existing user data:', error);
-                alert('An error occurred while fetching existing user data.');
-                return;
+                console.error('Error:', error);
+                alert(error.message || 'An error occurred. Please check the console.');
             }
-
-            const userData = {
-                username: form.username.value,
-                email: form.email.value,
-                phone: form.phone.value,
-                company: form.company.value,
-                country: form.country.value,
-                verification_status: form.verificationStatus.value,
-                user_type: form.userType.value,
-                is_superadmin: form.isSuperadmin.value === 'true',
-                notes: form.notes.value,
-                subscription: {
-                    is_subscribed: form.isSubscribed.value === 'true',
-                    plan: form.plan.value,
-                    start_date: existingUserData.subscription.start_date,
-                    expiry_date: existingUserData.subscription.expiry_date,
-                    status: existingUserData.subscription.status,
-                },
-                features: {
-                    first_job_uploaded: form.serviceUsed.value === 'true'
-                }
-            };
-
-            showConfirmationPopup("Are you sure you want to save changes?", async function () {
-                await updateUser(userId, userData);
-            });
         }
+
+        const formatDateToISO = (dateString) => {
+            if (!dateString) return null; // Handle null values safely
+            const date = new Date(dateString);
+            return isNaN(date.getTime()) ? null : date.toISOString();
+        };
+
+
+
 
         function populateUserVerificationTable(users) {
             const tableBody = document.getElementById("user-verification-body");
@@ -2447,16 +2495,19 @@
             // sort data newest first
             tickets.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
+            console.log(" fetched data : \n", tickets);
             tickets.forEach(data => {
                 const row = document.createElement("tr");
                 row.innerHTML = `
-                <td>${data.ticket_id}</td>
-                <td>${data.user_id}</td>
-                <td>${data.issue_type}</td>
+                <td>${data.ticketId}</td>
+                <td>${data.userId}</td>
+                <td>${data.emailAddress}</td>
+                <td>${data.subject}</td>
+                <td>${data.message}</td>
                 <td>${data.status}</td>
-                <td>${data.created_at}</td>
+                <td>${data.createdAt}</td>
                 <td>${data.updated_at}</td>
-                <td>${data.admin_response}</td>
+                <td>${data.admin_notes}</td>
                 <td>
                     <button class="btn btn-sm edit-btn" >Resolve</button>
                     <button class="btn btn-sm delete-btn">Delete</button>
@@ -2527,7 +2578,10 @@
             }
 
             let filteredData = userData;
+            let userVerTablefilterData = userData;
+
             const searchTerm = userSearchInput.value.toLowerCase();
+            const SearchInput = userVerificationPageSearch.value.toLowerCase();
 
             filteredData = filteredData.filter(user => {
                 return user.username.toLowerCase().includes(searchTerm) ||
@@ -2535,6 +2589,12 @@
                     user.email.toLowerCase().includes(searchTerm);
 
             });
+
+            userVerTablefilterData = userVerTablefilterData.filter(user => {
+                return user.username.toLowerCase().includes(SearchInput) ||
+                    user.company.toLowerCase().includes(SearchInput) ||
+                    user.email.toLowerCase().includes(SearchInput);
+            })
 
             const selectedStatus = statusFilterSelect.value;
 
@@ -2550,10 +2610,11 @@
 
             }
             populateUserTable(filteredData);
-            populateUserVerificationTable(filteredData);
+            populateUserVerificationTable(userVerTablefilterData);
         }
 
         userSearchInput.addEventListener('input', applyFilters);
+        userVerificationPageSearch.addEventListener('input', applyFilters);
         statusFilterSelect.addEventListener('change', applyFilters);
 
         // Add a custom selector to find the status label by email
@@ -2652,7 +2713,7 @@
 
 
 
-        /*----------------------------------- insert user ----------------------------*/
+        /*------------------------------- insert user ----------------------------*/
 
 
         function validateForm() {

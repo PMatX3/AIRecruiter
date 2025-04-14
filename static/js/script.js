@@ -1,9 +1,8 @@
 const GEMINI_API_KEY = CONFIG.GEMINI_API_KEY;
-const GEMINI_API_ENDPOINT = 
+const GEMINI_API_ENDPOINT =
   "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent";
 
 const OPENAI_API_KEY = CONFIG.OPENAI_API_KEY;
-
 
 const chatOutput = document.getElementById("chat-output");
 const voiceBtn = document.getElementById("voice-btn");

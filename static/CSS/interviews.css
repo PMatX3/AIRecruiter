@@ -27,7 +27,7 @@ body {
 }
 
 .header {
-  font-size: 28px;
+  font-size: 1.3rem;
   font-weight: bold;
   color: #333;
   text-align: center;
@@ -39,8 +39,24 @@ body {
 .container {
   width: 100%;
   max-width: var(--container-width);
-  margin: 60px auto;
+  margin: 0 auto;
   padding: 0 1.5rem;
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  color: var(--primary);
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 15px;
+  margin: 10px 0 0 15px;
+  transition: var(--transition);
+}
+
+.back-link:hover {
+  color: gray;
+  transform: translateX(-5px);
 }
 
 .page-title {
@@ -54,7 +70,6 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem;
   flex-wrap: wrap;
   gap: 1rem;
 }
@@ -67,10 +82,10 @@ body {
 
 .search-box input {
   width: 100%;
-  padding: 0.75rem 1rem 0.75rem 2.5rem;
+  padding: 0.4rem 1rem 0.4rem 2.5rem;
   border: 1px solid var(--border-color);
   border-radius: 25px;
-  font-size: 0.95rem;
+  font-size: 15px;
   transition: var(--transition);
 }
 
@@ -96,7 +111,7 @@ body {
 }
 
 .filter-select {
-  padding: 0.65rem 1rem;
+  padding: 0.4rem;
   border: 1px solid var(--border-color);
   border-radius: 4px;
   background-color: white;
@@ -228,7 +243,6 @@ body {
   }
 }
 
-
 /* Interview section styles */
 
 .interview-section {
@@ -240,7 +254,7 @@ body {
 }
 
 .section-header {
-  padding: 1.25rem 1.5rem;
+  padding: 0.5rem;
   background-color: var(--primary-light);
   border-bottom: 1px solid var(--border-color);
   display: flex;
@@ -249,7 +263,7 @@ body {
 }
 
 .section-title {
-  font-size: 1.2rem;
+  font-size: 1rem;
   font-weight: 500;
   color: var(--primary-color);
 }
@@ -274,7 +288,7 @@ body {
 }
 
 .accordion-header {
-  padding: 1.25rem 1.5rem;
+  padding: 0.5rem 1rem;
   cursor: pointer;
   display: flex;
   justify-content: space-between;
@@ -292,7 +306,7 @@ body {
 }
 
 .accordion-title {
-  font-size: 1.1rem;
+  font-size: 1rem;
   font-weight: 500;
   color: var(--dark-text);
   flex: 1;
@@ -455,7 +469,7 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 3rem 1rem;
+  padding: 0.5rem 0.9rem;
 }
 
 .empty-state-icon {
