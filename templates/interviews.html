@@ -1,0 +1,64 @@
+{% include 'navbar.html' %}
+
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Interviews- Hiring with AI-powered Candidate Selection</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <link rel="stylesheet" href="static/CSS/interviews.css" />
+</head>
+
+<body>
+
+
+  <main class="container">
+
+    <div class="search-filter-container">
+      <h1 class="header">Interviews Dashboard</h1>
+      <div class="search-box">
+        <input type="text" id="search-input" placeholder="Search by job title or candidate.... " />
+      </div>
+      <div class="filter-container">
+        <select class="filter-select" id="filter-job">
+          <option value="">All Job Titles</option>
+        </select>
+        <select class="filter-select" id="filter-status">
+          <option value="">All Statuses</option>
+          <option value="Scheduled">Scheduled</option>
+          <option value="Rescheduled">Rescheduled</option>
+          <option value="Canceled">Canceled</option>
+        </select>
+        <!-- <select class="filter-select" id="filter-mode">
+            <option value="">All Modes</option>
+            <option value="Online">Online</option>
+          </select>-->
+      </div>
+    </div>
+
+    <!-- Today's Interviews Section -->
+    <section class="interview-section" id="today-section">
+      <div class="section-header">
+        <h2 class="section-title">Today's Interviews</h2>
+        <span class="date-indicator" id="today-date"></span>
+      </div>
+      <div class="interview-list" id="today-interviews">
+        <!-- Interview accordions will be dynamically inserted here -->
+      </div>
+    </section>
+
+    <!-- Upcoming Interviews Section -->
+    <section class="interview-section" id="upcoming-section">
+      <div class="section-header">
+        <h2 class="section-title">Upcoming Interviews</h2>
+      </div>
+      <div class="interview-list" id="upcoming-interviews">
+        <!-- Interview accordions will be dynamically inserted here -->
+      </div>
+    </section>
+  </main>
+  <script src="static/js/interviews.js"></script>
+</body>
+
+</html>

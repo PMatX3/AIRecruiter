@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="./static/images/favion2.png" type="image/png" style="height:26px;width:26px">
+
+    <title>Registration- Hiring with AI-powered Candidate Selection</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    <script src="../static/js/adminpanel.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: 'Poppins', sans-serif;
+    }
+
+    body {
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        min-height: 100vh;
+        align-items: center;
+        padding: 20px;
+    }
+
+    .container {
+        background: #f6fbfe;
+        border-radius: 24px;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        padding: 40px;
+        width: 100%;
+        max-width: 650px;
+        position: relative;
+        overflow: hidden;
+        z-index: 1;
+    }
+
+
+
+
+    .form-header {
+        text-align: center;
+        margin-bottom: 15px;
+        position: relative;
+    }
+
+    .form-header h2 {
+        color: #2c3e50;
+        font-size: 28px;
+        font-weight: 600;
+        margin-bottom: 10px;
+    }
+
+
+
+    .form-group {
+        margin-bottom: 20px;
+        position: relative;
+    }
+
+    .input-icon {
+        position: relative;
+    }
+
+    .input-icon input {
+        padding-left: 40px;
+    }
+
+    .input-icon i {
+        position: absolute;
+        left: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #7f8c8d;
+    }
+
+    input {
+        width: 100%;
+        padding: 12px 45px;
+        border: none;
+        outline: none;
+        border-bottom: 1px solid #3498db;
+        border-radius: 4px;
+        font-size: 14px;
+        background: #f8fafc;
+        color: #2c3e50;
+        transition: all 0.3s ease;
+    }
+
+
+
+    input:focus {
+        border-color: #3498db;
+        background: #fff;
+        box-shadow: 0 0 0 4px rgba(52, 152, 219, 0.1);
+    }
+
+    input:focus+i {
+        color: #2980b9;
+    }
+
+    label {
+        display: block;
+        margin-bottom: 8px;
+        font-size: 14px;
+        color: #34495e;
+        font-weight: 500;
+    }
+
+    #country {
+        width: 100%;
+        padding: 12px 45px;
+        border: none;
+        outline: none;
+        border-bottom: 1px solid #3498db;
+        border-radius: 4px;
+        font-size: 14px;
+        background: #f8fafc;
+        color: #2c3e50;
+        transition: all 0.3s ease;
+    }
+
+
+
+    .side-by-side {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+    }
+
+    .password-criteria {
+        margin-top: 10px;
+        padding: 10px;
+        border-radius: 8px;
+        background: #f8fafc;
+    }
+
+    .password-criteria p {
+        font-size: 12px;
+        margin: 5px 0;
+        color: #7f8c8d;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .password-criteria p::before {
+        content: '•';
+        color: #bdc3c7;
+    }
+
+    .password-criteria p.valid::before {
+        content: '✓';
+        color: #27ae60;
+    }
+
+    .password-criteria p.invalid::before {
+        content: '×';
+        color: #e74c3c;
+    }
+
+    button {
+        width: 100%;
+        padding: 14px;
+        background: #3498db;
+        color: white;
+        border: none;
+        border-radius: 12px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-top: 20px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    button:hover {
+        background: #2980b9;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
+    }
+
+    button:active {
+        transform: translateY(0);
+    }
+
+    .err-message {
+        margin-top: 5px;
+        font-size: 12px;
+        color: #e74c3c;
+        animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    a {
+        display: block;
+        text-align: center;
+        margin-top: 20px;
+        color: #3498db;
+        text-decoration: none;
+        font-size: 14px;
+        transition: color 0.3s ease;
+        cursor: pointer !important;
+    }
+
+    a:hover {
+        color: #2980b9;
+    }
+
+    @media (max-width: 768px) {
+        .container {
+            padding: 30px 20px;
+        }
+
+        .side-by-side {
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        .social-login a {
+            width: 40px;
+            height: 40px;
+        }
+
+        .form-header h2 {
+            font-size: 24px;
+        }
+    }
+
+    /* AI-inspired decorative elements */
+    .ai-particles {
+        position: absolute;
+        width: 4px;
+        height: 4px;
+        background: #3498db;
+        border-radius: 50%;
+        pointer-events: none;
+        opacity: 0.6;
+    }
+
+    @keyframes float {
+        0% {
+            transform: translateY(0) translateX(0);
+        }
+
+        50% {
+            transform: translateY(-20px) translateX(10px);
+        }
+
+        100% {
+            transform: translateY(0) translateX(0);
+        }
+    }
+
+    .error-input {
+        border-color: #e74c3c !important;
+        box-shadow: 0 0 0 2px rgba(231, 76, 60, 0.2) !important;
+    }
+
+    .fa-eye,
+    /* Target the eye icon specifically */
+    .fa-eye-slash {
+        /* Also target the slashed eye icon */
+        position: relative;
+        margin-left: 85%;
+        color: #7f8c8d;
+        cursor: pointer;
+    }
+
+    .country-select-container {
+        position: relative;
+        width: 300px;
+    }
+
+    .country-select option {
+        padding: 10px;
+    }
+
+    .country-select:focus {
+        outline: none;
+        border-color: #007BFF;
+        box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+    }
+</style>
+</head>
+
+<body>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+
+    <div class="container">
+
+
+        <div class="form-header">
+            <h2>YourbestRecruiterAi</h2>
+            <p style="color: #7f8c8d;">Experience the future of technology</p>
+        </div>
+
+        <form id="registrationForm" action="/register" method="POST">
+            <div class="form-group">
+                <label for="username">Name<span style="color: red;">*</span></label>
+                <div class="input-icon">
+                    <i class="fas fa-user"></i>
+                    <input type="text" id="username" name="username" autocomplete="nope"
+                        placeholder="Choose a username">
+                </div>
+
+            </div>
+            <div class="side-by-side">
+                <div class="form-group">
+                    <label for="phone">Phone<span style="color: red;">*</span></label>
+                    <div class="input-icon">
+                        <i class="fas fa-phone"></i>
+                        <input type="tel" id="phone" name="phone" placeholder="Enter your phone number"
+                            oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);">
+
+                    </div>
+
+                </div>
+
+                <div class="form-group">
+
+                    <label for="email">Email<span style="color: red;">*</span></label>
+                    <div class="input-icon">
+                        <i class="fas fa-envelope"></i>
+                        <input type="text" id="email" name="email" placeholder="Enter your email">
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="side-by-side">
+                <div class="form-group">
+                    <label for="company">Company<span style="color: red;">*</span></label>
+                    <div class="input-icon">
+                        <i class="fas fa-building"></i>
+                        <input type="text" id="company" name="company" placeholder="Enter your comapny name "
+                            oninput="this.value = this.value.trim();">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="country">Country</label>
+                    <div class="input-icon">
+
+                        <div class="country-select-container">
+                            <i class="fas fa-globe"></i>
+                            <select id="country" name="country" required class="country-select">
+                                <option value="" disabled selected>Select your country</option>
+                                <option value="United States">United States</option>
+                                <option value="Afghanistan">Afghanistan</option>
+                                <option value="Albania">Albania</option>
+                                <option value="Algeria">Algeria</option>
+                                <option value="American Samoa">American Samoa</option>
+                                <option value="Andorra">Andorra</option>
+                                <option value="Angola">Angola</option>
+                                <option value="Antarctica">Antarctica</option>
+                                <option value="Antigua and Barbuda">Antigua and Barbuda</option>
+                                <option value="Argentina">Argentina</option>
+                                <option value="Armenia">Armenia</option>
+                                <option value="Australia">Australia</option>
+                                <option value="Austria">Austria</option>
+                                <option value="Azerbaijan">Azerbaijan</option>
+                                <option value="Bahamas">Bahamas</option>
+                                <option value="Bahrain">Bahrain</option>
+                                <option value="Bangladesh">Bangladesh</option>
+                                <option value="Barbados">Barbados</option>
+                                <option value="Belarus">Belarus</option>
+                                <option value="Belgium">Belgium</option>
+                                <option value="Belize">Belize</option>
+                                <option value="Benin">Benin</option>
+                                <option value="Bermuda">Bermuda</option>
+                                <option value="Bhutan">Bhutan</option>
+                                <option value="Bolivia">Bolivia</option>
+                                <option value="Bosnia and Herzegovina">Bosnia and Herzegovina</option>
+                                <option value="Botswana">Botswana</option>
+                                <option value="Brazil">Brazil</option>
+                                <option value="Brunei Darussalam">Brunei Darussalam</option>
+                                <option value="Bulgaria">Bulgaria</option>
+                                <option value="Burkina Faso">Burkina Faso</option>
+                                <option value="Burundi">Burundi</option>
+                                <option value="Cambodia">Cambodia</option>
+                                <option value="Cameroon">Cameroon</option>
+                                <option value="Canada">Canada</option>
+                                <option value="Cape Verde">Cape Verde</option>
+                                <option value="Cayman Islands">Cayman Islands</option>
+                                <option value="Central African Republic">Central African Republic</option>
+                                <option value="Chad">Chad</option>
+                                <option value="Chile">Chile</option>
+                                <option value="China">China</option>
+                                <option value="Colombia">Colombia</option>
+                                <option value="Costa Rica">Costa Rica</option>
+                                <option value="Croatia">Croatia</option>
+                                <option value="Cuba">Cuba</option>
+                                <option value="Cyprus">Cyprus</option>
+                                <option value="Czech Republic">Czech Republic</option>
+                                <option value="Denmark">Denmark</option>
+                                <option value="Dominica">Dominica</option>
+                                <option value="Dominican Republic">Dominican Republic</option>
+                                <option value="Ecuador">Ecuador</option>
+                                <option value="Egypt">Egypt</option>
+                                <option value="El Salvador">El Salvador</option>
+                                <option value="Equatorial Guinea">Equatorial Guinea</option>
+                                <option value="Estonia">Estonia</option>
+                                <option value="Ethiopia">Ethiopia</option>
+                                <option value="Fiji">Fiji</option>
+                                <option value="Finland">Finland</option>
+                                <option value="France">France</option>
+                                <option value="Gabon">Gabon</option>
+                                <option value="Gambia">Gambia</option>
+                                <option value="Georgia">Georgia</option>
+                                <option value="Germany">Germany</option>
+                                <option value="Ghana">Ghana</option>
+                                <option value="Greece">Greece</option>
+                                <option value="Greenland">Greenland</option>
+                                <option value="Guatemala">Guatemala</option>
+                                <option value="Guinea">Guinea</option>
+                                <option value="Guyana">Guyana</option>
+                                <option value="Haiti">Haiti</option>
+                                <option value="Honduras">Honduras</option>
+                                <option value="Hungary">Hungary</option>
+                                <option value="Iceland">Iceland</option>
+                                <option value="India">India</option>
+                                <option value="Indonesia">Indonesia</option>
+                                <option value="Iran">Iran</option>
+                                <option value="Ireland">Ireland</option>
+                                <option value="Israel">Israel</option>
+                                <option value="Italy">Italy</option>
+                                <option value="Jamaica">Jamaica</option>
+                                <option value="Japan">Japan</option>
+                                <option value="Jordan">Jordan</option>
+                                <option value="Kazakhstan">Kazakhstan</option>
+                                <option value="Kenya">Kenya</option>
+                                <option value="Kuwait">Kuwait</option>
+                                <option value="Kyrgyzstan">Kyrgyzstan</option>
+                                <option value="Latvia">Latvia</option>
+                                <option value="Lebanon">Lebanon</option>
+                                <option value="Liberia">Liberia</option>
+                                <option value="Lithuania">Lithuania</option>
+                                <option value="Luxembourg">Luxembourg</option>
+                                <option value="Malaysia">Malaysia</option>
+                                <option value="Malta">Malta</option>
+                                <option value="Mexico">Mexico</option>
+                                <option value="Morocco">Morocco</option>
+                                <option value="Nepal">Nepal</option>
+                                <option value="Netherlands">Netherlands</option>
+                                <option value="New Zealand">New Zealand</option>
+                                <option value="Nigeria">Nigeria</option>
+                                <option value="Norway">Norway</option>
+                                <option value="Pakistan">Pakistan</option>
+                                <option value="Panama">Panama</option>
+                                <option value="Peru">Peru</option>
+                                <option value="Philippines">Philippines</option>
+                                <option value="Poland">Poland</option>
+                                <option value="Portugal">Portugal</option>
+                                <option value="Qatar">Qatar</option>
+                                <option value="Romania">Romania</option>
+                                <option value="Russia">Russia</option>
+                                <option value="Saudi Arabia">Saudi Arabia</option>
+                                <option value="Singapore">Singapore</option>
+                                <option value="South Africa">South Africa</option>
+                                <option value="Spain">Spain</option>
+                                <option value="Sri Lanka">Sri Lanka</option>
+                                <option value="Sweden">Sweden</option>
+                                <option value="Switzerland">Switzerland</option>
+                                <option value="Turkey">Turkey</option>
+                                <option value="Ukraine">Ukraine</option>
+                                <option value="United Kingdom">United Kingdom</option>
+                                <option value="United States">United States</option>
+                                <option value="Venezuela">Venezuela</option>
+                                <option value="Vietnam">Vietnam</option>
+                                <option value="Zambia">Zambia</option>
+                                <option value="Zimbabwe">Zimbabwe</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="password">Password<span style="color: red;">*</span></label>
+                <div class="input-icon">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" id="password" name="password" placeholder="Create a password"
+                        oninput="this.value = this.value.trim();" autocomplete="new-password">
+                    <i class="fas fa-eye" id="togglePassword" onclick="togglePasswordVisibility()"></i>
+                </div>
+                <div id="passwordCriteria" class="password-criteria">
+                    <p id="lengthCriteria">At least 8 characters</p>
+                    <p id="uppercaseCriteria">At least one uppercase letter</p>
+                    <p id="numberCriteria">At least one number</p>
+                    <p id="specialCharCriteria">At least one special character</p>
+                </div>
+            </div>
+            <button type="submit">Register</button>
+            <a style="cursor: pointer;" onclick="goToLogin()">Already have an account? Login</a>
+
+        </form>
+    </div>
+    <script>
+        const countrySelect = document.getElementById("country");
+
+
+        function validatePassword(password) {
+            const lengthCriteria = document.getElementById('lengthCriteria');
+            const uppercaseCriteria = document.getElementById('uppercaseCriteria');
+            const numberCriteria = document.getElementById('numberCriteria');
+            const specialCharCriteria = document.getElementById('specialCharCriteria');
+
+            let isValid = true;
+
+            // Check length
+            if (password.length >= 8) {
+                lengthCriteria.className = 'valid';
+            } else {
+                lengthCriteria.className = 'invalid';
+                isValid = false;
+            }
+
+            // Check for uppercase letter
+            if (/[A-Z]/.test(password)) {
+                uppercaseCriteria.className = 'valid';
+            } else {
+                uppercaseCriteria.className = 'invalid';
+                isValid = false;
+            }
+
+            // Check for number
+            if (/[0-9]/.test(password)) {
+                numberCriteria.className = 'valid';
+            } else {
+                numberCriteria.className = 'invalid';
+                isValid = false;
+            }
+
+            // Check for special character
+            if (/[^A-Za-z0-9]/.test(password)) {
+                specialCharCriteria.className = 'valid';
+            } else {
+                specialCharCriteria.className = 'invalid';
+                isValid = false;
+            }
+
+            return isValid;
+        }
+
+        function togglePasswordVisibility() {
+            const passwordInput = document.getElementById('password');
+            const toggleIcon = document.getElementById('togglePassword');
+
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleIcon.classList.remove('fa-eye');
+                toggleIcon.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                toggleIcon.classList.remove('fa-eye-slash');
+                toggleIcon.classList.add('fa-eye');
+            }
+        }
+
+
+        function validateUsername(username) {
+
+            if (!username.trim()) { // Check if username is not just spaces
+
+                return false;
+            } else if (username.length < 3) {
+
+                return false;
+            }
+            else {
+
+                return true;
+            }
+        }
+
+        function validatePhone(phone) {
+
+            const phoneRegex = /^[0-9]{10}$/; // Basic 10-digit phone number regex
+
+            if (!phoneRegex.test(phone)) {
+                return false;
+            } else {
+                return true;
+            }
+        }
+
+        function validateEmail(email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+            const normalizedEmail = email.trim().toLowerCase();
+
+            if (!emailRegex.test(normalizedEmail)) {
+                return false;
+            } else {
+                return true;
+            }
+        }
+
+        function validateCompany(company) {
+            if (!company.trim()) { // Check if username is not just spaces
+                return false;
+            } else {
+                return true;
+            }
+        }
+
+        document.getElementById('username').addEventListener('input', function () {
+            validateUsername(this.value);
+        });
+
+        document.getElementById('phone').addEventListener('input', function () {
+            validatePhone(this.value);
+        });
+
+        document.getElementById('email').addEventListener('input', function () {
+            validateEmail(this.value);
+        });
+
+        document.getElementById('company').addEventListener('input', function () {
+            validateCompany(this.value);
+        });
+
+        document.getElementById('password').addEventListener('input', function () {
+            validatePassword(this.value);
+        });
+
+
+        document.getElementById('registrationForm').addEventListener('submit', function (event) {
+            event.preventDefault();
+
+            let username = document.getElementById("username").value;
+            let phone = document.getElementById("phone").value;
+            let email = document.getElementById("email").value;
+            let company = document.getElementById("company").value;
+            let password = document.getElementById("password").value;
+            let country = document.getElementById("country").value;
+
+            // Validate password and username before submitting
+            const isPasswordValid = validatePassword(password);
+            const isUsernameValid = validateUsername(username);
+            const isPhoneValid = validatePhone(phone);
+            const isEmailValid = validateEmail(email);
+            const isCompanyValid = validateCompany(company);
+
+            if (isPasswordValid && isUsernameValid && isPhoneValid && isEmailValid && isCompanyValid && !document.querySelector('button[type="submit"]').disabled) {
+                fetch('/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        company: company,
+                        phone: phone,
+                        email: email,
+                        country: country,
+                        password: password,
+
+                    })
+                })
+                    .then(response => {
+                        if (response.ok) {
+                            toastr.success('Your request has been submitted for review. Approval will be processed within 24 hours. You will receive an email once your account is activated')
+                            window.location.replace('/login');
+                        } else {
+                            return response.json().then(data => {
+                                alert('Registration failed: ' + data.message);
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('An error occurred. Please try again.');
+                    });
+            } else {
+                toastr.error("Please Enter required Details");
+                if (!isUsernameValid) document.getElementById('username').classList.add("error-input");
+                else document.getElementById('username').classList.remove("error-input"); // Remove if valid
+                if (!isPhoneValid) document.getElementById('phone').classList.add("error-input");
+                else document.getElementById('phone').classList.remove("error-input");
+                if (!isEmailValid) document.getElementById('email').classList.add("error-input");
+                else document.getElementById('email').classList.remove("error-input");
+                if (!isCompanyValid) document.getElementById('company').classList.add("error-input");
+                else document.getElementById('company').classList.remove("error-input");
+                if (!isPasswordValid) document.getElementById('password').classList.add("error-input");
+                else document.getElementById('password').classList.remove("error-input");
+            }
+
+        });
+
+        function goToLogin() {
+            window.location.replace('/login'); // Replace the current entry in the history
+        }
+    </script>
+</body>
+
+</html>

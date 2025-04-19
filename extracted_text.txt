@@ -1,0 +1,11 @@
+Question: What is the name of your company?
+Answer: demo
+
+Question: What is your company's mission statement?
+Answer: the mission statement is to create software that work on the all the platform
+
+Question: What is the department the role belongs to?
+Answer: nothing
+
+Question: What are the key responsibilities of the role? Be specific and list out the main tasks and duties.
+Answer: I don't

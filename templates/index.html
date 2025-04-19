@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="./static/images/favion2.png">
+    <title>Recruiter AI - Hiring with AI-powered Candidate Selection</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Audiowide">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+    <!-- Load Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+
+    <!-- SweetAlert2 CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@10/dist/sweetalert2.min.css">
+    <script src="https://unpkg.com/lottie-web@5.11.0/build/player/lottie.min.js"></script>
+
+    <!-- SweetAlert2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+
+    <!-- Static CSS-->
+    <link rel="stylesheet" href="../static/CSS/style.css" />
+    <script src="../static/js/script.js" defer> </script>
+    <script src="../static/js/upload_pdf.js" defer> </script>
+    <!--<script src="../static/js/voice_input.js" defer> </script>-->
+    <style>
+        /* Notification Container */
+        .notification-container {
+            position: relative;
+            display: inline-block;
+        }
+
+        /* Notification Popup */
+        .notifications-popup {
+            display: none;
+            position: absolute;
+            top: 40px;
+            right: 0;
+            width: 300px;
+            background: white;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+            border-radius: 5px;
+            padding: 10px;
+            z-index: 1000;
+        }
+
+        .notification-item {
+            padding: 8px;
+            border-bottom: 1px solid #ddd;
+            font-size: 14px;
+        }
+
+        .notification-item:last-child {
+            border-bottom: none;
+        }
+
+        .notification-item strong {
+            display: block;
+            font-weight: bold;
+        }
+
+        .notification-empty {
+            padding: 10px;
+            text-align: center;
+            color: gray;
+        }
+
+        .upgrade-plann-btn {
+            background: linear-gradient(to bottom, rgba(245, 68, 37, 1) 0%, rgba(200, 50, 20, 1) 100%);
+            color: #fff;
+            border: none;
+            border-radius: 50px;
+            padding: 10px 18px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            text-decoration: none;
+            margin-left: 5px;
+            display: inline-block;
+            text-align: center;
+            transition: all 0.2s ease-in-out;
+            position: relative;
+        }
+
+        .upgrade-plann-btn:hover {
+            background: linear-gradient(to bottom, rgba(223, 25, 11, 1) 0%, rgba(180, 40, 15, 1) 100%);
+            transform: translateY(2px);
+            /* Slight push-down effect */
+            color: #fff;
+        }
+
+        .disabled-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            color: red;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5);
+        }
+    </style>
+</head>
+
+<body>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+
+
+
+    <nav class="navbar exclude-disable">
+        <div onclick="window.location.href='/'">
+            <img class="logo-svg" src="static/images/yourbestrecruiter.png" alt="logo" />
+        </div>
+        <!-- Live Trial Countdown -->
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <div class="timer-container">
+                <span id="trial-timer" class="trial-info">Loading...</span>
+                <div>
+                    <a href="/pricing " id="upgrade-plann-btn" class="upgrade-plann-btn nav-link">Upgrade</a>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="nav-links ">
+            <div class="nav-item ">
+                <a href="/candidates " class="nav-link">Candidates</a>
+            </div>
+            <div class="nav-item">
+                <a href="/process" class="nav-link">All Process</a>
+            </div>
+            <div class="nav-item">
+                <a href="/interviews " class="nav-link">Interviews</a>
+            </div>
+
+            <div class="nav-item">
+
+                <div class="notification-container">
+                    <button type="button" class="icon-button" onclick="toggleNotifications(event)">
+                        <span class="material-icons">notifications</span>
+                        <span class="icon-button__badge" id="notification-count">{{ notification_count }}</span>
+                    </button>
+                </div>
+
+                <!-- Notifications Popup -->
+                <div class="notifications-popup" id="notification-popup"></div>
+            </div>
+            <div class="logout-dropdown">
+                <button class="dots-icon-button" id="menu-btn" onclick="toggleDropdown(event)">
+                    <span class="material-icons">more_vert</span>
+                </button>
+                <div class="logout-dropdown-menu" id="dropdown-menu">
+                    <a href="/profile" class="logout-dropdown-item">Profile</a>
+
+                    <a href="/logout" class="logout-dropdown-item" id="logout-btn"
+                        onclick="handleLogout(event)">Logout</a>
+                </div>
+            </div>
+
+        </div>
+    </nav>
+    <div class="job-desc-container" {% if not is_superadmin and service_used and not is_subscribed %}
+        style=" pointer-events: none; opacity: 0.6;" {% endif %}>
+
+        <div class="content">
+            <div id="uploadData">
+                <h2 style="text-align: center;">Upload Your Job Description</h2>
+                <p style="text-align: center;"> You can upload your job description in Two ways:</p>
+
+                <div>
+                    <h3>1. Text Input</h3>
+                    <input type="file" id="pdfInput" accept=".pdf,.txt">
+                    <p style="font-size: 13px; color: gray;">
+                        * Note: Only PDF and TXT file types are allowed for upload.
+                    </p>
+                    <button class="btn" onclick="uploadPDF()">Process PDF/TXT</button>
+
+                </div>
+
+
+            </div>
+
+            <div class="talk-ai">
+                <div>
+                    <h3>2. Talk to AI</h3>
+                    <button id="" class="btn primary-button" onclick="openAIChat()">Chat with AI</button>
+                </div>
+            </div>
+        </div>
+        <div class="overlay" id="overlay"></div>
+        <div class="loader" id="loader"></div>
+        <div id="aiChatPopup" class="popup">
+            <span class="close-btn" onclick="openCenteredAlert()">&times;</span>
+            <h3>Interactive AI Assistant</h3>
+            <div class="chat-container">
+                <div id="chat-output"></div>
+                <div class="status-indicator" id="status"></div>
+                <div class="event-btn">
+                    <button class="btn" id="voice-btn" onclick="startConversation()">Start Conversation</button>
+
+                    <div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"
+        integrity="sha384-2huaZvOR9iDzHqslqwpR87isEmrfxqyWOF7hr7BY6KG0+hVKLoEXMPUJw3ynWuhO"
+        crossorigin="anonymous"></script>
+
+    <script>
+
+        toastr.options = {
+            "closeButton": false,
+            "debug": false,
+            "newestOnTop": false,
+            "progressBar": true, // Show a progress bar
+            "preventDuplicates": false,
+            "positionClass": "toast-top-right", // Adjust position as needed
+            "onclick": null,
+            "showDuration": "300",
+            "hideDuration": "1000",
+            "timeOut": "3000", // Duration toast is shown
+            "extendedTimeOut": "1000",
+            "showEasing": "swing",
+            "hideEasing": "linear",
+            "showMethod": "fadeIn",
+            "hideMethod": "fadeOut"
+        };
+
+        function toggleNotifications(event) {
+            event.stopPropagation();
+            const notificationPopup = document.getElementById("notification-popup");
+
+            // Check if the popup is already open
+            if (notificationPopup.style.display === "block") {
+                notificationPopup.style.display = "none"; // Close the popup if it's open
+                return; // Exit the function to prevent re-fetching notifications
+            }
+
+            fetch('/get_notifications')
+                .then(response => response.json())
+                .then(data => {
+                    notificationCount = data.count;
+                    updateNotificationBadge(notificationCount);
+                    notificationPopup.innerHTML = ""; // Clear old notifications
+
+                    if (data.length === 0) {
+                        notificationPopup.innerHTML = "<p class='notification-empty'>No new notifications</p>";
+                    } else {
+                        data.forEach(notification => {
+                            let div = document.createElement("div");
+                            // Assuming notification.interview_time is in "HH:mm" format
+                            const timeParts = notification.interview_time.split(':');
+                            const hours = parseInt(timeParts[0], 10);
+                            const minutes = parseInt(timeParts[1], 10);
+
+                            // Create a new Date object for today at the specified time
+                            const now = new Date();
+                            const utcDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), hours, minutes));
+
+                            // Convert to local time
+                            const localTime = utcDate.toLocaleTimeString(); // You can customize this as needed
+
+
+                            div.classList.add("notification-item");
+                            div.innerHTML = `
+                                <strong><span class="job-title">Job: ${notification.job_title}</span></strong><br>
+                                <span class="candidate-name">${notification.candidate_name}</span>
+                                <span class="interview-time">${localTime}</span>
+                                
+                            `;
+                            notificationPopup.appendChild(div);
+                        });
+
+                        // Update notification badge
+                        document.getElementById("notification-count").innerText = data.length;
+                    }
+
+                    notificationPopup.style.display = "block";
+
+                    let timeoutId;
+
+                    function outsideClickListener(event) {
+                        // Check if the click was outside the notification popup
+                        if (notificationPopup && !notificationPopup.contains(event.target)) {
+                            closePopup(); // Call closePopup if clicked outside
+                        }
+                    }
+
+                    function closePopup() {
+                        notificationPopup.style.display = "none";
+                        document.removeEventListener("click", outsideClickListener); // Remove the outside click listener
+                        clearTimeout(timeoutId); // Clear the timeout
+                    }
+
+                    timeoutId = setTimeout(closePopup, 3000);
+
+
+                    notificationPopup.addEventListener("mouseover", () => {
+                        clearTimeout(timeoutId); // Clear the timeout if mouse is over the popup
+                    });
+                    notificationPopup.addEventListener("mouseout", () => {
+                        timeoutId = setTimeout(closePopup, 3000); // Reset the timeout when mouse leaves the popup
+                    });
+
+                });
+
+            // Close when clicking outside
+            document.addEventListener("click", function closePopup(e) {
+                if (!e.target.closest(".notification-container")) {
+                    notificationPopup.style.display = "none";
+                    document.removeEventListener("click", closePopup);
+                }
+            });
+        }
+
+        function updateNotificationBadge(count) {
+
+            const badge = document.getElementById('notification-count');
+            if (count == 0) {
+                badge.style.display = 'none';
+            } else {
+                // Or 'block' depending on your layout
+                badge.textContent = count;
+            }
+        }
+
+        // Example usage (assuming you have a way to get the notification count):
+        let notificationCount = {{ notification_count }}; // Get the count from your data
+        updateNotificationBadge(notificationCount);
+
+        let expiryTimestamp = {{ expiry_timestamp | default (0) | tojson}};
+        let isSuperAdmin = {{ is_superadmin | default (false) | tojson }};
+
+        if (isSuperAdmin) {
+            document.getElementById("trial-timer").innerHTML = "<span>Welcome Super Admin!</span>"; // Super Admin UI
+            document.getElementById("upgrade-plann-btn").style.display = "none";
+        } else {
+            function updateCountdown() {
+                let now = Math.floor(Date.now() / 1000);
+                let remainingTime = expiryTimestamp - now;
+
+                if (remainingTime <= 0) {
+                    // Redirect to pricing if trial expired
+                    window.location.href = "/pricing";
+                    return;
+                }
+
+                let days = Math.floor(remainingTime / 86400);
+                let hours = Math.floor((remainingTime % 86400) / 3600);
+                let minutes = Math.floor((remainingTime % 3600) / 60);
+                let seconds = Math.floor(remainingTime % 60);
+
+                let timerText = "<span>Your Free Trial ends in ";
+
+                if (days > 1) {
+                    timerText += `${days} days, ${hours} hours.`;
+                } else if (days >= 1) { // 1 day remaining
+                    timerText += `${days} day, ${hours} hours, and ${minutes} minutes.`;
+                } else if (hours >= 1) {
+                    timerText += `${hours} hours, ${minutes} minutes.`;
+                } else if (minutes >= 1) {
+                    timerText += `${minutes} minutes.`;
+                } else {
+                    timerText += `${seconds} seconds.`;
+                }
+
+                timerText += "</span>";
+
+                /*if (days) { // Less than 2 days, show upgrade message
+                    timerText += ` `;
+                } */
+
+                document.getElementById("trial-timer").innerHTML = timerText;
+            }
+
+            if (expiryTimestamp) {
+                updateCountdown();
+                setInterval(updateCountdown, 1000);  // Update every second
+            }
+        }
+
+
+        function checkUploadStatus() {
+            $.ajax({
+                url: "/check-upload-status",
+                type: "GET",
+                dataType: "json",
+                success: function (data) {
+                    console.log("Upload Status: ", data);
+                    if (data.service_used && !data.is_subscribed) {
+                        // disablePage();
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error("Error checking upload status:", error);
+                }
+            });
+        }
+
+        function disablePage() {
+            // Disable all buttons and inputs
+            document.querySelectorAll("button, input").forEach(el => {
+                if (!el.closest(".exclude-disable")) {
+                    el.disabled = true;
+                    el.style.opacity = "0.4";
+                    el.style.cursor = "not-allowed";
+                }
+            });
+
+            // Show overlay to prevent interaction
+            let overlay = document.createElement("div");
+            overlay.id = "pageOverlay";
+            overlay.style.position = "fixed";
+            overlay.style.top = "0";
+            overlay.style.left = "0";
+            overlay.style.width = "100%";
+            overlay.style.height = "100%";
+            overlay.style.backgroundColor = "rgba(0, 0, 0, 0.5)";
+            overlay.style.zIndex = "9999";
+            overlay.innerHTML = `<div class="disabled-message">${message}</div>`;
+            document.body.appendChild(overlay);
+        }
+
+        // Run the check when the page loads
+        window.onload = checkUploadStatus();
+
+    </script>
+
+</body>
+
+</html>
