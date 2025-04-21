@@ -1,264 +1,515 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
-  <link rel="stylesheet" href="static/CSS/header.css" />
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YourBestRecruiterAI: Hiring with AI-powered Candidate Selection</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+  <style>
+    :root {
+      --primary: #4361ee;
+      --secondary: #3f37c9;
+      --accent: #4cc9f0;
+      --light: #f8f9fa;
+      --dark: #212529;
+      --success: #4ade80;
+      --danger: #ef4444;
+      --border-radius: 12px;
+      --box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+      --transition: all 0.3s ease;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+      color: var(--dark);
+      line-height: 1.6;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    body {
+      overflow: auto;
+      /* Enables scrolling */
+      scrollbar-width: none;
+      /* Firefox */
+    }
+
+    body::-webkit-scrollbar {
+      display: none;
+      /* Chrome, Safari, Edge */
+    }
+
+
+    header {
+      background-color: white;
+      box-shadow: var(--box-shadow);
+      padding: 0.5rem;
+      position: sticky;
+      font-size: 13px;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-container.header-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* .logo-container {
+      flex: 1;
+      text-align: left;
+    } */
+
+    .logo {
+      display: flex;
+      align-items: center;
+      text-decoration: none;
+      z-index: 101;
+    }
+
+    .logo-svg {
+      height: auto;
+      max-width: 150px;
+      display: block;
+    }
+
+    nav {
+      transition: var(--transition);
+    }
+
+    nav ul {
+      display: inline-flex;
+      list-style: none;
+      gap: 1.5rem;
+      align-items: center;
+      margin-right: 2rem;
+      padding: 0;
+    }
+
+    nav a {
+      text-decoration: none;
+      color: var(--dark);
+      font-weight: 500;
+      transition: var(--transition);
+      position: relative;
+      display: block;
+    }
+
+    nav a:hover {
+      color: var(--primary);
+    }
+
+    nav a::after {
+      content: '';
+      position: absolute;
+      width: 0;
+      height: 2px;
+      bottom: -5px;
+      left: 0;
+      background-color: var(--primary);
+      transition: var(--transition);
+    }
+
+    nav a:hover::after {
+      width: 100%;
+    }
+
+    .notification-icon {
+      background: none;
+      border: none;
+      padding: 0;
+      cursor: pointer;
+    }
+
+    .dropdown-icon {
+      background: none;
+      border: none;
+      padding: 0px 20px;
+      cursor: pointer;
+    }
+
+    .fa-ellipsis-v {
+      font-size: 16px;
+    }
+
+    .notification-count {
+      position: absolute;
+      top: -10px;
+      right: -10px;
+      width: 25px;
+      height: 25px;
+      background: red;
+      color: #ffffff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border-radius: 50%;
+    }
+
+    .timer-container {
+      display: flex;
+      align-items: center;
+      text-align: center;
+      background-color: #edf2ff;
+      border-radius: 22px;
+      padding: 4px 16px;
+      color: #2563eb;
+      padding-right: 5px;
+      font-size: 15px;
+      font-weight: 500;
+      gap: 10px;
+      white-space: nowrap;
+    }
+
+    .nav-items {
+      /* flex: 1; */
+      text-align: right;
+    }
+
+    .upgrade-plann-btn {
+      background: linear-gradient(to bottom,
+          rgba(245, 68, 37, 1) 0%,
+          rgba(200, 50, 20, 1) 100%);
+      color: #fff;
+      border: none;
+      border-radius: 50px;
+      padding: 8px 16px;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+      text-align: center;
+      transition: all 0.2s ease-in-out;
+    }
+
+    .upgrade-plann-btn:hover {
+      background: linear-gradient(to bottom,
+          rgba(223, 25, 11, 1) 0%,
+          rgba(180, 40, 15, 1) 100%);
+      transform: translateY(-2px);
+      color: #fff;
+    }
+
+    .dropdown {
+      position: relative;
+    }
+
+    .dropdown-content {
+      display: none;
+      position: absolute;
+      background-color: #ffffff;
+      min-width: 150px;
+      box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.1);
+      z-index: 1;
+      right: 0;
+      top: 100%;
+      border-radius: 8px;
+      margin-top: 10px;
+      overflow: hidden;
+      text-align: left;
+    }
+
+    .dropdown-content a {
+      color: var(--dark);
+      padding: 12px 16px;
+      text-decoration: none;
+      display: block;
+      transition: var(--transition);
+    }
+
+
+
+    .mobile-menu-btn {
+      display: none;
+      background: none;
+      border: none;
+      color: var(--dark);
+      font-size: 1.5rem;
+      cursor: pointer;
+      z-index: 101;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes slideInFromLeft {
+      0% {
+        transform: translateX(-30px);
+        opacity: 0;
+      }
+
+      100% {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    .notifications-popup {
+      display: none;
+      position: absolute;
+      top: 50px;
+      right: 10px;
+      width: 300px;
+      background: white;
+      box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+      border-radius: 5px;
+      padding: 10px;
+      z-index: 1000;
+    }
+
+    .notification-empty {
+      padding: 10px;
+      text-align: center;
+      color: gray;
+    }
+
+    .notification-item {
+      padding: 8px;
+      border-bottom: 1px solid #ddd;
+      font-size: 14px;
+    }
+
+    .notification-item:last-child {
+      border-bottom: none;
+    }
+
+    .notification-item strong {
+      display: block;
+      font-weight: bold;
+    }
+
+    .fa-bell,
+    .fa-headset {
+      font-size: 22px;
+    }
+
+    /* Responsive styles */
+    @media (max-width: 1024px) {
+      .timer-container {
+        position: static;
+        transform: none;
+        margin: 0 auto;
+        padding: 6px 12px;
+        font-size: 13px;
+      }
+
+      .header-content {
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+    }
+
+    @media (max-width: 1040px) {
+      .mobile-menu-btn {
+        display: block;
+      }
+
+      nav {
+        position: fixed;
+        top: 0;
+        right: -300px;
+        width: 300px;
+        height: 100vh;
+        background-color: white;
+        transition: var(--transition);
+        box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
+        padding: 80px 2rem 2rem;
+        z-index: 99;
+        overflow-y: auto;
+      }
+
+      nav.active {
+        right: 0;
+        text-align: left;
+      }
+
+      nav ul {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1.5rem;
+      }
+
+      nav ul li {
+        margin-right: 20px;
+        position: relative;
+        transition: var(--transition);
+      }
+
+      nav.active ul li {
+        opacity: 1;
+        transform: translateX(0);
+        animation: slideInFromLeft 0.3s forwards;
+      }
+
+      /* Staggered animation for menu items */
+      nav.active ul li:nth-child(1) {
+        animation-delay: 0.1s;
+      }
+
+      nav.active ul li:nth-child(2) {
+        animation-delay: 0.2s;
+      }
+
+      nav.active ul li:nth-child(3) {
+        animation-delay: 0.3s;
+      }
+
+      nav.active ul li:nth-child(4) {
+        animation-delay: 0.4s;
+      }
+
+      nav.active ul li:nth-child(5) {
+        animation-delay: 0.5s;
+      }
+
+      nav.active ul li:nth-child(6) {
+        animation-delay: 0.6s;
+      }
+
+      .mobile-menu-btn.active i:before {
+        content: "\f00d";
+        /* Change to X icon */
+      }
+
+      .dropdown {
+        width: 100%;
+      }
+
+      .dropdown-content {
+        position: static;
+        width: 100%;
+        box-shadow: none;
+        margin-top: 10px;
+        margin-bottom: 5px;
+        border-left: 2px solid var(--primary);
+        border-radius: 0;
+      }
+
+      .timer-container {
+        order: 3;
+        width: 100%;
+        justify-content: center;
+        margin-top: 10px;
+        border-radius: 8px;
+        padding: 8px 12px;
+      }
+
+      .dropdown:hover .dropdown-content {
+        animation: none;
+      }
+
+      /* Enable click to show dropdown on mobile */
+      .dropdown-content {
+        display: none;
+      }
+
+      .dropdown.active .dropdown-content {
+        display: block;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .timer-container {
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        text-align: center;
+        padding: 10px;
+      }
+
+      .logo-svg {
+        max-width: 100px;
+      }
+
+      .header-content {
+        padding: 5px 0;
+      }
+    }
+
+    nav ul li {
+      font-size: 15px;
+    }
+  </style>
 </head>
 
 <body>
-  <!-- navbar.html - Import this at the top of your pages -->
-  <nav class="navbar">
-    <div class="logo" onclick="window.location.href='/'">
-      <img class="logo-svg" src="static/images/yourbestrecruiter.png" alt="logo" />
-    </div>
+  <script src="../static/js/navbar.js" defer></script>
+  <header>
+    <div class="header-container header-content">
+      <div class="logo-container">
+        <a href="/" class="logo">
+          <img class="logo-svg" src="../static/images/_logo_1.png" alt="logo" />
+        </a>
+      </div>
 
-
-
-    <!-- Live Trial Countdown -->
-    <div style="display: flex; align-items: center; gap: 10px;">
       <div class="timer-container">
-        <span id="trial-timer" class="trial-info">Loading...</span>
-        <div>
-          <a href="/pricing " id="upgrade-plann-btn" class="upgrade-plann-btn nav-link">Upgrade</a>
-        </div>
+        <span id="trial-timer" class="trial-info">You are limited to 1 job application with the free plan.</span>
+        <a href="/pricing" id="upgrade-plann-btn" class="upgrade-plann-btn nav-link">Upgrade</a>
       </div>
 
+      <div class="nav-items">
+        <nav id="main-nav">
+          <ul>
+            <li><a href="/myjobs">My Jobs</a></li>
+            <li><a href="/candidates">Candidates</a></li>
+            <li><a href="/process">All Process</a></li>
+            <li><a href="/interviews">Interviews</a></li>
+
+            <li><a href="/help"><i class="fa-solid fa-headset" title="Need Help?"></i></a></i>
+            <li>
+              <button type="button" class="notification-icon" onclick="window.toggleNotifications(event)">
+                <i class="fas fa-bell"></i>
+                <span class="notification-count" style="display: none;" id="notification-count">{{ notification_count
+                  }}</span>
+              </button>
+            </li>
+            <!-- Notifications Popup -->
+            <div class="notifications-popup" id="notification-popup"></div>
+            <li class="dropdown" id="user-dropdown">
+              <button class="dropdown-icon" id="dropdown-menu">
+                <i class="fas fa-ellipsis-v"></i>
+              </button>
+              <div class="dropdown-content">
+                <a href="/profile">Profile</a>
+                <a href="/logout" id="logout-btn" onclick="handleLogout(event)">Logout</a>
+              </div>
+            </li>
+          </ul>
+        </nav>
+      </div>
+
+
+      <button class="mobile-menu-btn" id="mobile-menu-toggle">
+        <i class="fas fa-bars"></i>
+      </button>
     </div>
-
-    <div class="nav-links" id="navLinks">
-      <div class="nav-item">
-        <a href="/candidates" class="nav-link">Candidates</a>
-      </div>
-      <div class="nav-item">
-        <a href="/process" class="nav-link">All Process</a>
-      </div>
-      <div class="nav-item">
-        <a href="/interviews" class="nav-link">Interviews</a>
-      </div>
-
-      <div class="nav-item">
-        <div class="notification-container">
-          <button type="button" class="icon-button" onclick="toggleNotifications(event)" id="notification-btn">
-            <span class="material-icons">notifications</span>
-            <span class="icon-button__badge" id="notification-count">0</span>
-          </button>
-        </div>
-
-        <!-- Notifications Popup -->
-        <div class="notifications-popup" id="notification-popup"></div>
-      </div>
-
-      <div class="logout-dropdown">
-        <button class="dots-icon-button" id="menu-btn" onclick="toggleDropdown(event)">
-          <span class="material-icons">more_vert</span>
-        </button>
-        <div class="logout-dropdown-menu" id="dropdown-menu">
-          <a href="/profile" class="logout-dropdown-item">Profile</a>
-          <a href="/logout" class="logout-dropdown-item" id="logout-btn" onclick="handleLogout(event)">Logout</a>
-        </div>
-      </div>
-    </div>
-  </nav>
-  <script>
-
-    const notificationCount = document.getElementById("notification-count");
-    const trialTimerEl = document.getElementById("trial-timer");
-    let notificationPopup = document.getElementById("notification-popup");
-    let timeoutId; // Store timeout globally
-
-    const expiryTimestamp = {{ expiry_timestamp | default (0) }};
-    const isSuperAdmin = {{ is_superadmin | lower }}; // Converts Python bool to JS bool
-    const notificationCounting = {{ notification_count | default (0) }};
-
-    updateNotifications({ count: notificationCounting });
-
-    updateTrialTimer(expiryTimestamp, isSuperAdmin);
-
-    function updateTrialTimer(expiryTimestamp, isSuperAdmin) {
-
-      console.log(" Is super admin :", isSuperAdmin);
-      if (isSuperAdmin) {
-        document.getElementById("trial-timer").innerHTML =
-          "<span>Welcome Super Admin!</span>"; // Super Admin UI
-        document.getElementById("upgrade-plann-btn").style.display = "none";
-        return;
-      }
-      function calculateRemainingTime() {
-        let now = Math.floor(Date.now() / 1000);
-        let remainingSeconds = expiryTimestamp - now;
-
-        if (remainingSeconds > 0) {
-          let days = Math.floor(remainingSeconds / (24 * 3600));
-          let hours = Math.floor((remainingSeconds % (24 * 3600)) / 3600);
-          let timerText = `Your Free Trial ends in ${days} days, ${hours} hours.`;
-          document.getElementById("trial-timer").textContent = timerText;
-        } else {
-          document.getElementById("trial-timer").textContent =
-            "Your subscription has expired.";
-        }
-      }
-
-      calculateRemainingTime();
-      setInterval(calculateRemainingTime, 60000);
-    }
+  </header>
 
 
-
-
-
-    function updateNotifications({ count }) {
-      const badge = document.getElementById("notification-count");
-
-      if (count === 0) {
-        badge.style.display = "none";
-      } else {
-        badge.textContent = count;
-        badge.style.display = "block";
-      }
-    }
-
-
-    function toggleNotifications(event) {
-      event.stopPropagation(); // Prevents closing when clicking the button
-
-      // Check if the popup is already open
-      if (notificationPopup.style.display === "block") {
-        closePopup();
-        return;
-      }
-
-      fetch("/get_notifications")
-        .then((response) => response.json())
-        .then((data) => {
-          let notifications = data.notifications; // Ensure it's an array
-          console.log(" notification s:  ", notifications);
-          updateNotificationBadge(data.count); // Update badge count
-
-          notificationPopup.innerHTML = ""; // Clear old notifications
-
-          if (data.length === 0) {
-            notificationPopup.innerHTML =
-              "<p class='notification-empty'>No new notifications</p>";
-          } else {
-            data.forEach((notification) => {
-              let div = document.createElement("div");
-              div.classList.add("notification-item");
-
-              const timeParts = notification.interview_time.split(":");
-              const hours = parseInt(timeParts[0], 10);
-              const minutes = parseInt(timeParts[1], 10);
-
-              // Create a new Date object for today at the specified time
-              const now = new Date();
-              const utcDate = new Date(
-                Date.UTC(
-                  now.getUTCFullYear(),
-                  now.getUTCMonth(),
-                  now.getUTCDate(),
-                  hours,
-                  minutes
-                )
-              );
-
-              // Convert to local time
-              const localTime = utcDate.toLocaleTimeString();
-
-              div.innerHTML = `
-                            </strong>
-                            <strong><span class="candidate-name">${notification.candidate_name}</span><br>
-                            <span class="job-title">Job: ${notification.job_title}</span>
-                            <span class="interview-time">${localTime}</span>
-                        `;
-              notificationPopup.appendChild(div);
-            });
-          }
-
-          // Update notification badge
-          document.getElementById("notification-count").innerText = data.length;
-
-          // Show the popup
-          notificationPopup.style.display = "block";
-
-          // Set auto-close timeout
-          timeoutId = setTimeout(closePopup, 3000);
-        });
-
-      // Close when clicking outside
-      document.addEventListener("click", outsideClickListener);
-    }
-
-    // Function to close the popup
-    function closePopup() {
-      notificationPopup.style.display = "none";
-      clearTimeout(timeoutId); // Clear timeout
-      document.removeEventListener("click", outsideClickListener);
-    }
-
-    // Function to detect outside clicks
-    function outsideClickListener(event) {
-      if (
-        !event.target.closest(".notification-container") &&
-        !event.target.closest("#notification-popup")
-      ) {
-        closePopup();
-      }
-    }
-
-    // Prevent auto-close when hovering
-    notificationPopup.addEventListener("mouseover", () =>
-      clearTimeout(timeoutId)
-    );
-    notificationPopup.addEventListener(
-      "mouseout",
-      () => (timeoutId = setTimeout(closePopup, 3000))
-    );
-
-    function updateNotificationBadge(count) {
-      const badge = document.getElementById("notification-count");
-      if (count == 0) {
-        badge.style.display = "none";
-      } else {
-        badge.textContent = count;
-      }
-    }
-
-    function toggleDropdown(event) {
-      event.stopPropagation(); // Prevent closing immediately after opening
-      const dropdownMenu = document.getElementById("dropdown-menu");
-
-      // Toggle visibility
-      dropdownMenu.style.display =
-        dropdownMenu.style.display === "block" ? "none" : "block";
-
-      // Close dropdown when clicking outside
-      document.addEventListener("click", function closeDropdown(e) {
-        if (!event.target.closest(".dropdown")) {
-          dropdownMenu.style.display = "none";
-          document.removeEventListener("click", closeDropdown);
-        }
-      });
-    }
-
-    function handleLogout(event) {
-      event.preventDefault(); // Prevent direct navigation
-      Swal.fire({
-        title: "Are you sure?",
-        text: "You will be logged out!",
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonColor: "#d33",
-        cancelButtonColor: "#3085d6",
-        confirmButtonText: "Yes, logout!",
-      }).then((result) => {
-        if (result.isConfirmed) {
-          window.location.href = "/logout"; // Redirect to logout
-        }
-      });
-    }
-
-  </script>
 
 </body>
 

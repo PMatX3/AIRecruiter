@@ -107,8 +107,8 @@ selected_collection = db.get_collection('selected_candidates') if db.get_collect
 tickets_collection = db.get_collection('tickets')
 reports_collection = db.get_collection('reports')
 subscriptions_collection = db.get_collection('subscription') 
-
-
+inquiry_colletion = db.get_collection('get_in_touch') if db.get_collection('get_in_touch') is not None  else db.create_collection('get_in_touch')
+demo_requests = db.get_collection('demo_requests') if db.get_collection('demo_requests') is not None  else db.create_collection('demo_requests')
 
 
 openai_client = openai.Client(api_key=os.getenv("OPENAI_API_KEY"))
@@ -183,7 +183,11 @@ def navbar():
 
 @app.route('/test', methods=['GET'])
 def index_testing():
-    return render_template('file4.html')
+    return render_template('temp.html')
+
+@app.route('/myjobs', methods=['GET'])
+def myjobs():
+    return render_template('myjobs.html')
 
 @app.route('/transcribe', methods=['POST'])
 def transcribe_audio():
@@ -226,9 +230,11 @@ def transcribe_audio():
 
 
         except openai.OpenAIError as e:  # Note the change here!
+            print("OpenAI error:", e)
             Thread(target=async_file_cleanup, args=(temp_audio_path,), daemon=True).start()
             return jsonify({'error': f'Failed to process audio with OpenAI: {str(e)}'}), 500
         except Exception as e:
+            print("General error:", e)
             Thread(target=async_file_cleanup, args=(temp_audio_path,), daemon=True).start()
             return jsonify({'error': str(e)}), 500
 
@@ -291,77 +297,122 @@ SUPER_ADMIN_EMAILS =  ['super.admin@gmail.com']
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
-
-
     if request.method == 'GET':
         return render_template('registration.html')
-    
+
+
     data = request.get_json()
-    email = data["email"].lower()
+
+    email = data["registered_email"].lower()
+    if not data or 'registered_email' not in data or 'username' not in data or 'password' not in data or 'phone' not in data or 'company' not in data:
+        return jsonify({"message": "Missing required registration data"}), 400
 
     if users_collection.find_one({"registered_email": email}):
         return jsonify({"message": "User already exists"}), 400
+
+    if data.get('is_linkedin_connected') and data.get('linkedin_id'):
+        try:
+            token_data = {
+                "grant_type": "authorization_code",
+                "code": data.get('linkedin_code'),
+                "client_id": CLIENT_ID,
+                "client_secret": CLIENT_SECRET,
+                "redirect_uri": REDIRECT_URI,
+            }
+
+            token_res = requests.post('https://www.linkedin.com/oauth/v2/accessToken', data=token_data)
+            token_json = token_res.json()
+            access_token = token_json.get("access_token")
+
+            if not access_token:
+                return jsonify({"error": "Failed to retrieve access token for linking", "details": token_json}), 400
+
+            profile_data = get_user_info(access_token)
+            if not profile_data:
+                return jsonify({"error": "Failed to retrieve user profile"}), 400
+
+            linkedin_email = profile_data.get("email")
+            linkedin_id = profile_data.get("sub")
+            linkedin_username = f"{profile_data.get('given_name', '')} {profile_data.get('family_name', '')}".strip()
+            picture = profile_data.get("picture", "")
+
+            if users_collection.find_one({'linkedin_id': linkedin_id}):
+                return jsonify({'error': 'This LinkedIn account is already linked to another user'}), 400
+            
+            data['linkedin_email'] = linkedin_email
+            data['linkedin_id'] = linkedin_id
+            data['linkedin_username'] = linkedin_username
+            data['profile_picture'] = picture
+            data['access_token'] = access_token
+            data['user_linkedin_pages'] = get_user_organizations(access_token)
+            
+        except Exception as e:
+            return jsonify({"error": f"LinkedIn authentication error: {str(e)}"}), 400
+
+        is_superadmin = email in SUPER_ADMIN_EMAILS if email else False
+
+    else :
+
+        new_user = {
+            "username": data["username"],
+            "company": data["company"],
+            "country": data.get("country", ""),
+            "created_at": datetime.utcnow(),
+            "registered_email": email,
+            "profileUrl": data.get("profileUrl", ""),
+            "phone": data["phone"],
+            "notes": "",
+            "verification_status": "Approved",
+            "user_type": "User",
+            "password": generate_password_hash(data["password"]),
+            "linkedin_id": None, # Initially None until user connects LinkedIn
+            "linkedin_email": None, # Will be set when LinkedIn is connected
+            "is_linkedin_connected": False,
+            "subscription": {
+                "is_subscribed": False,
+                "plan": "trial",
+                "status": "active"
+            },
+            
+            "first_job_uploaded": False,
+        
+            "is_superadmin": False,
+        }
+
+        result = users_collection.insert_one(new_user)  # Use insert_one()
     
-    is_superadmin = email in SUPER_ADMIN_EMAILS
-   
-    
-    new_user = {
-        "username": data["username"],
-        "company": data["company"],
-        "country": data.get("country", ""),
-        "created_at": datetime.utcnow(),
-        "registered_email": email,
-        "profileUrl": data.get("profileUrl", ""),
-        "phone": data["phone"],
-        "notes": "",
-        "verification_status": "Pending",
-        "user_type": "User",
-        "password": generate_password_hash(data["password"]),
-        "linkedin_id": None,  # Initially None until user connects LinkedIn
-        "linkedin_email": None,  # Will be set when LinkedIn is connected
-        "is_linkedin_connected": False,
-        "subscription": {
-            "is_subscribed": False,
-            "plan": "trial",    
-            "status": "active"
-        },
-        "features": {
-            "first_job_uploaded": False
-        },
-        "is_superadmin": is_superadmin
-    }
 
-    users_collection.insert_one(new_user) #Replace with DB call      
-    session['registration_data'] = data # Store for LinkedIn auth
-    email_body = f"""
-        Dear Recruiter,
+        session['registration_data'] = data  # Store for LinkedIn auth
+        email_body = f"""
+            Dear Recruiter,
 
-        Congratulations! Your registration with YourBestRecruiterAI was successful. 🎉  
+            Congratulations! Your registration with YourBestRecruiterAI was successful. 🎉
 
-        🚀 Explore our AI-powered recruitment tools:  
-        ✅ Post job listings and find the best-matched candidates effortlessly.  
-        ✅ Schedule interviews and manage hiring efficiently.  
-        ✅ Leverage AI to streamline your recruitment process.  
+            🚀 Explore our AI-powered recruitment tools:
+            ✅ Post job listings and find the best-matched candidates effortlessly.
+            ✅ Schedule interviews and manage hiring efficiently.
+            ✅ Leverage AI to streamline your recruitment process.
 
-        Start your journey now and experience smarter hiring!  
+            Start your journey now and experience smarter hiring!
 
-        Best Regards,  
-        YourBestRecruiterAI Team  
-        """
-    # send_mail(email, "Welcome to YourBestRecruiterAI – Your Registration is Successful!",email_body , attachment_paths=None)
+            Best Regards,
+            YourBestRecruiterAI Team
+            """
+        # send_mail(email, "Welcome to YourBestRecruiterAI – Your Registration is Successful!",email_body , attachment_paths=None)
 
-    return jsonify({
-        "message": "Super admin registered successfully" if is_superadmin else "User registered successfully"
-    }), 201
+        return jsonify({
+            'success': 'User registered successfully' ,
+            'redirect': '/login',
+        }), 201
 
 
 
 @app.route("/login-linkedin")
 def linkedin_login():
     
-    session.pop('user', None)   
-    print("Cleared existing session.")
-
+    if 'user' in session:
+        registered_user = session['user']['_id']
+  
     state = generate_random_string()
     session['state'] = state
 
@@ -379,19 +430,18 @@ def linkedin_login():
 @app.route("/auth/callback")
 def callback():
     try:
-        session.pop('user', None)   
-        print("Cleared existing session at callback.")
-
-    
+        session.pop('user', None)
         code = request.args.get("code")
-        state = request.args.get("state")
-        
+        state_received = request.args.get("state")
+        state_stored = session.pop('state', None)
+
+        if state_received is None or state_stored is None or state_received != state_stored:
+            return jsonify({"error": "Invalid state parameter. Possible CSRF attack."}), 400
+
         if not code:
             return jsonify({"error": "Missing LinkedIn authorization code."}), 400
-        if not state:
-            return jsonify({"error": "Invalid state parameter."}), 400
 
-    
+
         data = {
             "grant_type": "authorization_code",
             "code": code,
@@ -407,40 +457,26 @@ def callback():
         if not access_token:
             return jsonify({"error": "Failed to retrieve access token", "details": token_json}), 400
 
-        registration_data = session.pop('registration_data', None)
-        registered_email = registration_data.get('email').lower()
-        
 
         profile_data = get_user_info(access_token)  # Function to fetch user info
         if not profile_data:
             return jsonify({"error": "Failed to fetch profile data from LinkedIn"}), 400
-        
-
 
         # Extract profile details
         linkedin_email = profile_data.get("email")  
         linkedin_id = profile_data.get("sub")
         linkedin_username = f"{profile_data.get('given_name', '')} {profile_data.get('family_name', '')}".strip()
         picture = profile_data.get("picture", "")
-        
+
         if not linkedin_email:
             return jsonify({"error": "LinkedIn did not return an email address."}), 400
-        
-        if users_collection.find_one({'linkedin_email': linkedin_email}):
-            last_registered_user = users_collection.find_one(
-                {"registered_email": registered_email}, sort=[("_id", -1)]
-            )
 
-            if last_registered_user:
-                users_collection.delete_one({"_id": last_registered_user["_id"]})
+        # Check if this LinkedIn account is already linked to another user (excluding the current registering user)
+        if users_collection.find_one({'linkedin_email': linkedin_email}):
 
             return jsonify({'error': 'This LinkedIn account is already linked to another user'}), 400
 
-        
-        if not registered_email:
-            return jsonify({'error': 'Registered email is missing'}), 400
-
-        update_data = {
+        linkedin_data = {
             "access_token": access_token,
             "linkedin_email": linkedin_email,
             "linkedin_id": linkedin_id,
@@ -450,29 +486,85 @@ def callback():
             "is_linkedin_connected": True,
             "user_linkedin_pages": get_user_organizations(access_token)
         }
+        
+        registration_data  = session.get('registration_data', None)
+        print('registration_data', registration_data)
+        registered_email = registration_data.get('registered_email', None)
+        is_superadmin = registered_email in SUPER_ADMIN_EMAILS
+
+        if registration_data and registered_email :
+            print( "line 491 inside registration data and registered email")
+            new_user = {
+                "username": registration_data,
+                "company": registration_data["company"],
+                "country": registration_data.get("country", ""),
+                "created_at": datetime.utcnow(),
+                "registered_email": registration_data["registered_email"],
+                "profileUrl": registration_data.get("profileUrl", ""),
+                "phone": registration_data["phone"],
+                "notes": "",
+                "verification_status": "Approved",
+                "user_type": "User",
+                "password": generate_password_hash(registration_data["password"]),
+                "subscription": {
+                    "is_subscribed": False,
+                    "plan": "trial",
+                    "status": "active"
+                },
+                
+                "first_job_uploaded": False,
             
-        result = users_collection.update_one({"registered_email": registered_email}, {"$set": update_data})
+                "is_superadmin": is_superadmin
+            }
+            combined_user_data = {
+                **new_user,
+                **linkedin_data,
+            }
 
+            print( "line 497 comnined user data is combined ")
+            result = users_collection.insert_one(combined_user_data)
 
-        if result.modified_count == 1:
+            print(' line 500 result.inserted id ',result.inserted_id) 
+
+            session.pop('registration_data', None)
             user = users_collection.find_one({"registered_email": registered_email})
+            print('=== user === ',user  )
             session["user"] = {
                 "_id": str(user["_id"]), 
                 "email": user.get("linkedin_email"), 
                 "username": user.get("username"),
                 "is_superadmin": user.get("is_superadmin", False)
             }
-        
-            token = create_access_token(identity=user["linkedin_email"])
+
+            token = create_access_token(identity=user["registered_email"])
             return redirect(url_for("home", access_token=token, is_superadmin=user.get("is_superadmin", False)))
 
         else:
-            return jsonify({"error": "Failed to update user data."}), 400
+            return jsonify({"error": "Failed to find the recently registered user."}), 400
+
 
     except Exception as e:
         return jsonify({'error': 'Unexpected error occurred during LinkedIn callback', 'details': str(e)}), 500
 
     
+@app.route('/link-linkedin', methods=['POST'])
+def link_linkedin():
+    registration_data = request.get_json()
+    session['registration_data'] = registration_data  
+
+    state = generate_random_string()
+    session['state'] = state
+
+    auth_url = (
+        "https://www.linkedin.com/oauth/v2/authorization"
+        f"?response_type=code&client_id={CLIENT_ID}"
+        f"&redirect_uri={REDIRECT_URI}"
+        f"&state={state}"
+        f"&scope=profile email w_member_social w_organization_social r_organization_social rw_organization_admin openid"
+        f"&prompt=login&force_account_selection=true"
+    )
+    return jsonify({'auth_url': auth_url})  
+
 
 
     
@@ -511,7 +603,7 @@ def login():
     user = users_collection.find_one({'registered_email': email})
     
     if not user or not check_password_hash(user['password'], password):
-        return jsonify({'message': 'Invalid credentials'}), 401
+        return jsonify({'message': "User doesn't exist/Not registered"}), 401
     
     verification_status = user.get('verification_status', '')
 
@@ -522,6 +614,7 @@ def login():
     
     # Create session and JWT token
     user['_id'] = str(user['_id'])
+    user['email'] = email
     session['user'] = user
     access_token = create_access_token(identity=email)
 
@@ -530,7 +623,7 @@ def login():
     if job:
         return redirect('/process')
     
-    return jsonify({'access_token': access_token, 'is_superadmin': user.get('is_superadmin', False)}), 200
+    return jsonify({'access_token': access_token,  'is_superadmin': user.get('is_superadmin', False)}), 200
 
 @app.context_processor
 def inject_navbar_data():
@@ -676,11 +769,11 @@ def change_password():
         users_collection.update_one({'email': email}, {'$set': {'password': generate_password_hash(password)}})
         return redirect(url_for('login'))
     
-@app.route('/terms_of_services', methods=['GET'])
+@app.route('/terms-conditions', methods=['GET'])
 def terms_of_services():
     return render_template('terms_services.html')
 
-@app.route('/privacy_policy', methods=['GET'])
+@app.route('/privacy-policy', methods=['GET'])
 def privacy_policy():
     return render_template('privacy_policy.html')
 
@@ -705,8 +798,7 @@ def send_otp():
 @app.route('/logout', methods=['GET', 'POST'])
 def logout():
     # Clear user session
-    session.pop("user", None)
-    session.pop("access_token", None)
+    
     session.clear()
 
     # LinkedIn logout URL (redirects to login after logout)
@@ -742,9 +834,9 @@ def home():
             notifications = get_todays_interviews()
             notification_count = len(notifications) if notifications else 0
             is_superadmin = user.get('is_superadmin', False)
-            first_job_uploaded = user["features"]["first_job_uploaded"]
+            first_job_uploaded = user.get('first_job_uploaded', False)
             is_subscribed = user["subscription"]["is_subscribed"]
-            access_token = user.get('access_token', 'not foound')
+            access_token = user.get('access_token', 'not found')
 
             print(" line 762 Access_token :  : ", access_token)
             return render_template('index.html', notification_count=notification_count, notifications=notifications, is_superadmin=is_superadmin, first_job_uploaded = first_job_uploaded, is_subscribed=is_subscribed )
@@ -756,6 +848,72 @@ def home():
         
     print(" line 768 user is not in the session : ")
     return render_template('home.html')
+
+@app.route('/get-in-touch', methods=['POST'])
+def get_in_touch():
+    try:
+        data = request.get_json()
+        print(" data received: ", data)
+        # Validate required fields
+        required_fields = ['name', 'email', 'subject', 'message']
+        for field in required_fields:
+            if field not in data:
+                return jsonify({'error': f'Missing required field: {field}'}), 400
+        
+        # Create contact entry
+        contact = {
+            'name': data['name'],
+            'email': data['email'],
+            'subject': data['subject'],
+            'message': data['message'],
+            'created_at': datetime.utcnow()
+        }
+        print(" contact created: ", contact)
+        # Insert into MongoDB
+        result = inquiry_colletion.insert_one(contact)
+        
+        return jsonify({
+            'message': 'Contact form submitted successfully',
+            'id': str(result.inserted_id)
+        }), 201
+        
+    except Exception as e:
+        print(f"Error processing contact form: {str(e)}")
+        return jsonify({'error': 'Internal server error'}), 500
+    
+@app.route('/request-demo', methods=['POST'])
+def request_demo():
+    try:
+        data = request.get_json()
+        
+        # Validate required fields
+        required_fields = ['name', 'email', 'company']
+        for field in required_fields:
+            if field not in data:
+                return jsonify({'error': f'Missing required field: {field}'}), 400
+        
+        # Create demo request entry
+        demo_request = {
+            'name': data['name'],
+            'email': data['email'],
+            'company': data['company'],
+            'created_at': datetime.utcnow()
+        }
+        
+        # Insert into MongoDB
+        result = demo_requests.insert_one(demo_request)
+
+        return jsonify({
+            'message': 'Demo request submitted successfully',
+            'id': str(result.inserted_id)
+        }), 201
+        
+    except Exception as e:
+        print(f"Error processing demo request: {str(e)}")
+        return jsonify({'error': 'Internal server error'}), 500
+
+def strip_html_tags(text):
+    return re.sub(r'<[^>]+>', '', text)
 
 def create_or_get_job(user_id, job_info):
     # Find the highest job number for this user
@@ -774,13 +932,9 @@ def create_or_get_job(user_id, job_info):
     else:
         job_number = 1
 
-    # existing_job = jobs_collection.find_one({
-    #     'userid': user_id,
-    #     'process_status.Creating Job description': 'not_started'
-    # })
-
     if job_info:
-        match = re.search(r'# \*\*(.*?)\*\*', job_info)
+        clean_job_info = strip_html_tags(job_info)
+        match = re.search(r'# \*\*(.*?)\*\*', clean_job_info)
         if match:
             job_title = match.group(1)
             print("Job Title:", job_title)
@@ -789,31 +943,18 @@ def create_or_get_job(user_id, job_info):
     
     print("job info is:", job_info)
 
-    # title_match = re.search(r'<div align="center">(.*?)</div>|<center>(.*?)</center>|job title', job_info)
-    # if title_match:
-    #     job_title = title_match.group(1) if title_match.group(1) else title_match.group(0)
-    # else:
-    #     job_title = f'job_{job_number:03d}'
     
     print("job_title is:", job_title)
     
-    # if existing_job:
-    #     updated_job_info = job_info.replace("job_id", f"job_{str(existing_job['_id'])}")
-    #     jobs_collection.update_one(
-    #         {'_id': existing_job['_id']},
-    #         {'$set': {
-    #             'job_info': updated_job_info, 
-    #             'job_title': job_title,
-    #             'job_id': str(existing_job['_id']),
-    #             'edited': False
-    #         }}
-    #     )
-    #     return str(existing_job['_id'])
-    # else:
+   
     new_job = {
         'userid': user_id,
         'created_at': datetime.utcnow(),
         'job_info': job_info,
+        'salary': None,
+        'job_status': None,
+        'billing_status': 'Unbilled',
+        'posting_date':datetime.utcnow(),
         'job_title': job_title,
         'edited': False,
         'process_status': {
@@ -904,10 +1045,17 @@ def pdf_to_text():
         
         if not user.get('is_superadmin', False):    
             # Check if the user has already used the free trial feature
-            if not user['subscription']['is_subscribed'] and user['features'].get('first_job_uploaded', False):
+            if not user['subscription']['is_subscribed'] and user.get('first_job_uploaded', False):
                 print('Free Trial limit reached. Please subscribe to continue.')
                 return jsonify({'error': 'Trial limit reached. Please subscribe to continue.'}), 403
         
+        if not user.get('is_linkedin_connected'):
+            print("You need to connect your LinkedIn account before uploading jobs")
+            return jsonify({
+                "error": "LinkedIn account required",
+                "message": "You need to connect your LinkedIn account before uploading jobs",
+                "linkedin_required": True
+            }), 403
         
         # Check if a file is uploaded     
         if 'file' not in request.files:
@@ -1041,7 +1189,7 @@ def help_center():
     if not user:
         return jsonify({'error': 'User not found'}), 404
 
-    return render_template('help.html', user=user, username=user.get('username', ''), email=user.get('email', ''))
+    return render_template('help.html', user=user, username=user.get('username', ''), email=user.get('registered_email', ''))
 
 @app.route('/submit_ticket', methods=['POST'])
 def submit_ticket():
@@ -1209,7 +1357,7 @@ def run_process(job_id):
     job = jobs_collection.find_one({'_id': ObjectId(job_id)})
     
     
-    update_process_status(job_id, "Getting resumes from portal", "in_progress", log_message=f"This process will run")
+    update_process_status(job_id, "Getting resumes from portal", "in_progress", log_message=f"This process will run on {job['end_date']}")
     try:
         if 'end_date' in job:
             update_getting_resumes_celery.apply_async((job_id,), eta=job['end_date'])
@@ -1981,37 +2129,35 @@ def admin_panel():
             print("admin_panel: Invalid request (no JSON data)")
             return jsonify({'message': 'Invalid request'}), 400
 
-        email = data.get('email').lower()
+        registered_email = data.get('registered_email').lower()
         password = data.get('password')
 
-        if not email or not password:
+        if not registered_email or not password:
             print("admin_panel: Email or password missing")
             return jsonify({'message': 'Email and password are required'}), 400
 
-        user = users_collection.find_one({"registered_email": email})
+        user = users_collection.find_one({"registered_email": registered_email})
 
         if not user:
-            print(f"admin_panel: User not found: {email}")
+            print(f"admin_panel: User not found: {registered_email}")
             return jsonify({'message': 'Invalid credentials'}), 401
 
         if check_password_hash(user['password'], password):
             if user.get("user_type") == "Admin":
-                access_token = create_access_token(identity=email)
+                access_token = create_access_token(identity=registered_email)
                 user['_id'] = str(user['_id'])
                 session['user'] = user
-                print(f"admin_panel: Login successful for {email}")
+                print(f"admin_panel: Login successful for {registered_email}")
                 return jsonify({'access_token': access_token, 'message': 'Login successful'}), 200
             else:
-                print(f"admin_panel: Access denied for non-admin user: {email}")
+                print(f"admin_panel: Access denied for non-admin user: {registered_email}")
                 return jsonify({'message': 'Access denied. Only admins can log in.'}), 403
         else:
-            print(f"admin_panel: Invalid password for {email}")
+            print(f"admin_panel: Invalid password for {registered_email}")
             return jsonify({'message': 'Invalid credentials'}), 401
 
 @app.route('/admin/dashboard')
 def admin_dashboard():
-   
-
     if 'user' not in session:
         return redirect(url_for('admin_panel'))
     
@@ -2068,11 +2214,10 @@ def get_users():
             "user_id": str(user.get("_id", "")),
             "username": user.get("username", "N/A"),
             "company": user.get("company", "N/A"),
-            "registered_email": user.get("email", "N/A"),
+            "registered_email": user.get("registered_email", "N/A"),
             "verification_status": user.get("verification_status", "Pending"),
             "user_type": user.get("user_type", "User"),
             "created_at": user.get("created_at", datetime.utcnow()).strftime('%Y-%m-%d %H:%M:%S'),
-            "trial_days_left": user.get("trial_days_left", 0),
             "notes": user.get("notes", ""),
         })
 

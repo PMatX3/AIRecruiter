@@ -433,28 +433,200 @@ function initializePricing() {
   });
 }
 
-// Form Handling
-function handleFormSubmit(formId) {
-  const form = document.getElementById(formId);
-  if (!form) return;
+function validateEmail(email) {
+  const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return re.test(email);
+}
 
-  form.addEventListener("submit", (e) => {
+function showError(input, errorElement, message) {
+  input.classList.add("border-red-500");
+  input.classList.remove("border-gray-200");
+  errorElement.textContent = message;
+  errorElement.classList.remove("hidden");
+}
+
+function hideError(input, errorElement) {
+  input.classList.remove("border-red-500");
+  input.classList.add("border-gray-200");
+  errorElement.classList.add("hidden");
+}
+
+const contactForm = document.getElementById("contact-form");
+
+contactForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  await getInTouchFormHandler();
+});
+
+async function getInTouchFormHandler() {
+  const nameInput = document.getElementById("contact-name");
+  const emailInput = document.getElementById("contact-email");
+  const subjectInput = document.getElementById("contact-subject");
+  const messageInput = document.getElementById("contact-message");
+
+  const nameError = document.getElementById("name-error");
+  const emailError = document.getElementById("email-error");
+  const subjectError = document.getElementById("subject-error");
+  const messageError = document.getElementById("message-error");
+
+  let isValid = true;
+
+  // Validate name
+  if (nameInput.value.length < 4) {
+    showError(nameInput, nameError, "Name must be at least 4 characters long");
+    isValid = false;
+  } else {
+    hideError(nameInput, nameError);
+  }
+
+  // Validate email
+  if (!validateEmail(emailInput.value)) {
+    showError(emailInput, emailError, "Please enter a valid email address");
+    isValid = false;
+  } else {
+    hideError(emailInput, emailError);
+  }
+
+  // Validate subject
+  if (!subjectInput.value.trim()) {
+    showError(subjectInput, subjectError, "Subject cannot be empty");
+    isValid = false;
+  } else {
+    hideError(subjectInput, subjectError);
+  }
+
+  // Validate message
+  if (!messageInput.value.trim()) {
+    showError(messageInput, messageError, "Message cannot be empty");
+    isValid = false;
+  } else {
+    hideError(messageInput, messageError);
+  }
+
+  if (!isValid) {
+    return;
+  }
+
+  const data = {
+    name: nameInput.value,
+    email: emailInput.value,
+    subject: subjectInput.value,
+    message: messageInput.value,
+  };
+
+  console.log("data is : ", data);
+
+  try {
+    const response = await fetch("/get-in-touch", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      throw new Error("Network response was not ok");
+    }
+
+    const result = await response.json();
+    showToast(
+      "Message sent successfully! We'll get back to you soon.",
+      "success"
+    );
+    contactForm.reset();
+  } catch (error) {
+    console.error("Error submitting form:", error);
+    showToast(
+      "There was an error sending your message. Please try again.",
+      "error"
+    );
+  }
+}
+
+
+
+
+const demoForm = document.getElementById("demo-form");
+
+demoForm.addEventListener("submit", async (e) => {
     e.preventDefault();
-    // Show loading state
-    const submitButton = form.querySelector('button[type="submit"]');
-    const originalText = submitButton.textContent;
-    submitButton.innerHTML = '<div class="loading-spinner"></div>';
-    submitButton.disabled = true;
+    await handleDemoForm();
+});
 
-    // Simulate form submission
-    setTimeout(() => {
-      // Show success message
-      showToast("Form submitted successfully!");
-      form.reset();
-      submitButton.textContent = originalText;
-      submitButton.disabled = false;
-    }, 1500);
-  });
+async function handleDemoForm() {
+    const nameInput = document.getElementById("name");
+    const emailInput = document.getElementById("email");
+    const companyInput = document.getElementById("company");
+    
+    const nameError = document.getElementById("demo-name-error");
+    const emailError = document.getElementById("demo-email-error");
+    const companyError = document.getElementById("demo-company-error");
+    
+    let isValid = true;
+    
+    // Validate name
+    if (nameInput.value.length < 4) {
+        showError(nameInput, nameError, 'Name must be at least 4 characters long');
+        isValid = false;
+    } else {
+        hideError(nameInput, nameError);
+    }
+    
+    // Validate email
+    if (!validateEmail(emailInput.value)) {
+        showError(emailInput, emailError, 'Please enter a valid email address');
+        isValid = false;
+    } else {
+        hideError(emailInput, emailError);
+    }
+    
+    // Validate company
+    if (!companyInput.value.trim()) {
+        showError(companyInput, companyError, 'Company name cannot be empty');
+        isValid = false;
+    } else {
+        hideError(companyInput, companyError);
+    }
+    
+    if (!isValid) {
+        return;
+    }
+
+    const data = {
+        name: nameInput.value,
+        email: emailInput.value,
+        company: companyInput.value
+    };
+
+    console.log("Demo form data:", data);
+
+    try {
+        const response = await fetch("/request-demo", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(data),
+        });
+
+        if (!response.ok) {
+            throw new Error("Network response was not ok");
+        }
+
+        const result = await response.json();
+        showToast(
+            "Demo request received! We'll be in touch soon.",
+            "success"
+        );
+        demoForm.reset();
+    } catch (error) {
+        console.error("Error submitting demo form:", error);
+        showToast(
+            "There was an error submitting your demo request. Please try again.",
+            "error"
+        );
+    }
 }
 
 // Toast Notification
@@ -530,6 +702,6 @@ document.addEventListener("DOMContentLoaded", () => {
   initializeHeader();
   initializeScrollReveal();
   initializeDemoSection();
-  handleFormSubmit("demo-form");
-  handleFormSubmit("contact-form");
+  // handleFormSubmit("contact-form");
+  // handleFormSubmit("demo-form");
 });

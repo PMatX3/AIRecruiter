@@ -130,6 +130,30 @@ ENV/
 env.bak/
 venv.bak/
 
+creds.json
+celerybeat-schedule.db
+*.db
+*.rdb
+test.py
+test2.py
+token.json
+token_devradhekrishna1_at_gmail.com.pickle
+*.deb
+
+
+static/json/credentials.json
+static/json/yourbest_creds.json
+static/js/config.js
+
+nohup.out
+service_account.json
+
+
+
+
+
+
+
 # Spyder project settings
 .spyderproject
 .spyproject
@@ -164,4 +188,9 @@ attachments
 /attachments
 
 *.pdf
-*.txt
+*.txt/tests/
+*.html/tests/
+*.py/tests/
+
+tests/
+.qodo

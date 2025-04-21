@@ -4,393 +4,657 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
-        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <title>Privacy Policy - YourBestRecruiterAI</title>
+    <meta name="description" content="Privacy Policy for YourBestRecruiterAI">
+    <meta name="author" content="NAK">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
 
-    <!-- font -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap"
-        rel="stylesheet">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="../static/CSS/home.css">
+    <link rel="stylesheet" href="../static/CSS/hero.css">
 
-    <!-- icons -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
 
-    <!-- slider -->
-    <link rel="stylesheet" type="text/css" href="https://www.yourbestcandidate.ai/static/assets/css/slick.css" />
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            border: 0;
+            font-size: 100%;
+            font: inherit;
+            vertical-align: baseline;
+        }
 
-    <!-- css -->
-    <link rel="stylesheet" href="https://www.yourbestcandidate.ai/static/assets/css/style.css">
-    <link rel="shortcut icon" href="./static/images/favion2.png" style="height:26px;width:26px">
+        ul,
+        li {
+            list-style: none;
+        }
 
-    <meta charset="utf-8">
-    <title>YourBestRecruiterAI: Hiring with AI-powered Candidate Selection</title>
-    <meta name="description"
-        content="YourBestCandidateAI streamlines hiring with AI-powered candidate selection. Find qualified talent faster, saving time and improving your recruitment process.">
-    <meta name="author" content="YourBestCandidateAI">
-    <meta name="copyright" content="YourBestCandidateAI">
-    <meta name="robots" content="follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large" />
-    <link rel="canonical" href="https://www.yourbestcandidate.ai/" />
+        body {
+            line-height: 1;
+        }
 
-    <!-- Open Graph -->
-    <meta property="og:type" content="website">
-    <meta property="og:title" content="YourBestCandidateAI: Hiring with AI-powered Candidate Selection">
-    <meta property="og:url" content="https://www.yourbestcandidate.ai/">
-    <meta property="og:image" content="https://www.yourbestcandidate.ai/static/images/Yourbestcandidateai.svg">
-    <meta property="og:description"
-        content="YourBestRecruiterAI streamlines hiring with AI-powered candidate selection. Find qualified talent faster, saving time and improving your recruitment process.">
+        .card-glass {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+        }
 
-    <!-- Twitter Card -->
-    <meta name="twitter:card" content="summary">
-    <meta name="twitter:title" content="YourBestRecruiterAI: Hiring with AI-powered Candidate Selection">
-    <meta name="twitter:site" content="@https://www.yourbestcandidate.ai/">
-    <meta name="twitter:description"
-        content="YourBestRecruiterAI streamlines hiring with AI-powered candidate selection. Find qualified talent faster, saving time and improving your recruitment process.">
-    <meta name="twitter:image" content="https://www.yourbestcandidate.ai/static/images/Yourbestcandidateai.svg">
-    <meta name="twitter:image:alt" content="Your Best Candidate AI Logo">
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;300;400;500;600;700;800&display=swap');
 
-    <!-- LocalBusiness Schema -->
-    <script
-        type="application/ld+json"> { "@context": "https://schema.org", "@type": "LocalBusiness", "name": "YourBestCandidateAI", "image": "https://www.yourbestcandidate.ai/static/images/Yourbestcandidateai.svg", "@id": "", "url": "https://www.yourbestcandidate.ai/", "telephone": "", "priceRange": "$$", "address": { "@type": "PostalAddress", "streetAddress": "", "addressLocality": "", "postalCode": "", "addressCountry": "" }, "openingHoursSpecification": { "@type": "OpeningHoursSpecification", "dayOfWeek": [ "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday" ], "opens": "00:00", "closes": "23:59" } } </script>
+        /* Custom styles to match the homepage */
+        .dots-bg {
+            background-image: radial-gradient(rgba(0, 0, 0, 0.1) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
 
-    <!-- Logo Schema -->
-    <script
-        type="application/ld+json"> { "@context": "https://schema.org", "@type": "Organization", "name": "Your Best Candidate AI", "alternateName": "Best Candidate AI", "url": "https://www.yourbestcandidate.ai/", "logo": "https://www.yourbestcandidate.ai/static/images/Yourbestcandidateai.svg" } </script>
+        .shadow-soft {
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Generate Tailwind colors for recruiter theme */
+        :root {
+            --color-recruiter-50: #E0EFFE;
+            --color-recruiter-100: #BAE0FD;
+            --color-recruiter-200: #90CDFC;
+            --color-recruiter-300: #60B2F9;
+            --color-recruiter-400: #3B9DF8;
+            --color-recruiter-500: #0C87E8;
+            --color-recruiter-600: #0A6EBA;
+            --color-recruiter-700: #08548C;
+            --color-recruiter-800: #053B5E;
+            --color-recruiter-900: #032130;
+        }
+
+        /* Apply custom colors */
+        .bg-recruiter-50 {
+            background-color: var(--color-recruiter-50);
+        }
+
+        .bg-recruiter-100 {
+            background-color: var(--color-recruiter-100);
+        }
+
+        .bg-recruiter-500 {
+            background-color: var(--color-recruiter-500);
+        }
+
+        .bg-recruiter-600 {
+            background-color: var(--color-recruiter-600);
+        }
+
+        .bg-recruiter-700 {
+            background-color: var(--color-recruiter-700);
+        }
+
+        .bg-recruiter-800 {
+            background-color: var(--color-recruiter-800);
+        }
+
+        .bg-recruiter-900 {
+            background-color: var(--color-recruiter-900);
+        }
+
+        .text-recruiter-500 {
+            color: var(--color-recruiter-500);
+        }
+
+        .text-recruiter-600 {
+            color: var(--color-recruiter-600);
+        }
+
+        .text-recruiter-800 {
+            color: var(--color-recruiter-800);
+        }
+
+        .hover\:bg-recruiter-400:hover {
+            background-color: var(--color-recruiter-400);
+        }
+
+        .hover\:bg-recruiter-500:hover {
+            background-color: var(--color-recruiter-500);
+        }
+
+        .hover\:bg-recruiter-600:hover {
+            background-color: var(--color-recruiter-600);
+        }
+
+        .hover\:bg-recruiter-700:hover {
+            background-color: var(--color-recruiter-700);
+        }
+
+        .hover\:text-recruiter-600:hover {
+            color: var(--color-recruiter-600);
+        }
+
+        .hover\:border-recruiter-500:hover {
+            border-color: var(--color-recruiter-500);
+        }
+
+        .focus\:ring-recruiter-500:focus {
+            --tw-ring-color: var(--color-recruiter-500);
+        }
+
+    </style>
 </head>
-<style>
-    body {
-        font-family: 'Plus Jakarta Sans' !important;
-    }
-</style>
 
-<body>
-    <header class="header-wrp main-header">
-        <nav class="navbar navbar-expand-lg">
-            <div class="container">
-                <a class="navbar-brand" href="/">
-                    <img class="logo-svg" src="../static/images/_logo_1.png" alt="">
-                </a>
-                <!-- <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
-                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button> -->
-                <div class="collapse navbar-collapse mx-auto" id="navbarNav">
-                    <ul class="navbar-nav">
-                        <!-- <li class="nav-item">
-                        <a class="nav-link active" aria-current="page" href="pricing">Pricing</a>
-                    </li> -->
-                        <!-- <li class="nav-item">
-                        <a class="nav-link" >About us</a>
-                    </li> -->
-                    </ul>
-                </div>
-                <a href="/chat" style="color: white; text-decoration: none;">
-                    <div class="chat_button_div" style="display: none;">
-                        <button class="btn header-btn">Chat</button>
-                </a>
-            </div>
-            <a href="/login" style="color: white; text-decoration: none;">
-                <div class="login_button_div" style="display: none;">
-                    <button class="btn header-btn">Login</button>
+<body class="min-h-screen bg-white">
+    <!-- Header section -->
+
+    <header id="navbar"
+        class="fixed top-0 left-0 right-0 z-50 py-4 px-6 md:px-12 transition-all duration-300 bg-transparent">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <a href="/" class="flex items-center gap-2">
+                <span class="font-bold text-xl md:text-2xl text-recruiter-900">
+                    YourBestRecruiter<span class="text-recruiter-500">.AI</span>
+                </span>
             </a>
-            </div>
-            </div>
-        </nav>
+
+            <!-- Desktop navigation -->
+            <nav class="hidden md:flex space-x-8">
+                <a href="/register"
+                    class="bg-recruiter-500 hover:bg-recruiter-600 text-white px-5 py-2 rounded-full transition-all duration-200 font-medium">Free
+                    Trial</a>
+            </nav>
+
+            <!-- Mobile menu button -->
+            <button id="mobile-menu-button" class="md:hidden text-gray-700 focus:outline-none" aria-label="Toggle menu">
+                <svg id="menuIcon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16">
+                    </path>
+                </svg>
+                <svg id="closeIcon" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                    </path>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Mobile menu -->
+        <div id="mobileMenu"
+            class="md:hidden hidden absolute top-full left-0 right-0 bg-white/95 backdrop-blur-md p-6 shadow-md border-t border-gray-100 animate-fade-in">
+            <nav class="flex flex-col space-y-4">
+
+                <a href="/register"
+                    class="bg-recruiter-500 hover:bg-recruiter-600 text-white px-5 py-3 rounded-full transition-all duration-200 font-medium text-center mt-2">Free
+                    trial</a>
+            </nav>
+        </div>
     </header>
 
-    <div class="privacy_policy_container term_service_container container">
-        <h1>Privacy Policy</h1>
-        <p>Your BestRecruiterAI understands that your privacy is important to you. We are
-            committed to protecting the privacy of your personally identifiable information as you
-            use this website. This Privacy Policy tells you how we protect and use information that
-            we gather from you. By using this website, you consent to the terms described in the
-            most recent version of this Privacy Policy. You should also read our Terms of Use to
-            understand the general rules about your use of this website, and any additional terms
-            that may apply when you access services or materials on certain areas of this website.
-            “We,” “our” means Your BestRecruiterAI and its aEiliates. “You,” “your,” visitor,” or
-            “user” means the individual accessing this site.</p>
-        <h2>PERSONAL AND NON-PERSONAL INFORMATION</h2>
-        <p>Our Privacy Policy identifies how we treat your personal and non-personal information.</p>
-        <h2>WHAT IS NON-PERSONAL INFORMATION AND HOW IS IT COLLECTED AND USED?</h2>
-        <p>Non personal information is information that cannot identify you. If you visit this web
-            site to read information, such as information about one of our services, we may collect
-            certain non-personal information about you from your computer’s web browser.
-            Because non-personal information cannot identify you or be tied to you in any way,
-            there are no restrictions on the ways that we can use or share non-personal
-            information. What is personal information and how is it collected? Personal information
-            is information that identifies you as an individual, such as your name, mailing address,
-            e-mail address, telephone number, and fax number. We may collect personal
-            information from you in a variety of ways: • When you send us an application or other
-            form • When you conduct a transaction with us, our aEiliates, or others • When we
-            collect information about in you in support of a transaction, such as credit card
-            information • In some places on this web site you have the opportunity to send us
-            personal information about yourself, to elect to receive particular information, to
-            purchase access to one of our products or services, or to participate in an activity.</p>
-        <h2>ARE COOKIES OR OTHER TECHNOLOGIES USED TO COLLECT PERSONAL
-            INFORMATION?</h2>
-        <p>
-            Yes, we may use cookies and related technologies, such as web beacons, to collect
-            information on our web site. A cookie is a text file that is placed on your hard disk by a
-            web page server. Cookies cannot be used to run programs or deliver viruses to your
-            computer. Cookies are uniquely assigned to you and can only be read by a web server in
-            the domain that issued the cookie to you. One of the primary purposes of cookies is to
-            provide a convenience feature to save you time. The purpose of a cookie is to tell the
-            Web server that you have returned to a specific page. For example, if you register with
-            us, a cookie helps Your BestRecruiterAI to recall your specific information on
-            subsequent visits. This simplifies the process of recording your personal information,
-            such as billing addresses, shipping addresses, and so on. When you return to the same
-            Your BestRecruiterAI website, the information you previously provided can be
-            retrieved, so you can easily use the features that you customized. A web beacon is a
-            small graphic image that allows the party that set the web beacon to monitor and
-            collect certain information about the viewer of the web page, web-based document or
-            e-mail message, such as the type of browser requesting the web beacon, the IP address
-            of the computer that the web beacon is sent to and the time the web beacon was
-            viewed. Web beacons can be very small and invisible to the user, but, in general, any
-            electronic image viewed as part of a web page or e-mail, including HTML based content,
-            can act as a web beacon. We may use web beacons to count visitors to the web pages
-            on the web site or to monitor how our users navigate the web site, and we may include
-            web beacons in e-mail messages in order to count how many messages sent were
-            actually opened, acted upon or forwarded.</p>
-        <p>
-            Third party vendors also may use cookies on our web site. For instance, we may
-            contract with third parties who will use cookies on our web site to track and analyze
-            anonymous usage and volume statistical information from our visitors and members.
-            Such information is shared externally only on an anonymous, aggregated basis. These
-            third parties use persistent cookies to help us to improve the visitor experience, to
-            manage our site content, and to track visitor behaviour. We may also contract with a
-            third party to send e-mail to our registered [users/members].</p>
-        <p>
-            To help measure and improve the eEectiveness of our e-mail communications, the third
-            party sets cookies. All data collected by this third party on behalf of Your
-            BestRecruiterAI is used solely by or on behalf of Your BestRecruiterAI and is shared
-            externally only on an anonymous, aggregated basis. From time to time we may allow
-            third parties to post advertisements on our web site, and those third-party
-            advertisements may include a cookie or web beacon served by the third party. This
-            Privacy Policy does not cover the use of information collected from you by third party ad
-            servers. We do not control cookies in such third party ads, and you should check the
-            privacy policies of those advertisers and/or ad services to learn about their use of
-            cookies and other technology before linking to an ad. We will not share your personal
-            information with these companies, but these companies may use information about
-            your visits to this and other web sites in order to provide advertisements on this site and
-            other sites about goods and services that may be of interest to you, and they may share
-            your personal information that you provide to them with others.</p>
-        <p>
-            You have the ability to accept or decline cookies. Most Web browsers automatically
-            accept cookies, but you can usually modify your browser setting to decline cookies if
-            you prefer. If you choose to decline cookies, you may not be able to fully experience the
-            interactive features of the Your BestRecruiterAI websites you visit.
-        </p>
-        <h2>HOW DOES Your BestRecruiterAI USE PERSONAL INFORMATION?</h2>
-        <p>Your BestRecruiterAI may keep and use personal information we collect from or about
-            you to provide you with access to this web site or other products or services, to respond
-            to your requests, to bill you for products/services you purchased, and to provide
-            ongoing service and support, to contact you with information that might be of interest to
-            you, including information about products and services of ours and of others, or ask for
-            your opinion about our products or the products of others, for record keeping and
-            analytical purposes and to research, develop and improve programs, products, services
-            and content.</p>
-        <p>
-            Personal information collected online may be combined with information you provide to
-            us through other sources We may also remove your personal identifiers (your name,
-            email address, social security number, etc). In this case, you would no longer be
-            identified as a single unique individual. Once we have de-identified information, it is
-            non-personal information and we may treat it like other non-personal information.
-            Finally, we may use your personal information to protect our rights or property, or to
-            protect someone’s health, safety or welfare, and to comply with a law or regulation,
-            court order or other legal process.</p>
-        <h2>DOES Your BestRecruiterAI SHARE PERSONAL INFORMATION WITH OTHERS?</h2>
-        <p>We will not share your personal information collected from this web site with an
-            unrelated third party without your permission, except as otherwise provided in this
-            Privacy Policy. In the ordinary course of business, we may share some personal
-            information with companies that we hire to perform services or functions on our behalf.
-            In all cases in which we share your personal information with a third party for the
-            purpose of providing a service to us, we will not authorize them to keep, disclose or use
-            your information with others except for the purpose of providing the services we asked
-            them to provide.</p>
-        <p>We will not sell, exchange or publish your personal information, except in conjunction
-            with a corporate sale, merger, dissolution, or acquisition. For some sorts of
-            transactions, in addition to our direct collection of information, our third party service
-            vendors (such as credit card companies, clearinghouses and banks) who may provide
-            such services as credit, insurance, and escrow services may collect personal
-            information directly from you to assist you with your transaction. We do not control how
-            these third parties use such information, but we do ask them to disclose how they use
-            your personal information before they collect it.</p>
-        <p>If you submit a review for a third party (person or business) using our Facebook Fan
-            Review Application, during the submission process we ask your permission to gather
-            your basic information (such as name and email address) which we then share with the
-            third party for whom you are submitting the review. We may be legally compelled to
-            release your personal information in response to a court order, subpoena, search
-            warrant, law or regulation.</p>
-        <p>We may cooperate with law enforcement authorities in investigating and prosecuting
-            web site visitors who violate our rules or engage in behavior, which is harmful to other
-            visitors (or illegal). We may disclose your personal information to third parties if we feel
-            that the disclosure is necessary to protect our rights or property, protect someone’s
-            health, safety or welfare, or to comply with a law or regulation, court order or other legal
-            process. As discussed in the section on cookies and other technologies, from time to
-            time we may allow a third party to serve advertisements on this web site.</p>
-        <p>If you share information with the advertiser, including by clicking on their ads, this
-            Privacy Policy does not control the advertisers use of your personal information, and
-            you should check the privacy policies of those advertisers and/or ad services to learn
-            about their use of cookies and other technology before linking to an ad.</p>
-        <h2>HOW IS PERSONAL INFORMATION USED FOR COMMUNICATIONS?</h2>
-        <p>We may contact you periodically by e-mail, mail or telephone to provide information
-            regarding programs, products, services and content that may be of interest to you. In
-            addition, some of the features on this web site allow you to communicate with us using
-            an online form. If your communication requests a response from us, we may send you a
-            response via e-mail. The e-mail response or confirmation may include your personal
-            information. We cannot guarantee that our e-mails to you will be secure from
-            unauthorized interception.</p>
-        <h2>HOW IS PERSONAL INFORMATION SECURED?</h2>
-        <p>We have implemented generally accepted standards of technology and operational
-            security in order to protect personally-identifiable information from loss, misuse,
-            alteration, or destruction. Only authorized personnel and third party vendors have
-            access to your personal information, and these employees and vendors are required to
-            treat this information as confidential. Despite these precautions, we cannot guarantee
-            that unauthorized persons will not obtain access to your personal information.</p>
-        <h2>LINKS</h2>
-        <p>This site contains links to other sites that provide information that we consider to be
-            interesting. Your BestRecruiterAI is not responsible for the privacy practices or the
-            content of such web sites.</p>
-        <h2>PUBLIC DISCUSSIONS</h2>
-        <p>This site may provide public discussions on various business valuation topics. Please
-            note that any information you post in these discussions will become public, so please
-            do not post sensitive information in the public discussions. Whenever you publicly
-            disclose information online, that information could be collected and used by others. We
-            are not responsible for any action or policies of any third parties who collect information
-            that users disclose in any such forums on the web site. Your BestRecruiterAI does not
-            agree or disagree with anything posted on the discussion board. Also remember that
-            you must comply with our other published policies regarding postings on our public
-            forums.</p>
-        <h2>HOW CAN A USER ACCESS, CHANGE, AND/OR DELETE PERSONAL INFORMATION?</h2>
-        <p>You may access, correct, update, and/or delete any personally-identifiable information
-            that you submit to the web site. You may also unsubscribe from mailing lists or any
-            registrations on the web site. To do so, please either follow instructions on the page of
-            the web site on which you have provided such information or subscribed or registered or
-            contact us at <a
-                href="https://mail.google.com/mail/?view=cm&fs=1&to=yourbestrecruiterai@gmail.com">yourbestrecruiterai@gmail.com</a>.
-        </p>
-        <h2>CHILDREN’S PRIVACY</h2>
-        <p>Your BestRecruiterAI will not intentionally collect any personal information (such as a
-            child’s name or email address) from children under the age of 13. If you think that we
-            have collected personal information from a child under the age of 13, please contact
-            us.</p>
-        <h2>CHANGES</h2>
-        <p>Your BestRecruiterAI reserves the right to modify this statement at any time. Any
-            changes to this Privacy Policy will be listed in this section, and if such changes are
-            material, a notice will be included on the homepage of the web site for a period of time.
-            If you have any questions about privacy at any websites operated by Your
-            BestRecruiterAI or about our website practices, please contact us at:
-            <a
-                href="https://mail.google.com/mail/?view=cm&fs=1&to=yourbestrecruiterai@gmail.com">yourbestrecruiterai@gmail.com</a>.
-        </p>
+    <!-- Page Header -->
+    <section class="pt-32 pb-16 bg-gradient-to-b from-blue-50 to-white relative overflow-hidden">
+        <!-- Background effects -->
+        <div class="absolute inset-0 bg-gradient-to-b from-blue-50 to-white z-0"></div>
+        <div
+            class="absolute top-1/4 -right-64 w-96 h-96 bg-recruiter-100 rounded-full mix-blend-multiply filter blur-3xl opacity-70">
+        </div>
+        <div
+            class="absolute bottom-1/4 -left-64 w-96 h-96 bg-recruiter-200 rounded-full mix-blend-multiply filter blur-3xl opacity-70">
+        </div>
 
-    </div>
-
-    <section class="footer_wrp">
-        <div class="container">
-            <div class="row">
-                <div class="col-lg-4 col-md-6 col-sm-6">
-                    <div class="footer_social_data">
-                        <div class="footer_logo">
-                            <a href="/">
-                                <img src="../static/images/_logo_1.png" alt="">
-                            </a>
-                        </div>
-                        <div class="footer_text">
-                            <p>
-                                <a
-                                    href="https://mail.google.com/mail/?view=cm&fs=1&to=yourbestrecruiterai@gmail.com">yourbestrecruiterai@gmail.com</a>
-                            </p>
-                        </div>
-                        <div class="footer_icon">
-                            <ul>
-                                <li>
-                                    <a href="https://www.facebook.com" target="_blank" rel="noopener noreferrer">
-                                        <i class="bi bi-facebook"></i>
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="https://www.x.com/" target="_blank" rel="noopener noreferrer">
-                                        <i class="bi bi-twitter"></i>
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="https://www.linkedin.com" target="_blank" rel="noopener noreferrer">
-                                        <i class="bi bi-linkedin"></i>
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="https://www.instagram.com" target="_blank" rel="noopener noreferrer">
-                                        <i class="bi bi-instagram"></i>
-                                    </a>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-4 col-md-4 col-sm-4">
-                    <div class="company_data">
-                        <h6> Company </h6>
-                        <ul>
-                            <!-- <li>
-                                <a href="#">
-                                    About
-                                </a>
-                            </li> -->
-                            <li>
-                                <a data-bs-toggle="modal" data-bs-target="#demoModal" href="javascript:void(0);">
-                                    Contact </a>
-                            </li>
-                            <li>
-                                <a href="./terms_services.html"> Terms of Services </a>
-                            </li>
-                            <li>
-                                <a href="./privacy_policy.html"> Privacy Policy </a>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="col-lg-4 col-md-4 col-sm-4">
-                    <div class="company_data">
-                        <h6> Get Started </h6>
-                        <ul>
-                            <li>
-                                <a href="/register"> Sign Up </a>
-                            </li>
-                            <li>
-                                <a href="/login"> Log In </a>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
+        <div class="container mx-auto px-6 md:px-12 relative z-10">
+            <div class="text-center max-w-3xl mx-auto">
+                <h1 class="text-3xl md:text-5xl font-bold mb-6 text-gray-900">Privacy Policy</h1>
+                <p class="text-xl text-gray-700">
+                    How we collect, use, and protect your information
+                </p>
             </div>
-            <div class="row">
-                <div class="col-lg-12">
-                    <div class="copyright_data">
-                        <p> © 2024 All rights reserved. YourBestRecruiterAI, LLC </p>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <section class="py-16 bg-white">
+        <div class="container mx-auto px-6 md:px-12">
+            <div class="max-w-4xl mx-auto  p-8">
+                <div class="prose max-w-none">
+
+
+                    <div class="mb-10">
+                        <h2 class="text-3xl font-bold mb-4 text-gray-900 text-recruiter-600">Introduction</h2>
+                        <p class="text-lg  text-gray-700 mb-4">
+                            Your BestRecruiterAI understands that your privacy is important to you. We are
+                            committed to protecting the privacy of your personally identifiable information as you
+                            use this website. This Privacy Policy tells you how we protect and use information that
+                            we gather from you. By using this website, you consent to the terms described in the
+                            most recent version of this Privacy Policy. You should also read our Terms of Use to
+                            understand the general rules about your use of this website, and any additional terms
+                            that may apply when you access services or materials on certain areas of this website.
+                            “We,” “our” means Your BestRecruiterAI and its aEiliates. “You,” “your,” visitor,” or
+                            “user” means the individual accessing this site.
+                        </p>
+                        <p class="text-lg text-gray-700 mb-4">
+                            Please read this Privacy Policy carefully. By accessing or using our Services, you
+                            acknowledge that you have read, understood, and agree to be bound by all the terms of this
+                            Privacy Policy. If you do not agree with our policies and practices, please do not use our
+                            Services.
+                        </p>
                     </div>
+
+                    <div class="mb-10">
+                        <h2 class="text-3xl font-bold mb-4 text-gray-900 text-recruiter-600">Information We Collect</h2>
+
+                        <h3 class="text-xl font-semibold mb-3 text-gray-800">PERSONAL AND NON-PERSONAL INFORMATION</h3>
+                        <p class="text-lg text-gray-700 mb-4">
+                            We collect personal information that you voluntarily provide to us when you:
+                        </p>
+
+                        <p class="text-lg text-gray-700 mb-4">
+                            Non personal information is information that cannot identify you. If you visit this web
+                            site to read information, such as information about one of our services, we may collect
+                            certain non-personal information about you from your computer’s web browser.
+                            Because non-personal information cannot identify you or be tied to you in any way,
+                            there are no restrictions on the ways that we can use or share non-personal
+                            information. What is personal information and how is it collected? Personal information
+                            is information that identifies you as an individual, such as your name, mailing address,
+                            e-mail address, telephone number, and fax number. We may collect personal
+                            information from you in a variety of ways: • When you send us an application or other
+                            form • When you conduct a transaction with us, our aEiliates, or others • When we
+                            collect information about in you in support of a transaction, such as credit card
+                            information • In some places on this web site you have the opportunity to send us
+                            personal information about yourself, to elect to receive particular information, to
+                            purchase access to one of our products or services, or to participate in an activity.
+                        </p>
+
+                        <p class="text-lg text-gray-700 mb-4">
+                            This information may include your name, email address, phone number, company name, job
+                            title, and resume or CV information.
+                        </p>
+                    </div>
+                    <div class="mb-10">
+
+                        <h2 class="text-3xl font-bold mb-4 text-recruiter-600">Are cookies OR other Technologies Used to
+                            Collect Personal
+                            Information?</h2>
+                        <p class="text-lg text-gray-700 mb-4">
+                            Yes, we may use cookies and related technologies, such as web beacons, to collect
+                            information on our web site. A cookie is a text file that is placed on your hard disk by
+                            a
+                            web page server. Cookies cannot be used to run programs or deliver viruses to your
+                            computer. Cookies are uniquely assigned to you and can only be read by a web server in
+                            the domain that issued the cookie to you. One of the primary purposes of cookies is to
+                            provide a convenience feature to save you time. The purpose of a cookie is to tell the
+                            Web server that you have returned to a specific page. For example, if you register with
+                            us, a cookie helps Your BestRecruiterAI to recall your specific information on
+                            subsequent visits. This simplifies the process of recording your personal information,
+                            such as billing addresses, shipping addresses, and so on. When you return to the same
+                            Your BestRecruiterAI website, the information you previously provided can be
+                            retrieved, so you can easily use the features that you customized. A web beacon is a
+                            small graphic image that allows the party that set the web beacon to monitor and
+                            collect certain information about the viewer of the web page, web-based document or
+                            e-mail message, such as the type of browser requesting the web beacon, the IP address
+                            of the computer that the web beacon is sent to and the time the web beacon was
+                            viewed. Web beacons can be very small and invisible to the user, but, in general, any
+                            electronic image viewed as part of a web page or e-mail, including HTML based content,
+                            can act as a web beacon. We may use web beacons to count visitors to the web pages
+                            on the web site or to monitor how our users navigate the web site, and we may include
+                            web beacons in e-mail messages in order to count how many messages sent were
+                            actually opened, acted upon or forwarded.
+                        </p>
+                        <p class="text-lg text-gray-700 mb-4">
+                            Third party vendors also may use cookies on our web site. For instance, we may
+                            contract with third parties who will use cookies on our web site to track and analyze
+                            anonymous usage and volume statistical information from our visitors and members.
+                            Such information is shared externally only on an anonymous, aggregated basis. These
+                            third parties use persistent cookies to help us to improve the visitor experience, to
+                            manage our site content, and to track visitor behaviour. We may also contract with a
+                            third party to send e-mail to our registered [users/members].</p>
+                        <p class="text-lg text-gray-700 mb-4">
+                            To help measure and improve the eEectiveness of our e-mail communications, the third
+                            party sets cookies. All data collected by this third party on behalf of Your
+                            BestRecruiterAI is used solely by or on behalf of Your BestRecruiterAI and is shared
+                            externally only on an anonymous, aggregated basis. From time to time we may allow
+                            third parties to post advertisements on our web site, and those third-party
+                            advertisements may include a cookie or web beacon served by the third party. This
+                            Privacy Policy does not cover the use of information collected from you by third party
+                            ad
+                            servers. We do not control cookies in such third party ads, and you should check the
+                            privacy policies of those advertisers and/or ad services to learn about their use of
+                            cookies and other technology before linking to an ad. We will not share your personal
+                            information with these companies, but these companies may use information about
+                            your visits to this and other web sites in order to provide advertisements on this site
+                            and
+                            other sites about goods and services that may be of interest to you, and they may share
+                            your personal information that you provide to them with others.
+                        </p>
+
+                        <p class="text-lg text-gray-700 mb-4">
+                            You have the ability to accept or decline cookies. Most Web browsers automatically
+                            accept cookies, but you can usually modify your browser setting to decline cookies if
+                            you prefer. If you choose to decline cookies, you may not be able to fully experience
+                            the
+                            interactive features of the Your BestRecruiterAI websites you visit.
+                        </p>
+                    </div>
+                    <div class="mb-10">
+                        <h2 class="text-3xl font-bold mb-4 text-recruiter-600">
+                            How Does Your BestRecruiterAI Use Personal information?
+                        </h2>
+                        <p class="text-lg text-gray-700 mb-4">
+                            Your BestRecruiterAI may keep and use personal information we collect from or about
+                            you to provide you with access to this web site or other products or services, to respond
+                            to your requests, to bill you for products/services you purchased, and to provide
+                            ongoing service and support, to contact you with information that might be of interest to
+                            you, including information about products and services of ours and of others, or ask for
+                            your opinion about our products or the products of others, for record keeping and
+                            analytical purposes and to research, develop and improve programs, products, services
+                            and content.
+                        </p>
+                        <p class="text-lg text-gray-700 mb-4">
+                            Personal information collected online may be combined with information you provide to
+                            us through other sources We may also remove your personal identifiers (your name,
+                            email address, social security number, etc). In this case, you would no longer be
+                            identified as a single unique individual. Once we have de-identified information, it is
+                            non-personal information and we may treat it like other non-personal information.
+                            Finally, we may use your personal information to protect our rights or property, or to
+                            protect someone’s health, safety or welfare, and to comply with a law or regulation,
+                            court order or other legal process.
+                        </p>
+
+
+                    </div>
+
+                    <div class="mb-10">
+                        <h2 class="text-3xl font-bold mb-4 text-recruiter-600">Does Your BestRecruiterAI share personal
+                            information with others?</h2>
+                        <p class="text-lg text-gray-700 mb-4">
+                            We will not share your personal information collected from this web site with an
+                            unrelated third party without your permission, except as otherwise provided in this
+                            Privacy Policy. In the ordinary course of business, we may share some personal
+                            information with companies that we hire to perform services or functions on our behalf.
+                            In all cases in which we share your personal information with a third party for the
+                            purpose of providing a service to us, we will not authorize them to keep, disclose or use
+                            your information with others except for the purpose of providing the services we asked
+                            them to provide.
+                        </p>
+                        <p class="text-lg text-gray-700 mb-4">
+                            We will not sell, exchange or publish your personal information, except in conjunction
+                            with a corporate sale, merger, dissolution, or acquisition. For some sorts of
+                            transactions, in addition to our direct collection of information, our third party service
+                            vendors (such as credit card companies, clearinghouses and banks) who may provide
+                            such services as credit, insurance, and escrow services may collect personal
+                            information directly from you to assist you with your transaction. We do not control how
+                            these third parties use such information, but we do ask them to disclose how they use
+                            your personal information before they collect it.
+                        </p>
+                        <p class="text-lg text-gray-700 mb-4">
+                            If you submit a review for a third party (person or business) using our Facebook Fan
+                            Review Application, during the submission process we ask your permission to gather
+                            your basic information (such as name and email address) which we then share with the
+                            third party for whom you are submitting the review. We may be legally compelled to
+                            release your personal information in response to a court order, subpoena, search
+                            warrant, law or regulation.
+                        </p>
+                        <p class=" text-lg text-gray-700 mb-4">
+                            We may cooperate with law enforcement authorities in investigating and prosecuting
+                            web site visitors who violate our rules or engage in behavior, which is harmful to other
+                            visitors (or illegal). We may disclose your personal information to third parties if we feel
+                            that the disclosure is necessary to protect our rights or property, protect someone’s
+                            health, safety or welfare, or to comply with a law or regulation, court order or other legal
+                            process. As discussed in the section on cookies and other technologies, from time to
+                            time we may allow a third party to serve advertisements on this web site.
+                        </p>
+                        <p class="text-lg text-gray-700 mb-4">
+                            If you share information with the advertiser, including by clicking on their ads, this
+                            Privacy Policy does not control the advertisers use of your personal information, and
+                            you should check the privacy policies of those advertisers and/or ad services to learn
+                            about their use of cookies and other technology before linking to an ad.
+                        </p>
+                    </div>
+
+                    <div class="mb-10">
+                        <h2 class="text-3xl font-bold mb-4 text-recruiter-600">
+                            How is personal information used for communications?
+                        </h2>
+                        <p class="text-lg text-gray-700 mb-4">
+                            We may contact you periodically by e-mail, mail or telephone to provide information
+                            regarding programs, products, services and content that may be of interest to you. In
+                            addition, some of the features on this web site allow you to communicate with us using
+                            an online form. If your communication requests a response from us, we may send you a
+                            response via e-mail. The e-mail response or confirmation may include your personal
+                            information. We cannot guarantee that our e-mails to you will be secure from
+                            unauthorized interception.
+                        </p>
+                    </div>
+
+                    <div class="mb-10">
+                        <h2 class="text-3xl font-bold mb-4 text-recruiter-600">
+                            Links
+                        </h2>
+                        <p class="text-lg text-gray-700 mb-4">
+                            This site contains links to other sites that provide information that we consider to be
+                            interesting. Your BestRecruiterAI is not responsible for the privacy practices or the
+                            content of such web sites.
+                        </p>
+
+                    </div>
+                    <div class="mb-10">
+                        <h2 class="text-3xl font-bold mb-4 text-recruiter-600">
+                            Public Discussions
+                        </h2>
+                        <p class="text-lg text-gray-700 mb-4">
+                            This site may provide public discussions on various business valuation topics. Please
+                            note that any information you post in these discussions will become public, so please
+                            do not post sensitive information in the public discussions. Whenever you publicly
+                            disclose information online, that information could be collected and used by others. We
+                            are not responsible for any action or policies of any third parties who collect information
+                            that users disclose in any such forums on the web site. Your BestRecruiterAI does not
+                            agree or disagree with anything posted on the discussion board. Also remember that
+                            you must comply with our other published policies regarding postings on our public
+                            forums.
+                        </p>
+                    </div>
+
+                    <div class="mb-10">
+                        <h2 class="text-3xl font-bold mb-4 text-recruiter-600">
+                            How can a user access, change, or delete personal information?
+                        </h2>
+                        <p class="text-lg text-gray-700 mb-4">
+                            This site may provide public discussions on various business valuation topics. Please
+                            note that any information you post in these discussions will become public, so please
+                            do not post sensitive information in the public discussions. Whenever you publicly
+                            disclose information online, that information could be collected and used by others. We
+                            are not responsible for any action or policies of any third parties who collect information
+                            that users disclose in any such forums on the web site. Your BestRecruiterAI does not
+                            agree or disagree with anything posted on the discussion board. Also remember that
+                            you must comply with our other published policies regarding postings on our public
+                            forums.
+                        </p>
+                        <p class="text-lg text-gray-700 mb-4">
+                            You may access, correct, update, and/or delete any personally-identifiable information
+                            that you submit to the web site. You may also unsubscribe from mailing lists or any
+                            registrations on the web site. To do so, please either follow instructions on the page of
+                            the web site on which you have provided such information or subscribed or registered or
+                            contact us at
+                            <a class="text-recruiter-600"
+                                href="https://mail.google.com/mail/?view=cm&fs=1&to=yourbestrecruiterai@gmail.com">yourbestrecruiterai@gmail.com</a>
+                        </p>
+                    </div>
+
+                    <div class="mb-10">
+                        <h2 class="text-3xl font-bold mb-4 text-recruiter-600">
+                            Children’s Privacy
+                        </h2>
+                        <p class="text-lg text-gray-700 mb-4">
+                            Your BestRecruiterAI will not intentionally collect any personal information (such as a
+                            child’s name or email address) from children under the age of 13. If you think that we
+                            have collected personal information from a child under the age of 13, please contact
+                            us.
+                        </p>
+                    </div>
+
+                    <div class="mb-10">
+                        <h2 class="text-3xl font-bold mb-4 text-recruiter-600">
+                            Changes
+                        </h2>
+                        <p class="text-lg text-gray-700 mb-4">
+                            Your BestRecruiterAI reserves the right to modify this statement at any time. Any
+                            changes to this Privacy Policy will be listed in this section, and if such changes are
+                            material, a notice will be included on the homepage of the web site for a period of time.
+                            If you have any questions about privacy at any websites operated by Your
+                            BestRecruiterAI or about our website practices, please contact us at:
+                            <a class="text-recruiter-600"
+                                href="https://mail.google.com/mail/?view=cm&fs=1&to=yourbestrecruiterai@gmail.com">yourbestrecruiterai@gmail.com</a>.
+
+                        </p>
+                    </div>
+
                 </div>
             </div>
         </div>
     </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-50 py-12 md:py-20 relative overflow-hidden">
+        <div class="container mx-auto px-6 md:px-12 relative z-10">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 mb-10">
+                <div>
+                    <h3 class="font-bold text-xl mb-4 text-gray-900">
+                        YourBestRecruiter<span class="text-recruiter-500">.AI</span>
+                    </h3>
+                    <p class="text-lg text-gray-600 mb-6">
+                        Transforming recruitment with AI. Find the perfect candidates faster and more efficiently.
+                    </p>
+                    <div class="flex space-x-4">
+                        <a href="#"
+                            class="w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-recruiter-500 hover:border-recruiter-500 hover:text-white transition-colors duration-300">
+                            <i data-lucide="facebook" class="w-5 h-5"></i>
+                        </a>
+                        <a href="#"
+                            class="w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-recruiter-500 hover:border-recruiter-500 hover:text-white transition-colors duration-300">
+                            <i data-lucide="twitter" class="w-5 h-5"></i>
+                        </a>
+                        <a href="#"
+                            class="w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-recruiter-500 hover:border-recruiter-500 hover:text-white transition-colors duration-300">
+                            <i data-lucide="linkedin" class="w-5 h-5"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div>
+                    <h4 class="font-semibold text-gray-900 mb-4">Company</h4>
+                    <ul class="space-y-3">
+                        <li>
+                            <a href="#"
+                                class="text-gray-600 hover:text-recruiter-600 transition-colors duration-200">About
+                                Us</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                                class="text-gray-600 hover:text-recruiter-600 transition-colors duration-200">Careers</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                                class="text-gray-600 hover:text-recruiter-600 transition-colors duration-200">Blog</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                                class="text-gray-600 hover:text-recruiter-600 transition-colors duration-200">Press</a>
+                        </li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 class="font-semibold text-gray-900 mb-4">Resources</h4>
+                    <ul class="space-y-3">
+                        <li>
+                            <a href="#"
+                                class="text-gray-600 hover:text-recruiter-600 transition-colors duration-200">Documentation</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                                class="text-gray-600 hover:text-recruiter-600 transition-colors duration-200">Help
+                                Center</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                                class="text-gray-600 hover:text-recruiter-600 transition-colors duration-200">Pricing</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                                class="text-gray-600 hover:text-recruiter-600 transition-colors duration-200">API</a>
+                        </li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 class="font-semibold text-gray-900 mb-4">Contact</h4>
+                    <ul class="space-y-3">
+                        <li class="flex items-center gap-3">
+                            <i data-lucide="mail" class="w-5 h-5 text-recruiter-500"></i>
+                            <a href="https://mail.google.com/mail/?view=cm&fs=1&to=yourbestrecruiterai@gmail.com"
+                                class="text-gray-600 hover:text-recruiter-600 transition-colors duration-200">
+                                yourbestrecruiterai@gmail.com
+                            </a>
+                        </li>
+                        <li class="flex items-center gap-3">
+                            <i data-lucide="phone" class="w-5 h-5 text-recruiter-500"></i>
+                            <a href="tel:+1234567890"
+                                class="text-gray-600 hover:text-recruiter-600 transition-colors duration-200">
+                                +1 (234) 567-890
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="pt-8 mt-8 border-t border-gray-200 flex flex-col md:flex-row justify-between items-center">
+                <p class="text-gray-600 mb-4 md:mb-0">
+                    &copy; <span id="current-year">2025</span> YourBestRecruiter.AI. All rights reserved.
+                </p>
+                <div class="flex space-x-6">
+                    <a href="/privacy-policy"
+                        class="text-gray-600 hover:text-recruiter-600 transition-colors duration-200 text-sm">
+                        Privacy Policy
+                    </a>
+                    <a href="/terms-conditions"
+                        class="text-gray-600 hover:text-recruiter-600 transition-colors duration-200 text-sm">
+                        Terms of Service
+                    </a>
+                    <a href="#" class="text-gray-600 hover:text-recruiter-600 transition-colors duration-200 text-sm">
+                        Cookie Policy
+                    </a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Initialize Lucide icons -->
     <script>
-        console.log("")
-        let user_id = ""
-        if (user_id === null || user_id === undefined || user_id === '') {
-            document.querySelector('.login_button_div').style.display = 'block';
-        } else {
-            document.querySelector('.chat_button_div').style.display = 'block';
-        }
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        // Mobile menu toggle
+        document.getElementById('mobile-menu-button').addEventListener('click', function () {
+            const mobileMenu = document.getElementById('mobileMenu');
+            const menuIcon = document.getElementById('menuIcon');
+            const closeIcon = document.getElementById('closeIcon');
+
+            mobileMenu.classList.toggle('hidden');
+            menuIcon.classList.toggle('hidden');
+            closeIcon.classList.toggle('hidden');
+        });
+
+        // Set current year in footer
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+
+        // Navbar background change on scroll
+        window.addEventListener('scroll', function () {
+            const navbar = document.getElementById('navbar');
+            if (window.scrollY > 10) {
+                navbar.classList.add('bg-white', 'shadow-md');
+                navbar.classList.remove('bg-transparent');
+            } else {
+                navbar.classList.remove('bg-white', 'shadow-md');
+                navbar.classList.add('bg-transparent');
+            }
+        });
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"
-        integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r"
-        crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js"
-        integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy"
-        crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-    <script type="text/javascript" src="https://www.yourbestcandidate.ai/static/assets/js/slick.min.js"></script>
-    <script src="https://www.yourbestcandidate.ai/static/assets/js/custom.js"></script>
 </body>
 
 </html>

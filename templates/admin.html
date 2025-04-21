@@ -2223,7 +2223,7 @@
                 row.innerHTML = `
                 <td>${user.username}</td>
                 <td>${user.company}</td>
-                <td>${user.email}</td>
+                <td>${user.registered_email}</td>
                 <td>${user.user_type}</td>
                 <td>${localCreatedAtString}</td>
                 
@@ -2435,7 +2435,7 @@
                 row.innerHTML = `
                     <td>${user.username}</td>
                     <td>${user.company}</td>
-                    <td>${user.email}</td>
+                    <td>${user.registered_email}</td>
                     <td><span class="status-label ${user.verification_status}">${user.verification_status}</span></td>
                     <td>${user.user_type}</td>
                     <td>${localCreatedAtString}</td>
@@ -2834,7 +2834,7 @@
                         username: username,
                         company: company,
                         phone: phone,
-                        email: email,
+                        registered_email: email,
                         country: country,
                         password: password,
                         verification_status: verificationStatus,
@@ -2863,7 +2863,7 @@
         });
 
         // Add input event listeners to clear error classes on input
-        ["username", "phone", "email", "company", "password", "country", "verificationStatus", "userType", "isSuperadmin"].forEach((id) => {
+        ["username", "phone", "registered_email", "company", "password", "country", "verificationStatus", "userType", "isSuperadmin"].forEach((id) => {
             document.getElementById(id).addEventListener("input", () => {
                 document.getElementById(id).classList.remove("error-input");
             });

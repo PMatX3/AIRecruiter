@@ -279,6 +279,7 @@
         .next-btn {
             width: 30%;
             border-radius: 45px;
+            margin-left: 1rem;
         }
 
         .err-message {
@@ -363,9 +364,18 @@
         }
 
         .loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.8);
+            /* Optional dim background */
             display: none;
-            text-align: center;
-            padding: 40px 0;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
         }
 
         .spinner {
@@ -499,6 +509,112 @@
                 width: 100%;
             }
         }
+
+        /* Popup Styles */
+        .linkedin-option-popup,
+        .confirmation-popup {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .popup-content {
+            background: #fff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+        }
+
+        .popup-content h3 {
+            color: #2c3e50;
+            font-size: 24px;
+            margin-bottom: 15px;
+        }
+
+        .popup-content p {
+            color: #7f8c8d;
+            margin-bottom: 25px;
+            line-height: 1.5;
+        }
+
+        .button-group {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .btn-primary {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #f8fafc;
+            color: #3498db;
+            border: 1px solid #3498db;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary:hover {
+            background: #e8f0f7;
+            transform: translateY(-2px);
+        }
+
+        @media (max-width: 768px) {
+            .popup-content {
+                padding: 20px;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            .btn-primary,
+            .btn-secondary {
+                width: 100%;
+            }
+        }
+
+        .agreement-summary {
+            font-size: 0.9rem;
+            color: #4B5563;
+            margin-top: 0.5rem;
+            text-align: left;
+        }
+
+        .agreement-summary {
+            background: #F3F4F6;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+        }
     </style>
 </head>
 
@@ -525,7 +641,7 @@
             </div>
         </div>
 
-        <div class="form-header">
+        <div class="form-header" id="formHeader">
             <h2>YourbestRecruiterAI</h2>
             <p style="color: #7f8c8d;">Experience the future of recruitment technology</p>
         </div>
@@ -696,13 +812,27 @@
                         </svg>
                         Signup with LinkedIn
                     </button>
+                    <div class="agreement-summary">
+                        <strong>Recruitment Fee Summary:</strong><br>
+                        - Flat 10% fee due upon hiring a candidate<br>
+                        - Fee calculated from starting salary<br>
+                        - Charged to your card upon confirmation of hire<br>
+                        - Disputes must be raised within 14 days
+                    </div>
+                    <!-- <div class="checkbox" style="margin-top: 1rem;">
+                        <input type="checkbox" style=" transform: scale(1.5); margin-right: 10px; width:auto;    ">
+                        <span>I understand
+                            and agree to the recruitment fee
+                            terms and authorize
+                            payment upon candidate hire.</span>
+                    </div> -->
                     <div id="linkedinAuthError" style="color: #e74c3c; margin-top: 20px; display: none;">
                         Authentication failed. Please try again.
                     </div>
                 </div>
                 <div class="navigation-buttons">
                     <button type="button" class="back-btn" id="stepTwoBack">Back</button>
-                    <!-- <button type="button" class="next-btn" id="stepTwoNext" disabled>Continue</button> -->
+                    <button type="button" class="next-btn" id="skipLinkedinBtn">Skip for Now</button>
                 </div>
             </div>
 
@@ -753,18 +883,24 @@
         const step3 = document.getElementById('formStep3');
         const stepOneNext = document.getElementById('stepOneNext');
         const stepTwoBack = document.getElementById('stepTwoBack');
-        const stepTwoNext = document.getElementById('stepTwoNext');
         const linkedinAuthBtn = document.getElementById('linkedinAuthBtn');
+        const skipLinkedinBtn = document.getElementById('skipLinkedinBtn');
         const loginLink = document.getElementById('loginLink');
         const loadingAnimation = document.getElementById('loadingAnimation');
         const successAnimation = document.getElementById('successAnimation');
         const linkedinAuthError = document.getElementById('linkedinAuthError');
         const progressBarFill = document.getElementById('progressBarFill');
+        const progressLabel = document.getElementById('step-label');
+
 
         // Step indicators
         const step1Indicator = document.getElementById('step1');
         const step2Indicator = document.getElementById('step2');
         const step3Indicator = document.getElementById('step3');
+
+        // Form data storage
+        let userData = {};
+        let hasChanges = false;
 
         // Password toggle functionality
         const togglePassword = document.getElementById('togglePassword');
@@ -781,6 +917,76 @@
                 togglePassword.classList.add('fa-eye');
             }
         });
+
+        // Event Listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            setupEventListeners();
+
+
+            // Restore form data
+            const storedData = localStorage.getItem('registrationFormData');
+            if (storedData) {
+                userData = JSON.parse(storedData);
+                // Optionally repopulate form fields if needed for user review
+            }
+            localStorage.removeItem('registrationFormData'); // Clean up
+
+            // Proceed with linking LinkedIn account
+
+        });
+
+
+
+
+        async function linkLinkedInAccount(registration_data) {
+            loadingAnimation.style.display = 'flex';
+            try {
+                const response = await fetch('/link-linkedin', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(registration_data)
+                });
+
+                const data = await response.json();
+
+                console.log('data ---------- ', data);
+                if (data) {
+                    window.location.href = data.auth_url;
+                }
+
+
+                loadingAnimation.style.display = 'flex';
+                // showSuccess();
+
+            } catch (error) {
+                console.error('Error linking LinkedIn:', error);
+                loadingAnimation.style.display = 'flex';
+                linkedinAuthError.style.display = 'block';
+                goToStep(2); // Go back to the LinkedIn option step
+                toastr.error(error.message || 'Failed to link LinkedIn account.');
+            }
+        }
+
+        function setupEventListeners() {
+            // Detect changes in form
+            const formInputs = form.querySelectorAll('input, select');
+            formInputs.forEach(input => {
+                input.addEventListener('input', () => {
+                    hasChanges = true;
+                });
+            });
+
+            // Before unload event
+            window.addEventListener('beforeunload', function (e) {
+                if (hasChanges && step2.style.display !== 'block') { // Only trigger if not on the LinkedIn step
+                    e.preventDefault();
+                    e.returnValue = '';
+                    return '';
+                }
+            });
+        }
 
         // Validation functions
         function validateUsername(username) {
@@ -909,92 +1115,42 @@
             const isLinkedInValid = validateLinkedInUrl(linkedinUrl);
             const isPasswordValid = validatePassword(password);
 
-            if (isPasswordValid && isUsernameValid && isPhoneValid && isEmailValid && isCompanyValid) {
-                fetch('/register', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        username: username,
-                        company: company,
-                        phone: phone,
-                        email: email,
-                        country: country,
-                        password: password,
-                        profileUrl: linkedinUrl
+            if (isPasswordValid && isUsernameValid && isPhoneValid && isEmailValid && isCompanyValid && isLinkedInValid) {
+                // Show loading animation
+                loadingAnimation.style.display = 'flex';
+                step1.style.display = 'none';
 
-                    })
-                })
-                    .then(response => {
-                        if (response.ok) {
-                            goToStep(2);
-                        } else {
-                            return response.json().then(data => {
-                                toastr.error(data.message + ' Please Login using Your credentials');
-                            });
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        alert('An error occurred. Please try again.');
-                    });
+                // Collect user data
+                userData = {
+                    username: username,
+                    company: company,
+                    phone: phone,
+                    registered_email: email,
+                    country: country,
+                    password: password,
+                    profileUrl: linkedinUrl
+                };
+
+                localStorage.setItem('registration_data', JSON.stringify(userData));
+
+                loadingAnimation.style.display = 'none';
+                goToStep(2);
+
+                // registerUser();
             }
         }
 
-        // Add input event listeners for real-time validation
-        document.getElementById('username').addEventListener('input', function () {
-            validateUsername(this.value);
-            updateNextButtonState();
-        });
-
-        document.getElementById('phone').addEventListener('input', function () {
-            validatePhone(this.value);
-            updateNextButtonState();
-        });
-
-        document.getElementById('email').addEventListener('input', function () {
-            validateEmail(this.value);
-            updateNextButtonState();
-        });
-
-        document.getElementById('company').addEventListener('input', function () {
-            validateCompany(this.value);
-            updateNextButtonState();
-        });
-
-        document.getElementById('linkedin-url').addEventListener('input', function () {
-            validateLinkedInUrl(this.value);
-            updateNextButtonState();
-        });
-
-        document.getElementById('password').addEventListener('input', function () {
-            validatePassword(this.value);
-            updateNextButtonState();
-        });
-
-        // Update the next button state based on form validation
-        function updateNextButtonState() {
-
-        }
-
-        function showMessage(message, type) {
-            const messageContainer = document.getElementById("messageContainer");
-            messageContainer.textContent = message;
-            messageContainer.className = `message-container ${type}`;
-            messageContainer.classList.add("active");
-
-            messageContainer.style.display = "block";
-
-            setTimeout(() => messageContainer.classList.remove("active"), 3000);
-            setTimeout(() => (messageContainer.style.display = "none"), 3000);
-        }
-
-        // Step navigation functions
         function goToStep(stepNumber) {
             step1.style.display = 'none';
             step2.style.display = 'none';
             step3.style.display = 'none';
+
+            const formHeader = document.getElementById('formHeader');
+            if (stepNumber === 2 || stepNumber === 3) {
+                formHeader.style.display = 'none';
+            } else {
+                formHeader.style.display = 'block'; // Show it again for step 1
+            }
 
             step1Indicator.classList.remove('active');
             step2Indicator.classList.remove('active');
@@ -1004,89 +1160,216 @@
                 step1.style.display = 'block';
                 step1Indicator.classList.add('active');
                 progressBarFill.style.width = '33.33%';
+
+
             } else if (stepNumber === 2) {
                 step2.style.display = 'block';
                 step2Indicator.classList.add('active');
                 progressBarFill.style.width = '66.66%';
+
+
             } else if (stepNumber === 3) {
                 step3.style.display = 'block';
                 step3Indicator.classList.add('active');
-                progressBarFill.style.width = '100%';
+                progressBarFill.style.width = '90%';
+
+
             }
         }
 
-        stepOneNext.addEventListener('click', function (e) {
-            validateStepOne();
-        });
+        async function registerUser() {
+            try {
+                const response = await fetch('/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(userData)
+                });
 
-        // stepTwoBack.addEventListener('click', function (e) {
-        //     e.preventDefault();
-        //     goToStep(1);
-        // });
+                const data = await response.json();
+
+                if (!response.ok) {
+                    toastr.error(data.message || 'An error occurred. Please try again.');
+                    loadingAnimation.style.display = 'flex';
+                    step2.style.display = 'block';
+                    return;
+                }
+
+                // Store the user ID for later use
+                userData.userId = data.userId;
+
+                // Show LinkedIn option
+                loadingAnimation.style.display = 'flex';
+                step2.style.display = 'block';
+
+            } catch (error) {
+                console.error('Registration error:', error);
+                loadingAnimation.style.display = 'flex';
+                step1.style.display = 'block';
+                toastr.error(error.message || 'An error occurred. Please try again.');
+            }
+        }
 
         linkedinAuthBtn.addEventListener('click', function (e) {
             e.preventDefault();
+            registration_data = JSON.parse(localStorage.getItem('registration_data'));
+
+            linkLinkedInAccount(registration_data);
+        })
+
+        // Skip LinkedIn Authentication
+        skipLinkedinBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+
+            // Get registration data from local storage
+            const registrationData = JSON.parse(localStorage.getItem('registration_data'));
+            if (!registrationData) {
+                toastr.error('Registration data not found. Please start again.');
+                goToStep(1);
+                return;
+            }
+
+            // Add LinkedIn skipped flag
+            registrationData.is_linkedin_connected = false;
+            registrationData.linkedin_skipped = true;
+
             // Show loading animation
-            step2.style.display = 'none';
-            loadingAnimation.style.display = 'block';
+            loadingAnimation.style.display = 'flex';
 
-            window.location.href = '/login-linkedin';
-
-            // Simulate LinkedIn authentication (replace with actual OAuth)
-            setTimeout(function () {
-                loadingAnimation.style.display = 'none';
-
-                // For demonstration, randomly succeed or fail (in real app, replace with actual auth)
-                const authSuccess = Math.random() > 0.3; // 70% success rate for demo
-
-                if (authSuccess) {
-                    // Authentication successful
-                    linkedinAuthError.style.display = 'none';
-                    stepTwoNext.disabled = false;
-                    step2.style.display = 'block';
-                    goToStep(3);
-                    successAnimation.style.display = 'block';
-                } else {
-                    // Authentication failed
-                    linkedinAuthError.style.display = 'block';
-                    stepTwoNext.disabled = true;
-                    step2.style.display = 'block';
-                    fetch('/auth/callback') // Assuming your callback endpoint is here.
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.error) {
-                                showMessage(data.error, 'error');
-                            } else {
-                                showMessage("LinkedIn authentication failed.");
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Error fetching callback error:', error);
-                            showMessage("An unexpected error occurred during LinkedIn authentication.");
-                        });
-
-                }
-            }, 2000);
+            // Submit registration
+            submitRegistration(registrationData);
         });
 
-        stepTwoNext.addEventListener('click', function (e) {
+        // Check if we're returning from LinkedIn OAuth
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
+        const error = urlParams.get('error');
+
+        if (code) {
+            // We're back from successful LinkedIn auth
+            handleLinkedInCallback(code);
+        } else if (error) {
+            // LinkedIn auth failed
+            handleLinkedInError(error, urlParams.get('error_description'));
+        }
+
+        function handleLinkedInCallback(code) {
+            const loadingAnimation = document.getElementById('loadingAnimation');
+            loadingAnimation.style.display = 'flex';
+
+            // Get registration data
+            const registrationData = JSON.parse(localStorage.getItem('registration_data'));
+            if (!registrationData) {
+                toastr.error('Registration data not found. Please start again.');
+                goToStep(1);
+                return;
+            }
+
+            // Add the LinkedIn auth code
+            registrationData.linkedin_code = code;
+            registrationData.is_linkedin_connected = true;
+
+            // Submit registration with LinkedIn code
+            submitRegistration(registrationData);
+        }
+
+        function handleLinkedInError(error, description) {
+            const linkedinAuthError = document.getElementById('linkedinAuthError');
+            linkedinAuthError.style.display = 'block';
+            linkedinAuthError.textContent = description || 'LinkedIn authentication failed. Please try again or skip this step.';
+            goToStep(2);
+        }
+
+        function submitRegistration(registrationData) {
+            const loadingAnimation = document.getElementById('loadingAnimation');
+
+            // Show loading
+            document.body.style.pointerEvents = 'none';
+            document.body.style.opacity = '0.6';
+            loadingAnimation.style.display = 'flex';
+
+            fetch('/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(registrationData)
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+
+                        toastr.success("Registration successful!");
+                        window.location.href = data.redirect; // ✅ fixed here
+                    }
+                    if (data.error) {
+                        throw new Error(data.error);
+                    }
+
+                    // Registration success
+                    localStorage.removeItem('registration_data');
+
+
+
+
+
+                })
+                .catch(error => {
+                    console.error('Registration error:', error);
+                    toastr.error(error.message || 'Registration failed. Please try again.');
+                    goToStep(2);
+                })
+                .finally(() => {
+                    document.body.style.pointerEvents = 'auto';
+                    document.body.style.opacity = '1';
+                    loadingAnimation.style.display = 'flex';
+                });
+        }
+
+
+
+
+        // Add input event listeners for real-time validation
+        document.getElementById('username').addEventListener('input', function () {
+            validateUsername(this.value);
+        });
+
+        document.getElementById('phone').addEventListener('input', function () {
+            validatePhone(this.value);
+        });
+
+        document.getElementById('email').addEventListener('input', function () {
+            validateEmail(this.value);
+        });
+
+        document.getElementById('company').addEventListener('input', function () {
+            validateCompany(this.value);
+        });
+
+        document.getElementById('linkedin-url').addEventListener('input', function () {
+            validateLinkedInUrl(this.value);
+        });
+
+        document.getElementById('password').addEventListener('input', function () {
+            validatePassword(this.value);
+        });
+
+        // Step navigation functions
+
+
+        stepOneNext.addEventListener('click', function (e) {
             e.preventDefault();
-            // Show loading animation
-            step2.style.display = 'none';
-            loadingAnimation.style.display = 'block';
+            validateStepOne();
+        });
 
-            setTimeout(function () {
-                loadingAnimation.style.display = 'none';
-                successAnimation.style.display = 'block';
-                goToStep(3);
-            }, 2000);
-
+        stepTwoBack.addEventListener('click', function (e) {
+            e.preventDefault();
+            goToStep(1);
         });
 
         // Initialize first step
         goToStep(1);
-        updateNextButtonState();
-
     </script>
 
 </body>

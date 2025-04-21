@@ -21,7 +21,7 @@ function uploadPDF() {
   if (!file) {
     toastr.error("Please upload job description to proceed");
     return;
-}
+  }
   var formData = new FormData();
   console.log("file: ", file);
   formData.append("file", file);
@@ -61,9 +61,37 @@ function ajaxCall(url, formData) {
       }
     },
     error: function (xhr) {
-      toastr.error("Please upload a valid file", xhr);
       $("#loader").hide();
       $("#overlay").hide();
+
+      let errorMsg = "An error occurred while uploading the file.";
+      try {
+        const response = JSON.parse(xhr.responseText);
+
+        if (response.linkedin_required) {
+          // Show LinkedIn popup
+          document.getElementById("linkedinModal").classList.remove("hidden");
+
+          // Handle button events
+          document.getElementById("linkedinYesBtn").onclick = function () {
+            window.location.href = "/login-linkedin";
+          };
+
+          document.getElementById("linkedinNoBtn").onclick = function () {
+            document.getElementById("linkedinModal").classList.add("hidden");
+          };
+
+          return;
+        }
+
+        if (response.error) {
+          errorMsg = response.error;
+        }
+      } catch (err) {
+        console.error("Failed to parse error JSON", err);
+      }
+
+      alert(errorMsg); // Optional fallback
     },
   });
 }

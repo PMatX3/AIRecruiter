@@ -49,41 +49,6 @@
 </head>
 
 <body class="min-h-screen bg-white">
-    <!-- Navbar -->
-    <!-- <nav class="fixed w-full bg-white/80 backdrop-blur-md z-50 border-b border-gray-100">
-        <div class="container mx-auto px-6 py-4">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center">
-                    <a href="#" class="text-2xl font-bold text-recruiter-600">TalentLinkGuru</a>
-                </div>
-                <div class="hidden md:flex items-center space-x-8">
-                    <a href="#features" class="text-gray-600 hover:text-recruiter-600">Features</a>
-                    <a href="#pricing" class="text-gray-600 hover:text-recruiter-600">Pricing</a>
-                    <a href="#contact" class="text-gray-600 hover:text-recruiter-600">Contact</a>
-                    <button
-                        class="bg-recruiter-500 text-white px-6 py-2 rounded-lg hover:bg-recruiter-600 transition-colors">
-                        Get Started
-                    </button>
-                </div>
-                <button class="md:hidden" id="mobile-menu-button">
-                    <i data-lucide="menu" class="w-6 h-6"></i>
-                </button>
-            </div>
-            
-            <div class="hidden md:hidden" id="mobile-menu">
-                <div class="px-2 pt-2 pb-3 space-y-1">
-                    <a href="#features" class="block px-3 py-2 text-gray-600 hover:text-recruiter-600">Features</a>
-                    <a href="#pricing" class="block px-3 py-2 text-gray-600 hover:text-recruiter-600">Pricing</a>
-                    <a href="#contact" class="block px-3 py-2 text-gray-600 hover:text-recruiter-600">Contact</a>
-                    <button
-                        class="w-full bg-recruiter-500 text-white px-6 py-2 rounded-lg hover:bg-recruiter-600 transition-colors">
-                        Get Started
-                    </button>
-                </div>
-            </div>
-        </div>
-    </nav> -->
-
     <!-- header section -->
     <header id="navbar"
         class="fixed top-0 left-0 right-0 z-50 py-4 px-6 md:px-12 transition-all duration-300 bg-transparent">
@@ -105,8 +70,8 @@
                 <a href="#contact"
                     class="text-gray-700 hover:text-recruiter-600 transition-colors duration-200 font-medium">Contact</a>
                 <a href="/register"
-                    class="bg-recruiter-500 hover:bg-recruiter-600 text-white px-5 py-2 rounded-full transition-all duration-200 font-medium">Get
-                    Started</a>
+                    class="bg-recruiter-500 hover:bg-recruiter-600 text-white px-5 py-2 rounded-full transition-all duration-200 font-medium">Free
+                    Trial</a>
             </nav>
 
             <!-- Mobile menu button -->
@@ -134,9 +99,9 @@
                     class="text-gray-700 hover:text-recruiter-600 transition-colors duration-200 font-medium py-2">Pricing</a>
                 <a href="#contact"
                     class="text-gray-700 hover:text-recruiter-600 transition-colors duration-200 font-medium py-2">Contact</a>
-                <a href="/login"
-                    class="bg-recruiter-500 hover:bg-recruiter-600 text-white px-5 py-3 rounded-full transition-all duration-200 font-medium text-center mt-2">Get
-                    Started</a>
+                <a href="/register"
+                    class="bg-recruiter-500 hover:bg-recruiter-600 text-white px-5 py-3 rounded-full transition-all duration-200 font-medium text-center mt-2">Free
+                    Trial</a>
             </nav>
         </div>
     </header>
@@ -170,7 +135,7 @@
                     <div class="flex flex-col sm:flex-row gap-4">
                         <a href="/register"
                             class="bg-recruiter-600 hover:bg-recruiter-700 text-white px-8 py-4 rounded-full font-medium text-center transition-all duration-200 flex items-center justify-center gap-2 shadow-lg shadow-recruiter-500/20">
-                            Get Started <i data-lucide="chevron-right" class="w-5 h-5"></i>
+                            Free Trial <i data-lucide="chevron-right" class="w-5 h-5"></i>
                         </a>
                         <a href="#process"
                             class="bg-white hover:bg-gray-50 text-gray-800 px-8 py-4 rounded-full font-medium text-center transition-all duration-200 border border-gray-200">
@@ -332,26 +297,34 @@
                 <div
                     class="p-6 rounded-2xl border border-recruiter-700 bg-recruiter-800/50 backdrop-blur-md reveal-element opacity-0">
                     <h3 class="text-2xl font-semibold mb-6">Request a Demo</h3>
-                    <form id="demo-form" class="space-y-4">
+                    <form id="demo-form" method="POST" class="space-y-4">
                         <div>
                             <label for="name" class="block text-sm font-medium mb-1">Full Name</label>
-                            <input type="text" id="name"
+                            <input type="text" id="name" 
                                 class="w-full px-4 py-3 bg-recruiter-700/50 border border-recruiter-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-recruiter-500 text-white"
                                 placeholder="Your name" />
+                            <div id="demo-name-error" class="text-red-500 text-sm mt-1 hidden">Name must be at least 4
+                                characters long</div>
                         </div>
                         <div>
                             <label for="email" class="block text-sm font-medium mb-1">Email Address</label>
-                            <input type="email" id="email"
+                            <input type="email" id="email" 
                                 class="w-full px-4 py-3 bg-recruiter-700/50 border border-recruiter-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-recruiter-500 text-white"
                                 placeholder="you@company.com" />
+                            <div id="demo-email-error" class="text-red-400 text-sm mt-1 hidden">Please enter a valid
+                                email address</div>
+
                         </div>
                         <div>
                             <label for="company" class="block text-sm font-medium mb-1">Company</label>
                             <input type="text" id="company"
                                 class="w-full px-4 py-3 bg-recruiter-700/50 border border-recruiter-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-recruiter-500 text-white"
                                 placeholder="Your company" />
+                            <div id="demo-company-error" class="text-red-400 text-sm mt-1 hidden">Company name cannot be
+                                empty</div>
+
                         </div>
-                        <button type="button"
+                        <button type="submit"
                             class="w-full bg-recruiter-500 hover:bg-recruiter-400 text-white font-medium py-3 px-6 rounded-lg transition-colors duration-300">
                             Schedule Demo
                         </button>
@@ -457,36 +430,43 @@
             </div>
 
             <div class="max-w-3xl mx-auto card-glass p-8">
-                <form id="contact-form" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <form id="contact-form" method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <label for="contact-name" class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                        <label for="contact-name" class="block text-sm font-medium text-gray-700 mb-1">Full
+                            Name*</label>
                         <input type="text" id="contact-name"
                             class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-recruiter-500"
                             placeholder="Your name" />
+                        <div id="name-error" class="text-red-500 text-sm mt-1 hidden">Name must be at least 4 characters
+                            long</div>
                     </div>
                     <div>
                         <label for="contact-email" class="block text-sm font-medium text-gray-700 mb-1">Email
-                            Address</label>
+                            Address*</label>
                         <input type="email" id="contact-email"
                             class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-recruiter-500"
                             placeholder="you@company.com" />
+                        <div id="email-error" class="text-red-500 text-sm mt-1 hidden">Please enter a valid email
+                            address</div>
                     </div>
                     <div class="md:col-span-2">
                         <label for="contact-subject"
-                            class="block text-sm font-medium text-gray-700 mb-1">Subject</label>
+                            class="block text-sm font-medium text-gray-700 mb-1">Subject*</label>
                         <input type="text" id="contact-subject"
                             class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-recruiter-500"
                             placeholder="How can we help?" />
+                        <div id="subject-error" class="text-red-500 text-sm mt-1 hidden">Subject cannot be empty</div>
                     </div>
                     <div class="md:col-span-2">
                         <label for="contact-message"
-                            class="block text-sm font-medium text-gray-700 mb-1">Message</label>
+                            class="block text-sm font-medium text-gray-700 mb-1">Message*</label>
                         <textarea id="contact-message" rows="6"
                             class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-recruiter-500"
                             placeholder="Your message..."></textarea>
+                        <div id="message-error" class="text-red-500 text-sm mt-1 hidden">Message cannot be empty</div>
                     </div>
                     <div class="md:col-span-2">
-                        <button type="button"
+                        <button type="submit"
                             class="bg-recruiter-500 hover:bg-recruiter-600 text-white font-medium py-3 px-6 rounded-lg transition-colors duration-300">
                             Send Message
                         </button>
@@ -596,10 +576,12 @@
                     &copy; <span id="current-year"></span> YourBestRecruiter.AI. All rights reserved.
                 </p>
                 <div class="flex space-x-6">
-                    <a href="#" class="text-gray-600 hover:text-recruiter-600 transition-colors duration-200 text-sm">
+                    <a href="/privacy-policy"
+                        class="text-gray-600 hover:text-recruiter-600 transition-colors duration-200 text-sm">
                         Privacy Policy
                     </a>
-                    <a href="#" class="text-gray-600 hover:text-recruiter-600 transition-colors duration-200 text-sm">
+                    <a href="/terms-conditions"
+                        class="text-gray-600 hover:text-recruiter-600 transition-colors duration-200 text-sm">
                         Terms of Service
                     </a>
                     <a href="#" class="text-gray-600 hover:text-recruiter-600 transition-colors duration-200 text-sm">
