@@ -832,7 +832,7 @@
                 </div>
                 <div class="navigation-buttons">
                     <button type="button" class="back-btn" id="stepTwoBack">Back</button>
-                    <button type="button" class="next-btn" id="skipLinkedinBtn">Skip for Now</button>
+                    <!-- <button type="button" class="next-btn" id="skipLinkedinBtn">Skip for Now</button> -->
                 </div>
             </div>
 
@@ -1219,27 +1219,27 @@
         })
 
         // Skip LinkedIn Authentication
-        skipLinkedinBtn.addEventListener('click', (e) => {
-            e.preventDefault();
+        // skipLinkedinBtn.addEventListener('click', (e) => {
+        //     e.preventDefault();
 
-            // Get registration data from local storage
-            const registrationData = JSON.parse(localStorage.getItem('registration_data'));
-            if (!registrationData) {
-                toastr.error('Registration data not found. Please start again.');
-                goToStep(1);
-                return;
-            }
+        //     // Get registration data from local storage
+        //     const registrationData = JSON.parse(localStorage.getItem('registration_data'));
+        //     if (!registrationData) {
+        //         toastr.error('Registration data not found. Please start again.');
+        //         goToStep(1);
+        //         return;
+        //     }
 
-            // Add LinkedIn skipped flag
-            registrationData.is_linkedin_connected = false;
-            registrationData.linkedin_skipped = true;
+        //     // Add LinkedIn skipped flag
+        //     registrationData.is_linkedin_connected = false;
+        //     registrationData.linkedin_skipped = true;
 
-            // Show loading animation
-            loadingAnimation.style.display = 'flex';
+        //     // Show loading animation
+        //     loadingAnimation.style.display = 'flex';
 
-            // Submit registration
-            submitRegistration(registrationData);
-        });
+        //     // Submit registration
+        //     submitRegistration(registrationData);
+        // });
 
         // Check if we're returning from LinkedIn OAuth
         const urlParams = new URLSearchParams(window.location.search);

@@ -421,7 +421,7 @@ def linkedin_login():
         f"?response_type=code&client_id={CLIENT_ID}"
         f"&redirect_uri={REDIRECT_URI}"
         f"&state={state}"
-        f"&scope=profile email w_member_social w_organization_social r_organization_social rw_organization_admin openid" # added w_member_social
+        f"&scope=openid profile r_ads_reporting r_organization_social rw_organization_admin w_member_social r_ads w_organization_social rw_ads r_basicprofile r_organization_admin email r_1st_connections_size" # added w_member_social
         f"&prompt=login&force_account_selection=true"
     )
     return redirect(auth_url)
@@ -1426,22 +1426,28 @@ def get_status(job_id):
     return jsonify({'error': 'Job not found'}), 404
 
 @app.route('/save-text', methods=['POST'])
-def save_text():
+def save_text():    
+       
     try:
         if 'user' not in session:
+            print("User not in session")    
             return jsonify({'error': 'Unauthorized access'}), 401
         
         user_id = session['user']['_id']
-
+        print("------------- save text called ---------------- ")
         # Check if the user has already used the service
         user = users_collection.find_one({"_id": ObjectId(user_id)}, {"features.first_job_uploaded": 1, "subscription.is_subscribed": 1})
 
         if not user:
+            print("User not found")
             return jsonify({'error': 'User not found'}), 404
         
         # If service has already been used and user is not subscribed, restrict access
-        if user.get('features', {}).get('first_job_uploaded', False) and not user.get('subscription', {}).get('is_subscribed', False):
-            return jsonify({'error': 'Trial limit reached. Please subscribe to continue.'}), 403
+        if not user.get('is_superadmin', False):    
+            # Check if the user has already used the free trial feature
+            if not user['subscription']['is_subscribed'] and user.get('first_job_uploaded', False):
+                print('Free Trial limit reached. Please subscribe to continue.')
+                return jsonify({'error': 'Trial limit reached. Please subscribe to continue.'}), 403
         
         data = request.get_json()
         

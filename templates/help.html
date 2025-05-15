@@ -230,6 +230,11 @@
             background-clip: text;
             -webkit-text-fill-color: transparent;
         }
+
+        .checkbox-container.err:hover .custom-checkbox {
+            border-color: red;
+            /* Change border color to red on hover when there is an error */
+        }
     </style>
 </head>
 
@@ -250,7 +255,8 @@
                 </svg>
                 <div class="relative z-10">
                     <h1 class="form-header text-3xl md:text-4xl font-bold">Raise a Ticket</h1>
-                    <p class="text-gray-600 mt-2 max-w-xs mx-auto"> Need assistance? Submit your issue and we'll get back to you as soon as possible.</p>
+                    <p class="text-gray-600 mt-2 max-w-xs mx-auto"> Need assistance? Submit your issue and we'll get
+                        back to you as soon as possible.</p>
                 </div>
             </div>
 
@@ -400,7 +406,8 @@
                     <label class="checkbox-container text-sm text-gray-600">
                         <input type="checkbox" id="terms" class="checkbox-input sr-only">
                         <span class="custom-checkbox"></span>
-                        I agree to the <a href="#" class="text-indigo-600 hover:text-indigo-800">Terms and
+                        I agree to the <a href="/terms-conditions" class="text-indigo-600 hover:text-indigo-800">Terms
+                            and
                             Conditions</a>
                     </label>
                 </div>
@@ -466,6 +473,7 @@
             const formProgress = document.getElementById('formProgress');
             const ticketNumberSpan = document.getElementById('ticketNumber');
             const termsCheckbox = document.getElementById('terms');
+            const checkboxInput = document.getElementById('terms');
             // const priorityButtons = document.querySelectorAll('.priority-btn');
             // const priorityInput = document.getElementById('priority');
 
@@ -576,7 +584,8 @@
 
                 // Check terms checkbox
                 if (!termsCheckbox.checked) {
-                    alert('Please agree to the Terms and Conditions');
+                    termsCheckbox.classList.add('err');
+                    // alert('Please agree to the Terms and Conditions');
                     return;
                 }
 

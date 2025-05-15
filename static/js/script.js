@@ -525,6 +525,7 @@ class AudioVisualizer {
 }
 
 function startListening() {
+  console.log("startListening called line 528");
   if (mediaRecorder) {
     mediaRecorder.stop();
     mediaRecorder = null;
