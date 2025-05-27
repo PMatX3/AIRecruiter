@@ -1,17 +1,29 @@
 /* navbar.css - Include this in your CSS files or in a <style> tag */
-* {
-  padding: 0;
+*,
+*::before,
+*::after {
   margin: 0;
+  padding: 0;
   box-sizing: border-box;
 }
 
+:root {
+  --primary: #0066cc;
+  --primary-light: #4d94ff;
+  --primary-dark: #004c99;
+  --secondary: #f8f9fa;
+  --text-dark: #333333;
+  --text-light: #767676;
+  --white: #ffffff;
+  --border-radius: 8px;
+  --box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  --transition: all 0.3s ease;
+}
+
 body {
-  font-family: "Roboto", sans-serif;
-  background: #f5f5f5;
-  color: #333;
-  margin: 0;
-  padding: 0;
-  line-height: 1.6 !important;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  color: var(--text-dark);
+  line-height: 1.6;
 }
 
 .logo-svg {
@@ -146,7 +158,7 @@ img {
 
 .timer-container {
   position: absolute;
-  left: 50%;
+  left: 45%;
   transform: translateX(-50%);
   background-color: #edf2ff;
   border-radius: 22px;
@@ -172,33 +184,8 @@ img {
   border-radius: 5px;
   /* Rounded corners */
   font-weight: 500;
+  font-size: large;
   /* Bold text */
-}
-
-@media (max-width: 768px) {
-  .nav-links {
-    display: none; /* Hide nav links */
-    flex-direction: column; /* Stack links vertically */
-    position: absolute;
-    top: 60px; /* Adjust based on navbar height */
-    right: 0;
-    background-color: white;
-    width: 100%;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    z-index: 1000;
-  }
-
-  .nav-links.active {
-    display: flex; /* Show nav links when active */
-  }
-
-  .menu-toggle {
-    display: block; /* Show hamburger icon */
-  }
-
-  .nav-item {
-    margin: 1rem 0; /* Add spacing between items */
-  }
 }
 
 .menu-dropdown {
@@ -355,61 +342,107 @@ img {
   background: #f5f5f5;
 }
 
-/* Responsive styles */
-@media (max-width: 768px) {
-  .nav-links {
-    display: none;
-    flex-direction: column;
-    position: absolute;
-    top: 60px;
-    right: 0;
-    background-color: white;
-    width: 100%;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    z-index: 1000;
-  }
-
-  .nav-links.active {
-    display: flex;
-  }
-
-  .nav-item {
-    margin: 1rem 0;
-  }
-
-  .logo-svg {
-    height: 30px;
-  }
-
+/* Media Queries for Responsive Design */
+@media (max-width: 992px) {
   .timer-container {
-    text-align: center;
-    gap: 8px;
-    padding: 10px;
-  }
-
-  .trial-info {
-    font-size: 7px;
-    padding: 6px;
-  }
-
-  .upgrade-plann-btn {
-    font-size: 13px;
-    padding: 8px 16px;
+    display: none;
   }
 }
 
-@media (max-width: 480px) {
-  .logo-svg {
-    height: 20px;
+@media (max-width: 768px) {
+  .hamburger {
+    display: flex;
   }
 
+  .nav-links {
+    position: fixed;
+    top: 0;
+    right: -300px;
+    width: 270px;
+    height: 100vh;
+    background-color: var(--white);
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 2rem 1.5rem;
+    box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
+    transition: right 0.4s ease;
+    z-index: 250;
+    gap: 2rem;
+  }
+
+  .nav-links.active {
+    right: 0;
+  }
+
+  .nav-item {
+    width: 100%;
+  }
+
+  .nav-link {
+    display: block;
+    width: 100%;
+    padding: 0.8rem 0;
+    border-bottom: 1px solid #eee;
+  }
+
+  .nav-link:after {
+    display: none;
+  }
+
+  .hamburger.active span:nth-child(1) {
+    transform: translateY(9px) rotate(45deg);
+  }
+
+  .hamburger.active span:nth-child(2) {
+    opacity: 0;
+  }
+
+  .hamburger.active span:nth-child(3) {
+    transform: translateY(-9px) rotate(-45deg);
+  }
+
+  .notification-container,
+  .logout-dropdown {
+    width: 100%;
+  }
+
+  .notifications-popup,
+  .logout-dropdown-menu {
+    position: static;
+    width: 100%;
+    box-shadow: none;
+    margin-top: 0.5rem;
+    border: 1px solid #eee;
+  }
+
+  /* Add overlay when mobile menu is active */
+  .overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 200;
+  }
+
+  .overlay.active {
+    display: block;
+  }
+
+  /* Timer container becomes visible again but with updated style */
   .timer-container {
-    width: 50%;
-    padding: 8px;
+    display: flex;
+    width: 100%;
+    border-top: 1px solid #eee;
+    padding-top: 1rem;
+    margin-top: 1rem;
   }
 
   .upgrade-plann-btn {
+    margin-top: 0.5rem;
     width: 100%;
-    padding: 10px;
+    text-align: center;
   }
 }

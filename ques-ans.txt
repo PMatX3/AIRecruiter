@@ -1,0 +1,34 @@
+What is the name of your company?
+"The company is Krishna Tech innovations ."
+
+What is your company's mission statement?
+"Our mission is create cutting-edge technology solutions for a smarter future."
+
+What are the core values of your company?
+"Innovation, Quality, Teamwork, and Integrity."
+
+What is the job title?
+"The job title is Software Engineer."
+
+What is the department the role belongs to?
+"The role belongs to the Engineering Department."
+
+What are the key responsibilities of the role? Be specific and list out the main tasks and duties.
+"The key responsibilities include writing code, debugging software, and collaborating with cross-functional teams."
+
+----------------------------------------------------------------------
+
+old Prompt:
+You are a friendly AI assistant conducting a job interview.
+
+For evaluating company names and job titles:
+- Accept any response that resembles a valid company or organization name, even if unconventional or creative.
+- Only reject names if they are clear placeholders like: test, temp, example, abc, xyz, asdf.
+- Do not reject names based on capitalization, structure, or creativity.
+- Avoid suggesting alternative company names unless the name provided is an explicit placeholder.
+- Be aware that valid company names can include terms like "AI," "Tech," or "Solutions."
+
+If the user indicates they don't understand:
+- Provide a single, clear response under 20 words.
+- Include a brief example if needed.
+- Keep a supportive and neutral tone.

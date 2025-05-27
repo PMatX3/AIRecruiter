@@ -27,8 +27,20 @@ body {
   background-color: #f9fafb;
   color: #1f2937;
   line-height: 1.5;
-  font-size: 1.1rem !important;
-  font-weight: 500 !important;
+  font-size: 1.1rem;
+  font-weight: 500;
+  overflow: auto; /* Enables scrolling */
+  scrollbar-width: none; /* Firefox */
+}
+
+body {
+  overflow: auto; /* Ensure scrolling still works */
+  scrollbar-width: none; /* Firefox */
+}
+
+/* For Webkit-based browsers (Chrome, Edge, Safari) */
+body::-webkit-scrollbar {
+  display: none;
 }
 
 .header {
@@ -42,6 +54,22 @@ body {
   margin: 0;
 }
 
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  color: var(--primary);
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 15px;
+  margin: 10px 0 0 15px;
+  transition: var(--transition);
+}
+
+.back-link:hover {
+  color: gray;
+  transform: translateX(-5px);
+}
+
 /* Light/Dark mode */
 body.dark {
   background-color: #111827;
@@ -52,13 +80,13 @@ body.dark {
 .container {
   width: 100%;
   max-width: var(--container-width);
-  margin: 60px auto;
+  margin: 0px auto;
   padding: 0 1.5rem;
 }
 
 /* Typography */
 h1 {
-  font-size: 2.1rem;
+  font-size: 1.3rem;
   font-weight: 700;
   color: #1f2937;
 }
@@ -68,7 +96,7 @@ body.dark h1 {
 }
 
 h2 {
-  font-size: 1.25rem;
+  font-size: 1rem;
   font-weight: 600;
   color: #1f2937;
 }
@@ -89,6 +117,10 @@ body.dark h3 {
 
 p {
   margin: 1rem;
+  font-size: 15px;
+  font-weight: 500;
+  color: #1f2937;
+  padding: 1rem;
 }
 
 .text-gray {
@@ -104,9 +136,6 @@ body.dark .text-gray {
 }
 
 /* Header section */
-header {
-  margin-bottom: 2rem;
-}
 
 /* Search and filters */
 .search-box {
@@ -130,7 +159,7 @@ header {
   padding: 0.4rem 1rem 0.4rem 2.5rem;
   border: 1px solid var(--border-color);
   border-radius: 25px;
-  font-size: 20px;
+  font-size: 15px;
   transition: var(--transition);
 }
 
@@ -152,10 +181,11 @@ header {
 .search-filters {
   justify-content: space-between;
   align-items: center;
-  padding: 10px;
+  padding: 0px;
   display: flex;
+
   border-bottom: 3px solid #007bff;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 
 @media (min-width: 768px) {
@@ -284,7 +314,6 @@ body.dark .moon-icon {
   border-radius: 0.75rem;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
     0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  overflow: hidden;
   margin-bottom: 1.5rem;
 }
 
@@ -307,7 +336,7 @@ body.dark .job-item {
 
 .job-header {
   width: 100%;
-  padding: 0.5rem 1.5rem;
+  padding: 1.3rem 1.3rem;
   text-align: left;
   background: none;
   border: none;
@@ -327,7 +356,7 @@ body.dark .job-item {
 }
 
 .job-title-container {
-  font-size: 1.1rem !important;
+  font-size: 15px !important;
   font-weight: 500;
   color: var(--dark-text);
   flex: 1;
@@ -340,7 +369,7 @@ body.dark .job-item {
 
 .job-content {
   display: none;
-  padding: 1rem 1.5rem;
+  padding: 0.2rem;
   background-color: #f9fafb;
   border-top: 1px solid #e5e7eb;
 }
@@ -352,6 +381,7 @@ body.dark .job-content {
 
 .job-content.show {
   display: block;
+  font-size: 15px !important;
 }
 
 /* Candidate cards */
@@ -719,25 +749,55 @@ body.dark .button-secondary:hover {
 }
 
 .flatpickr-calendar {
-  width: 90%;
-  /* Occupy most of the screen width */
-  max-width: 400px;
-  /* Set a maximum width to prevent it from becoming too large */
-  box-sizing: border-box;
-  /* Include padding and border in the element's total width and height */
-  margin: 10px auto;
-  /* Center the calendar */
-  font-size: 14px;
-}
-
-.flatpickr-calendar {
+  transform: scale(0.85); /* Slightly reduce size */
+  width: 310px !important; /* Adjust width */
+  font-size: 13px !important; /* Improve readability */
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-  /* Softer shadow */
   border-radius: 8px;
   overflow: hidden;
-  /* Prevents content from overflowing rounded corners */
   font-family: "Inter", sans-serif;
-  /* Inherit your main font */
+}
+
+.flatpickr-day {
+  width: 28px !important; /* Increase width */
+  height: 28px !important; /* Increase height */
+  line-height: 28px !important;
+  font-size: 12px !important;
+  margin: 2px; /* Adds space between days */
+}
+
+.flatpickr-weekdays {
+  font-size: 12px !important; /* Adjust weekday labels */
+}
+
+.flatpickr-month {
+  font-size: 13px !important; /* Adjust month label */
+}
+
+.flatpickr-time {
+  font-size: 13px !important; /* Adjust time selector font */
+}
+
+/* Month & Weekday Labels */
+.flatpickr-month {
+  font-size: 12px !important;
+}
+
+.flatpickr-weekdays {
+  font-size: 11px !important;
+}
+
+/* Optional: Make Selected Date More Noticeable */
+.flatpickr-day.selected {
+  background-color: #007bff !important; /* Change to blue */
+  color: white !important;
+  border-radius: 50%; /* Make it circular */
+}
+
+/* Optional: Reduce the time input height */
+.flatpickr-time input {
+  height: 24px !important;
+  font-size: 12px !important;
 }
 
 .schedule-meeting-btn {
@@ -822,12 +882,6 @@ body.dark .button-secondary:hover {
   100% {
     transform: rotate(360deg);
   }
-}
-
-.calendar-container .flatpickr-calendar {
-  position: absolute; /* Needed for positioning relative to the icon */
-  z-index: 900; /* Ensure it's above other elements */
-  display: none; /* Initially hidden */
 }
 
 .schedule-btn {

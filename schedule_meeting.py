@@ -81,7 +81,14 @@ def create_open_google_meet():
 
 
 def handle_schedule(user_id, job_id,candidate_id, candidate_name, candidate_email, recruiter_email, datetime_str, user_timezone_str):
-
+    print("user_id", user_id)
+    print("job_id", job_id)
+    print("candidate_id", candidate_id)
+    print("candidate_name", candidate_name)
+    print("candidate_email", candidate_email)
+    print("recruiter_email", recruiter_email)
+    print("datetime_str", datetime_str)
+    print("user_timezone_str", user_timezone_str)
     try:
     
         user_timezone = pytz.timezone(user_timezone_str)
@@ -114,15 +121,7 @@ def handle_schedule(user_id, job_id,candidate_id, candidate_name, candidate_emai
         subject_recruiter = f"Interview Scheduled with {candidate_name}"
         body_recruiter = f"""Dear Recruiter,\n\nAn interview has been scheduled with candidate {candidate_name} for {formatted_local_datetime}.\n\nYou can join the meeting using the following Google Meet link:\n{google_meet_link}\n\nPlease be prepared for the interview.\n\nBest regards,\nYour Recruitment Team"""
 
-        print("Step 3: Sending emails...")
-        email_sent_to_candidate = send_mail(candidate_email, subject_candidate, body_candidate)
-        email_sent_to_recruiter = send_mail(recruiter_email, subject_recruiter, body_recruiter)
-
-        print(f"Email sent status - Candidate: {email_sent_to_candidate}, Recruiter: {email_sent_to_recruiter}")
-
-        if not email_sent_to_candidate or not email_sent_to_recruiter:
-            print("Error: Failed to send emails.")
-            return jsonify({"success": False, "error": "Failed to send emails"}), 500
+       
 
         print("Step 4: Updating database...")
         update_result = selected_collection.update_one(
@@ -135,6 +134,7 @@ def handle_schedule(user_id, job_id,candidate_id, candidate_name, candidate_emai
                 "$set": {
                     "selected_candidates.$.interview_date": utc_time.isoformat(),  # Store in UTC
                     "selected_candidates.$.status": "Scheduled",  # Set interview status
+                    "selected_candidates.$.selection_status": "Interview Scheduled",
                     "selected_candidates.$.location": google_meet_link  # Store Google Meet link
                 }
             }
@@ -146,7 +146,17 @@ def handle_schedule(user_id, job_id,candidate_id, candidate_name, candidate_emai
             print("Error: Failed to update interview date in the database.")
             return jsonify({"success": False, "error": "Failed to update interview date"}), 500
 
-        print("Interview scheduled successfully!")
+        
+        print("Step 3: Sending emails...")
+        email_sent_to_candidate = send_mail(candidate_email, subject_candidate, body_candidate)
+        email_sent_to_recruiter = send_mail(recruiter_email, subject_recruiter, body_recruiter)
+
+        print(f"Email sent status - Candidate: {email_sent_to_candidate}, Recruiter: {email_sent_to_recruiter}")
+
+        if not email_sent_to_candidate or not email_sent_to_recruiter:
+            print("Error: Failed to send emails.")
+            return jsonify({"success": False, "error": " Failed to send emails"}), 500
+        
         return jsonify({"success": True, "meet_link": google_meet_link, "local_datetime": formatted_local_datetime})
 
     except Exception as e:
@@ -236,7 +246,8 @@ def handle_cancel(user_id, job_id, candidate_id, candidate_name, candidate_email
             },
             {
                 "$set": {
-                    "selected_candidates.$.status": "Canceled"
+                    "selected_candidates.$.status": "Canceled",
+                    "interview_date": None
                 },
                 "$unset": {
                     "selected_candidates.$.location": ""  # Removes 'location' field

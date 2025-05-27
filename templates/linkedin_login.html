@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LinkedIn Login</title>
+    <style>
+        :root {
+            --primary-color: #0a66c2;
+            --primary-color-hover: #084e96;
+            --text-color: #333;
+            --text-color-secondary: #666;
+            --bg-color: #f5f5f5;
+            --card-bg: #fff;
+            --error-color: #d11124;
+            --input-border: #dcdcdc;
+            --input-focus: #0a66c2;
+            --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+
+        /* Dark mode variables */
+        .dark-mode {
+            --text-color: #e4e4e4;
+            --text-color-secondary: #aaa;
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --input-border: #444;
+            --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            transition: var(--transition);
+        }
+
+        .container {
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: var(--card-shadow);
+            padding: 32px;
+            width: 100%;
+            transition: var(--transition);
+        }
+
+        .logo {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 24px;
+        }
+
+        .logo svg {
+            height: 40px;
+            fill: var(--primary-color);
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 24px;
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--text-color);
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--input-border);
+            border-radius: 4px;
+            font-size: 16px;
+            color: var(--text-color);
+            background-color: var(--card-bg);
+            transition: var(--transition);
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--input-focus);
+            box-shadow: 0 0 0 2px rgba(10, 102, 194, 0.2);
+        }
+
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 12px 24px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 24px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            text-align: center;
+            margin-top: 16px;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-color-hover);
+        }
+
+        .linkedin-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .linkedin-btn svg {
+            width: 20px;
+            height: 20px;
+            fill: white;
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            margin: 24px 0;
+            color: var(--text-color-secondary);
+        }
+
+        .divider::before,
+        .divider::after {
+            content: "";
+            flex: 1;
+            border-bottom: 1px solid var(--input-border);
+        }
+
+        .divider span {
+            padding: 0 10px;
+            font-size: 14px;
+        }
+
+        .error-message {
+            color: var(--error-color);
+            font-size: 14px;
+            margin-top: 4px;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        .theme-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text-color);
+            font-size: 24px;
+        }
+
+        /* Responsive styles */
+        @media (max-width: 480px) {
+            .card {
+                padding: 24px 16px;
+            }
+
+            h1 {
+                font-size: 20px;
+            }
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .card {
+            animation: fadeIn 0.3s ease-out;
+        }
+    </style>
+</head>
+
+<body>
+
+
+    <div class="container">
+        <div class="card">
+            <div class="logo">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" data-supported-dps="24x24"
+                    fill="currentColor" width="24" height="24" focusable="false">
+                    <path
+                        d="M20.5 2h-17A1.5 1.5 0 002 3.5v17A1.5 1.5 0 003.5 22h17a1.5 1.5 0 001.5-1.5v-17A1.5 1.5 0 0020.5 2zM8 19H5v-9h3zM6.5 8.25A1.75 1.75 0 118.3 6.5a1.78 1.78 0 01-1.8 1.75zM19 19h-3v-4.74c0-1.42-.6-1.93-1.38-1.93A1.74 1.74 0 0013 14.19a.66.66 0 000 .14V19h-3v-9h2.9v1.3a3.11 3.11 0 012.7-1.4c1.55 0 3.36.86 3.36 3.66z">
+                    </path>
+                </svg>
+            </div>
+
+            <h1>Sign in to LinkedIn</h1>
+
+
+
+            <button class="btn linkedin-btn" id="linkedinBtn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
+                    <path
+                        d="M20.5 2h-17A1.5 1.5 0 002 3.5v17A1.5 1.5 0 003.5 22h17a1.5 1.5 0 001.5-1.5v-17A1.5 1.5 0 0020.5 2zM8 19H5v-9h3zM6.5 8.25A1.75 1.75 0 118.3 6.5a1.78 1.78 0 01-1.8 1.75zM19 19h-3v-4.74c0-1.42-.6-1.93-1.38-1.93A1.74 1.74 0 0013 14.19a.66.66 0 000 .14V19h-3v-9h2.9v1.3a3.11 3.11 0 012.7-1.4c1.55 0 3.36.86 3.36 3.66z">
+                    </path>
+                </svg>
+                Sign in with LinkedIn
+            </button>
+        </div>
+    </div>
+
+    <script>
+
+        // Form validation
+
+        const linkedinBtn = document.getElementById('linkedinBtn');
+
+
+
+
+
+        linkedinBtn.addEventListener('click', () => {
+            window.location.href = '/login-linkedin';
+        });
+    </script>
+</body>
+
+</html>

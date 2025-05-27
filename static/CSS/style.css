@@ -1,6 +1,6 @@
 /* General Styles */
 body {
-  font-family: "Roboto", sans-serif;
+  font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   background: #f5f5f5;
   color: #333;
   margin: 0;
@@ -48,7 +48,7 @@ body {
 
 .timer-container {
   position: absolute;
-  left: 50%;
+  left: 49%;
   transform: translateX(-50%);
   background-color: #edf2ff;
   border-radius: 22px;
@@ -320,7 +320,7 @@ input[type="file"] {
   border-radius: 5px;
   /* Rounded corners */
   font-weight: 500;
-  /* Bold text */
+  font-size: 17px;
 }
 
 .trial-expired {
@@ -745,6 +745,37 @@ input[type="file"] {
   cursor: pointer;
   color: #333333 !important;
   background: #dddddd !important;
+}
+
+.upgrade-plann-btn {
+  background: linear-gradient(
+    to bottom,
+    rgba(245, 68, 37, 1) 0%,
+    rgba(200, 50, 20, 1) 100%
+  );
+  color: #fff;
+  border: none;
+  border-radius: 50px;
+  padding: 10px 18px;
+  font-size: 14px;
+  font-weight: bold !important;
+  cursor: pointer;
+  text-decoration: none;
+  margin-left: 5px;
+  display: inline-block;
+  text-align: center;
+  transition: all 0.2sease-in-out;
+  position: relative;
+}
+
+.upgrade-plann-btn:hover {
+  background: linear-gradient(
+    to bottom,
+    rgba(223, 25, 11, 1) 0%,
+    rgba(180, 40, 15, 1) 100%
+  );
+  transform: translateY(2px); /* Slight push-down effect */
+  color: #fff;
 }
 
 /* Notification icon Popup */

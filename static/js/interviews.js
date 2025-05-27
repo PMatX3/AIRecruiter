@@ -462,6 +462,7 @@ function openRescheduleModal(
   candidateEmail
 ) {
   const existingCalendarPopup = document.querySelector(".flatpickr-calendar");
+
   if (existingCalendarPopup) {
     existingCalendarPopup.remove();
   }
@@ -490,23 +491,6 @@ function openRescheduleModal(
     minDate: "today",
     dateFormat: "Y-m-d H:i",
     disableMobile: "true",
-    onOpen: function (selectedDates, dateStr, instance) {
-      const calendarPopup = document.querySelector(".flatpickr-calendar");
-      if (calendarPopup) {
-        // Adjust the position of the calendar popup to ensure it stays within the viewport
-        const rect = calendarPopup.getBoundingClientRect();
-        const windowWidth = window.innerWidth;
-        const windowHeight = window.innerHeight;
-
-        if (rect.right > windowWidth) {
-          calendarPopup.style.left = windowWidth - rect.width - 10 + "px"; // 10px margin
-        }
-
-        if (rect.bottom > windowHeight) {
-          calendarPopup.style.top = windowHeight - rect.height - 10 + "px";
-        }
-      }
-    },
     onClose: function () {
       // Clean up the calendar container when closed
       if (calendarContainer) {
@@ -520,20 +504,21 @@ function openRescheduleModal(
     onChange: function (selectedDates) {
       const selectedDate = selectedDates[0];
       const now = new Date();
-
       const calendarPopup = document.querySelector(".flatpickr-calendar");
       let scheduleButton = calendarPopup.querySelector(".schedule-meeting-btn");
 
-      if (scheduleButton) {
-        if (selectedDate.getTime() < new Date().getTime()) {
-          showErrorPopup(
-            "You cannot schedule a meeting in the past. Please select a valid date and time."
-          );
+      if (selectedDate.getTime() < new Date().getTime()) {
+        showErrorPopup(
+          "You cannot schedule a meeting in the past. Please select a valid date and time."
+        );
 
+        if (scheduleButton) {
           scheduleButton.disabled = true;
           scheduleButton.style.cursor = "not-allowed";
           scheduleButton.style.opacity = "0.6";
-        } else {
+        }
+      } else {
+        if (scheduleButton) {
           scheduleButton.disabled = false;
           scheduleButton.style.cursor = "pointer";
           scheduleButton.style.opacity = 1;
@@ -541,66 +526,66 @@ function openRescheduleModal(
       }
 
       if (!scheduleButton) {
+        // Create the button and add the listener *only* if it doesn't exist
         scheduleButton = document.createElement("button");
         scheduleButton.textContent = "Schedule Meeting";
         scheduleButton.classList.add("schedule-meeting-btn");
         calendarPopup.appendChild(scheduleButton);
-      }
 
-      // // Enable the button if the selected date and time are valid
-      // scheduleButton.disabled = false;
-      // scheduleButton.classList.remove("disabled");
+        scheduleButton.addEventListener("click", async () => {
+          const selectedDate = fp.selectedDates[0];
+          const isoDateTime = selectedDate.toISOString();
+          const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
-      // Add a click event listener to the "Schedule Meeting" button
-      scheduleButton.addEventListener("click", async () => {
-        const selectedDate = fp.selectedDates[0];
-        const isoDateTime = selectedDate.toISOString();
-        const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+          showLoadingOverlay(true);
 
-        showLoadingOverlay(true);
+          try {
+            const response = await fetch("/schedule_meeting", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                action: "reschedule",
+                candidate_id: candidateId,
+                candidate_name: candidateName,
+                candidate_email: "devradhekrishna1@gmail.com",
+                recruiter_email: "yourbestrecruiterai@gmail.com",
+                datetime: isoDateTime,
+                timezone: userTimezone,
+                job_id: jobId,
+              }),
+            });
 
-        try {
-          const response = await fetch("/schedule_meeting", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              action: "reschedule",
-              candidate_id: candidateId,
-              candidate_name: candidateName,
-              candidate_email: "devradhekrishna1@gmail.com",
-              recruiter_email: "yourbestrecruiterai@gmail.com",
-              datetime: isoDateTime,
-              timezone: userTimezone,
-              job_id: jobId,
-            }),
-          });
-
-          const data = await response.json();
-
-          if (data.success) {
-            showPopup("Interview is scheduled successfully!", true); // Success message
-            const utcDateTime = luxon.DateTime.fromISO(data.scheduled_datetime);
-            const localDateTime = utcDateTime.toLocaleString(
-              luxon.DateTime.DATETIME_MED
+            const data = await response.json();
+            console.log(
+              " ==== <><><> Schedule meeting Api called <><><> ========="
             );
-            window.interviewData = await fetchAndProcessInterviews();
-            renderInterviews();
-            window.location.reload();
-          } else {
-            showPopup("Error: Failed to schedule the interview.", false); // Error message
-          }
-        } catch (error) {
-          console.error("Error scheduling interview:", error);
-        } finally {
-          // Hide the loader
-          showLoadingOverlay(false);
+            if (data.success) {
+              showPopup("Interview is scheduled successfully!", true); // Success message
 
-          // Close the calendar popup
-          if (fp) {
-            fp.close();
+              const utcDateTime = luxon.DateTime.fromISO(
+                data.scheduled_datetime
+              );
+
+              const localDateTime = utcDateTime.toLocaleString(
+                luxon.DateTime.DATETIME_MED
+              );
+              window.interviewData = await fetchAndProcessInterviews();
+              renderInterviews();
+            } else {
+              showPopup("Error: Failed to schedule the interview.", false); // Error message
+            }
+          } catch (error) {
+            console.error("Error scheduling interview:", error);
+          } finally {
+            showLoadingOverlay(false);
+
+            // Close the calendar popup
+            if (fp) {
+              fp.close();
+            }
           }
-        }
-      });
+        });
+      }
     },
   });
 
@@ -608,7 +593,6 @@ function openRescheduleModal(
   calendarContainer.appendChild(calendarPopup);
   // Open the calendar popup
   fp.open();
-
   // Prevent the event from propagating to the document
   event.stopPropagation();
 }
@@ -759,6 +743,8 @@ async function cancelInterview(id, candidateId, candidateName, candidateEmail) {
     const result = await response.json();
     if (result.success) {
       showPopup("Interview is canceled !", true);
+      window.interviewData = fetchAndProcessInterviews();
+      renderInterviews();
       // Refresh the interviews
     } else {
       showPopup(`Failed to cancel interview: ${result.error}`, false);

@@ -1,0 +1,1570 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Candidate Management System</title>
+    <script src="https://cdn.jsdelivr.net/npm/luxon@2.x/build/global/luxon.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.12.0/cdn.min.js" defer></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        [x-cloak] {
+            display: none !important;
+        }
+
+        .calendar-container .flatpickr-calendar {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            border-radius: 0.5rem;
+        }
+
+        .schedule-meeting-btn {
+            background-color: #4F46E5;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            margin: 8px;
+            width: calc(100% - 16px);
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .schedule-meeting-btn:hover {
+            background-color: #4338CA;
+        }
+
+        .score-badge {
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.25rem 0.5rem;
+            border-radius: 9999px;
+        }
+
+        .modern-loader {
+            width: 48px;
+            height: 48px;
+            border: 5px solid #FFF;
+            border-bottom-color: #4F46E5;
+            border-radius: 50%;
+            animation: rotation 1s linear infinite;
+        }
+
+        @keyframes rotation {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        #loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+
+        #loading-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .notification {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 50;
+            transform: translateX(100%);
+            animation: slide-in 0.3s forwards;
+        }
+
+        @keyframes slide-in {
+            to {
+                transform: translateX(0);
+            }
+        }
+
+        /* Additional styles for the candidate management system */
+        .job-item {
+            margin-bottom: 1rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .job-header {
+            width: 100%;
+            padding: 1rem;
+            background-color: #f9fafb;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .job-header:hover {
+            background-color: #f3f4f6;
+        }
+
+        .job-content {
+            display: none;
+            padding: 1rem;
+        }
+
+        .job-content.show {
+            display: block;
+        }
+
+        .candidate-accordion {
+            margin-bottom: 1rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+        }
+
+        .accordion-header {
+            padding: 1rem;
+            background-color: #f9fafb;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .accordion-content {
+            display: none;
+            padding: 1rem;
+            background-color: white;
+        }
+
+        .accordion-content.active {
+            display: block;
+        }
+
+        .accordion-content.edit-mode {
+            display: block;
+        }
+
+        .feedback-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .feedback-section {
+            padding: 0.5rem;
+        }
+
+        .feedback-label {
+            font-weight: 500;
+            color: #6b7280;
+            margin-bottom: 0.25rem;
+        }
+
+        .feedback-value {
+            color: #111827;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-edit {
+            background-color: #f3f4f6;
+            color: #374151;
+            border: 1px solid #d1d5db;
+        }
+
+        .btn-edit:hover {
+            background-color: #e5e7eb;
+        }
+
+        .btn-save {
+            background-color: #4F46E5;
+            color: white;
+            border: none;
+        }
+
+        .btn-save:hover {
+            background-color: #4338CA;
+        }
+
+        .btn-cancel {
+            background-color: #f3f4f6;
+            color: #374151;
+            border: 1px solid #d1d5db;
+        }
+
+        .btn-cancel:hover {
+            background-color: #e5e7eb;
+        }
+
+        .score-high {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+
+        .score-medium {
+            background-color: #fef9c3;
+            color: #854d0e;
+        }
+
+        .score-low {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+
+        .status-selected {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+
+        .status-rejected {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 text-gray-800">
+    <div x-data="candidateSystem()" x-init="initializeUI()">
+        <!-- Header and Back Button -->
+        <header class="bg-white shadow">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center">
+                <a href="/" class="flex items-center text-indigo-600 hover:text-indigo-800 transition mr-auto">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20"
+                        fill="currentColor">
+                        <path fill-rule="evenodd"
+                            d="M9.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L7.414 9H15a1 1 0 110 2H7.414l2.293 2.293a1 1 0 010 1.414z"
+                            clip-rule="evenodd" />
+                    </svg>
+                    Back to Home
+                </a>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <!-- Search & Title Section -->
+            <div class="flex flex-col md:flex-row md:items-center justify-between mb-6">
+                <h1 class="text-2xl font-bold text-gray-900 mb-4 md:mb-0">Selected Candidates</h1>
+                <div class="relative w-full md:w-64">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
+                            fill="currentColor">
+                            <path fill-rule="evenodd"
+                                d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
+                                clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <input x-model="searchTerm" @input="performSearch" type="text"
+                        class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition"
+                        placeholder="Search by job title or candidate..." />
+                </div>
+            </div>
+
+            <!-- Jobs Accordion -->
+            <div class="space-y-4" x-ref="jobsContainer" id="jobsContainer">
+                <template x-for="job in filteredJobs" :key="job.job_id">
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                        <!-- Job Header -->
+                        <div @click="toggleJobAccordion(job.job_id)"
+                            class="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition">
+                            <div class="flex items-center space-x-3">
+                                <h2 class="text-lg font-medium" x-text="job.job_title"></h2>
+                                <span
+                                    class="bg-indigo-100 text-indigo-800 text-xs font-medium px-2.5 py-0.5 rounded-full"
+                                    x-text="`${job.selected_candidates.length} candidates`"></span>
+                            </div>
+                            <div class="flex items-center">
+                                <svg :class="{'transform rotate-180': job.isOpen}"
+                                    class="w-5 h-5 text-gray-500 transition-transform duration-200"
+                                    xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd"
+                                        d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                                        clip-rule="evenodd" />
+                                </svg>
+                            </div>
+                        </div>
+
+                        <!-- Candidates List -->
+                        <div x-show="job.isOpen" x-transition:enter="transition ease-out duration-200"
+                            x-transition:enter-start="opacity-0 transform -translate-y-2"
+                            x-transition:enter-end="opacity-100 transform translate-y-0"
+                            x-transition:leave="transition ease-in duration-150"
+                            x-transition:leave-start="opacity-100 transform translate-y-0"
+                            x-transition:leave-end="opacity-0 transform -translate-y-2"
+                            class="border-t border-gray-200">
+                            <template x-for="candidate in job.selected_candidates" :key="candidate.candidate_id">
+                                <div class="border-b border-gray-200 last:border-0">
+                                    <!-- Candidate Header -->
+                                    <div @click.stop="toggleCandidateAccordion(candidate)"
+                                        class="flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-gray-50 transition">
+                                        <div class="flex items-center space-x-3">
+                                            <span class="font-medium" x-text="candidate.candidate_name"></span>
+                                            <span :class="{
+                                                'bg-green-100 text-green-800': candidate.score >= 80,
+                                                'bg-yellow-100 text-yellow-800': candidate.score >= 60 && candidate.score < 80,
+                                                'bg-red-100 text-red-800': candidate.score < 60
+                                            }" class="score-badge" x-text="candidate.score || 'N/A'"></span>
+                                        </div>
+                                        <div class="flex items-center space-x-4">
+                                            <span :class="{
+                                                'bg-green-100 text-green-800': candidate.selection_status === 'Selected',
+                                                'bg-red-100 text-red-800': candidate.selection_status === 'Rejected',
+                                                'bg-yellow-100 text-yellow-800': candidate.selection_status === 'On Hold',
+                                                'bg-blue-100 text-blue-800': candidate.selection_status === 'Shortlisted' || candidate.selection_status === 'Under Review',
+                                                'bg-gray-100 text-gray-800': candidate.selection_status === 'Pending' || !candidate.selection_status
+                                            }" class="px-2.5 py-0.5 rounded-full text-xs font-medium"
+                                                x-text="candidate.selection_status || 'Pending'"></span>
+                                            <svg :class="{'transform rotate-180': candidate.isOpen}"
+                                                class="w-5 h-5 text-gray-500 transition-transform duration-200"
+                                                xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
+                                                fill="currentColor">
+                                                <path fill-rule="evenodd"
+                                                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                                                    clip-rule="evenodd" />
+                                            </svg>
+                                        </div>
+                                    </div>
+
+                                    <!-- Candidate Details -->
+                                    <div x-show="candidate.isOpen" x-transition:enter="transition ease-out duration-200"
+                                        x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+                                        x-transition:leave="transition ease-in duration-150"
+                                        x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+                                        class="p-4 bg-gray-50">
+                                        <template x-if="!candidate.isEditing">
+                                            <div>
+                                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                                    <div>
+                                                        <h4 class="text-sm font-medium text-gray-500">Interview Date
+                                                        </h4>
+                                                        <p class="mt-1"
+                                                            x-text="formatDate(candidate.interview_date) || 'Not Scheduled'">
+                                                        </p>
+                                                    </div>
+                                                    <div>
+                                                        <h4 class="text-sm font-medium text-gray-500">Interview Round
+                                                        </h4>
+                                                        <p :class="{
+                                'text-green-600': candidate.next_round === 'Yes',
+                                'text-gray-600': !candidate.next_round
+                              }" class="mt-1" x-text="candidate.next_round || 'Pending Interview Round'"></p>
+                                                    </div>
+                                                </div>
+
+                                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                                                    <div>
+                                                        <h4 class="text-sm font-medium text-gray-500">Interviewer
+                                                            Message</h4>
+                                                        <p class="mt-1"
+                                                            x-text="candidate.interviwer_feedback || 'Not Available'">
+                                                        </p>
+                                                    </div>
+                                                    <div>
+                                                        <h4 class="text-sm font-medium text-gray-500">Selection Status
+                                                        </h4>
+                                                        <p class="mt-1"
+                                                            x-text="candidate.selection_status || 'Pending'"></p>
+                                                    </div>
+                                                </div>
+
+                                                <div class="flex flex-wrap gap-3">
+                                                    <button onclick="editCandidate(candidate)"
+                                                        class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition">
+                                                        <svg class="mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg"
+                                                            fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2"
+                                                                d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                                        </svg>
+                                                        Edit Feedback
+                                                    </button>
+
+                                                    <template x-if="!candidate.interview_date">
+                                                        <button
+                                                            @click.stop="showDatePopup($event, candidate.candidate_id, candidate.candidate_name, candidate.candidate_email, job.job_id)"
+                                                            class="inline-flex items-center px-3 py-2 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition">
+                                                            <svg class="mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg"
+                                                                fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                                    stroke-width="2"
+                                                                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                            </svg>
+                                                            Schedule Interview
+                                                        </button>
+                                                    </template>
+
+                                                    <template
+                                                        x-if="candidate.interview_date && new Date(candidate.interview_date) < new Date()">
+                                                        <button
+                                                            @click.stop="showDatePopup($event, candidate.candidate_id, candidate.candidate_name, candidate.candidate_email, job.job_id)"
+                                                            class="inline-flex items-center px-3 py-2 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition">
+                                                            <svg class="mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg"
+                                                                fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                                    stroke-width="2"
+                                                                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                            </svg>
+                                                            Reschedule
+                                                        </button>
+                                                    </template>
+                                                </div>
+                                            </div>
+                                        </template>
+
+                                        <!-- Edit Mode -->
+                                        <template x-if="candidate.isEditing">
+                                            <div class="bg-white p-4 rounded-md shadow-sm">
+                                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                                    <div>
+                                                        <label
+                                                            class="block text-sm font-medium text-gray-700 mb-1">Selection
+                                                            Status</label>
+                                                        <select x-model="candidate.editData.selection_status"
+                                                            class="block w-full pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                                                            <option value="Selected">Selected</option>
+                                                            <option value="Rejected">Rejected</option>
+                                                            <option value="On Hold">On Hold</option>
+                                                            <option value="Pending">Pending</option>
+                                                            <option value="Shortlisted">Shortlisted</option>
+                                                            <option value="Under Review">Under Review</option>
+                                                            <option value="Hired">Hired</option>
+                                                            <option value="Offer Declined">Offer Declined</option>
+                                                        </select>
+                                                    </div>
+                                                    <div>
+                                                        <label
+                                                            class="block text-sm font-medium text-gray-700 mb-1">Interview
+                                                            Round</label>
+                                                        <select x-model="candidate.editData.next_round"
+                                                            class="block w-full pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                                                            <option value="">No Round Assigned</option>
+                                                            <option value="Round 1">Round 1</option>
+                                                            <option value="Round 2">Round 2</option>
+                                                            <option value="Round 3">Round 3</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+
+                                                <div class="mb-4">
+                                                    <label
+                                                        class="block text-sm font-medium text-gray-700 mb-1">Interviewer
+                                                        Message</label>
+                                                    <textarea x-model="candidate.editData.interviwer_feedback" rows="3"
+                                                        class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border border-gray-300 rounded-md p-2"></textarea>
+                                                </div>
+
+                                                <div class="flex justify-end space-x-3">
+                                                    <button onclick="cancelEdit(candidate)"
+                                                        class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                                        Cancel
+                                                    </button>
+                                                    <button @click.stop="saveFeedback(candidate)"
+                                                        class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                                        Save Feedback
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+            <!-- Load More Button -->
+            <div class="flex justify-center mt-6">
+                <button x-show="showLoadMoreButton" @click="loadMore"
+                    class="px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    x-text="isLoading ? 'Loading...' : 'Load More'" :disabled="isLoading"></button>
+            </div>
+        </main>
+
+        <!-- Loading Overlay -->
+        <div id="loading-overlay">
+            <div class="modern-loader"></div>
+        </div>
+    </div>
+    <script>
+        function candidateSystem() {
+            return {
+                searchTerm: '',
+                filteredJobs: [],
+                jobs: [],
+                isLoading: false,
+                showLoadMoreButton: false,
+                editingCandidate: null,
+
+                initializeUI() {
+                    this.loadInitialData();
+                },
+
+                async loadInitialData() {
+                    try {
+                        const data = await fetchCandidateData();
+                        this.jobs = data.jobs.map(job => ({
+                            ...job,
+                            isOpen: false, // Ensure jobs start collapsed
+                            selected_candidates: job.selected_candidates.map(candidate => ({
+                                ...candidate,
+                                isOpen: false, // Ensure candidates start collapsed
+                                isEditing: false,
+                                editData: null
+                            }))
+                        }));
+                        this.filteredJobs = this.jobs;
+                    } catch (error) {
+                        console.error("Error loading data:", error);
+                        showErrorPopup("Failed to load candidate data");
+                    }
+                },
+
+                toggleJobAccordion(jobId) {
+                    const job = this.filteredJobs.find(j => j.job_id === jobId);
+                    if (job) {
+                        // Close all other jobs when opening one
+                        this.filteredJobs.forEach(j => {
+                            if (j.job_id !== jobId) {
+                                j.isOpen = false;
+                                // Also close all candidates within other jobs
+                                j.selected_candidates.forEach(c => {
+                                    c.isOpen = false;
+                                });
+                            }
+                        });
+                        job.isOpen = !job.isOpen;
+
+                        // Close all candidates within this job when collapsing the job
+                        if (!job.isOpen) {
+                            job.selected_candidates.forEach(c => {
+                                c.isOpen = false;
+                            });
+                        }
+                    }
+                },
+
+                toggleCandidateAccordion(candidate) {
+                    if (candidate) {
+                        // Close all other candidates in the same job
+                        const job = this.filteredJobs.find(j =>
+                            j.selected_candidates.some(c => c.candidate_id === candidate.candidate_id)
+                        );
+                        if (job) {
+                            job.selected_candidates.forEach(c => {
+                                if (c.candidate_id !== candidate.candidate_id) {
+                                    c.isOpen = false;
+                                }
+                            });
+                        }
+                        candidate.isOpen = !candidate.isOpen;
+                    }
+                },
+
+                // Add a method to check if a candidate is open
+                isCandidateOpen(candidate) {
+                    return candidate && candidate.isOpen;
+                },
+
+                // Add a method to check if a job is open
+                isJobOpen(job) {
+                    return job && job.isOpen;
+                },
+
+                formatDate(dateString) {
+                    if (!dateString) return "Not Scheduled";
+                    const date = new Date(dateString);
+                    return date.toLocaleDateString("en-US", {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                    });
+                },
+
+
+
+                async saveFeedback(candidate) {
+                    try {
+                        const response = await fetch(`/save_feedback/${candidate.candidate_id}`, {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                            },
+                            body: JSON.stringify({
+                                nextRound: candidate.editData.next_round,
+                                selectionStatus: candidate.editData.selection_status,
+                                feedback: candidate.editData.interviwer_feedback,
+                            }),
+                        });
+
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+
+                        const data = await response.json();
+
+                        // Update candidate data
+                        candidate.selection_status = candidate.editData.selection_status;
+                        candidate.next_round = candidate.editData.next_round;
+                        candidate.interviwer_feedback = candidate.editData.interviwer_feedback;
+                        candidate.isEditing = false;
+                        candidate.editData = null;
+
+                        showSuccessPopup("Feedback saved successfully!");
+                    } catch (error) {
+                        console.error("Error saving feedback:", error);
+                        showErrorPopup("Failed to save feedback");
+                    }
+                },
+
+
+                performSearch() {
+                    const searchTerm = this.searchTerm.toLowerCase();
+                    if (!searchTerm) {
+                        this.filteredJobs = this.jobs;
+                        return;
+                    }
+
+                    this.filteredJobs = this.jobs.filter(job => {
+                        const jobTitleMatch = job.job_title.toLowerCase().includes(searchTerm);
+                        const candidateMatch = job.selected_candidates.some(candidate =>
+                            candidate.candidate_name.toLowerCase().includes(searchTerm)
+                        );
+                        return jobTitleMatch || candidateMatch;
+                    });
+                },
+
+                loadMore() {
+                    this.isLoading = true;
+                    // Implementation for loading more data
+                    setTimeout(() => {
+                        this.isLoading = false;
+                        this.showLoadMoreButton = false;
+                    }, 1000);
+                }
+            };
+        }
+
+
+        function editCandidate(candidate) {
+            candidate.isEditing = true;
+            candidate.editData = {
+                selection_status: candidate.selection_status || '',
+                next_round: candidate.next_round || '',
+                interviwer_feedback: candidate.interviwer_feedback || ''
+            };
+        }
+
+        function cancelEdit(candidate) {
+            candidate.isEditing = false;
+            candidate.editData = null;
+        }
+
+        // Fetch data once and cache it
+        let cachedCandidateData = null;
+
+        async function fetchCandidateData() {
+            if (cachedCandidateData) return cachedCandidateData;
+
+            try {
+                const response = await fetch("/selected_candidates");
+                const data = await response.json();
+
+                // Ensure all panels are collapsed by default
+                data.jobs = data.jobs.map(job => ({
+                    ...job,
+                    isOpen: false,
+                    selected_candidates: job.selected_candidates.map(candidate => ({
+                        ...candidate,
+                        isOpen: false,
+                        isEditing: false,
+                        editData: null
+                    }))
+                }));
+
+                cachedCandidateData = data;
+                return cachedCandidateData;
+            } catch (error) {
+                console.error("Error fetching candidate data:", error);
+                throw error;
+            }
+        }
+
+        // Preload data before DOM is ready
+        const preloadedDataPromise = fetchCandidateData();
+
+        // Create elements using DocumentFragment for better performance
+        function createJobElements(data) {
+            const fragment = document.createDocumentFragment();
+
+            if (!data.jobs || data.jobs.length === 0) {
+                const noDataMessage = document.createElement("p");
+                noDataMessage.className = "text-gray-500 text-center py-4";
+                noDataMessage.textContent = "No matching profiles available at this time.";
+                fragment.appendChild(noDataMessage);
+                return fragment;
+            }
+
+            data.jobs.forEach((job) => {
+                if (!job.selected_candidates || job.selected_candidates.length === 0) {
+                    return;
+                }
+
+                // Sort candidates by score (using stable sort)
+                job.selected_candidates.sort((a, b) => {
+                    return (
+                        b.score - a.score || a.candidate_name.localeCompare(b.candidate_name)
+                    );
+                });
+
+                const jobItem = document.createElement("div");
+                jobItem.className = "bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden mb-4";
+                jobItem.setAttribute('data-job-id', job.job_id);
+
+                // Job Header with Candidate Count
+                const jobHeader = document.createElement("div");
+                jobHeader.className = "flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition";
+                jobHeader.innerHTML = `
+      <div class="flex items-center space-x-3">
+        <h2 class="text-lg font-medium">${escapeHTML(job.job_title)}</h2>
+        <span class="bg-indigo-100 text-indigo-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
+          ${job.selected_candidates.length} candidates
+        </span>
+      </div>
+      <div class="flex items-center">
+        <svg class="w-5 h-5 text-gray-500 transition-transform duration-200" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+        </svg>
+      </div>
+    `;
+
+                jobItem.appendChild(jobHeader);
+
+                // Create candidates container but keep it hidden initially
+                const candidatesContainer = document.createElement("div");
+                candidatesContainer.className = "border-t border-gray-200";
+                candidatesContainer.style.display = "none"; // Hide by default
+
+                // Add click event to job header
+                jobHeader.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    const expanded = candidatesContainer.style.display !== "none";
+                    candidatesContainer.style.display = expanded ? "none" : "block";
+
+                    // Rotate arrow icon
+                    const arrow = this.querySelector('svg');
+                    arrow.style.transform = expanded ? "" : "rotate(180deg)";
+
+                    // If collapsing, also collapse all candidate panels
+                    if (expanded) {
+                        candidatesContainer.querySelectorAll('.candidate-content').forEach(content => {
+                            content.style.display = "none";
+                        });
+
+                        candidatesContainer.querySelectorAll('.candidate-header svg').forEach(arrow => {
+                            arrow.style.transform = "";
+                        });
+                    }
+                });
+
+                // Candidate Cards
+                job.selected_candidates.forEach((candidate) => {
+                    const candidateItem = document.createElement("div");
+                    candidateItem.className = "border-b border-gray-200 last:border-0";
+
+                    // Candidate Header
+                    const candidateHeader = document.createElement("div");
+                    candidateHeader.className = "flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-gray-50 transition candidate-header";
+                    candidateHeader.innerHTML = `
+        <div class="flex items-center space-x-3">
+          <span class="font-medium">${escapeHTML(candidate.candidate_name)}</span>
+          <span class="score-badge ${getScoreBadgeClass(candidate.score)}">
+            ${candidate.score || 'N/A'}
+          </span>
+        </div>
+        <div class="flex items-center space-x-4">
+          <span class="px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusClass(candidate.selection_status)}">
+            ${candidate.selection_status || 'Pending'}
+          </span>
+          <svg class="w-5 h-5 text-gray-500 transition-transform duration-200" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+          </svg>
+        </div>
+      `;
+
+                    candidateItem.appendChild(candidateHeader);
+
+                    // Candidate Content (details)
+                    const candidateContent = document.createElement("div");
+                    candidateContent.className = "p-4 bg-gray-50 candidate-content";
+                    candidateContent.style.display = "none"; // Hide by default
+                    candidateContent.innerHTML = createCandidateDetails(candidate, job);
+
+                    candidateItem.appendChild(candidateContent);
+
+                    // Add click event to candidate header
+                    candidateHeader.addEventListener('click', function (e) {
+                        e.stopPropagation();
+                        const expanded = candidateContent.style.display !== "none";
+                        candidateContent.style.display = expanded ? "none" : "block";
+
+                        // Rotate arrow icon
+                        const arrow = this.querySelector('svg');
+                        arrow.style.transform = expanded ? "" : "rotate(180deg)";
+                    });
+
+                    candidatesContainer.appendChild(candidateItem);
+                });
+
+                jobItem.appendChild(candidatesContainer);
+                fragment.appendChild(jobItem);
+            });
+
+            return fragment;
+        }
+
+        function getScoreBadgeClass(score) {
+            if (score >= 80) return "bg-green-100 text-green-800";
+            if (score >= 60) return "bg-yellow-100 text-yellow-800";
+            return "bg-red-100 text-red-800";
+        }
+
+        function getStatusClass(status) {
+            switch (status) {
+                case 'Selected': return "bg-green-100 text-green-800";
+                case 'Rejected': return "bg-red-100 text-red-800";
+                case 'On Hold': return "bg-yellow-100 text-yellow-800";
+                case 'Shortlisted':
+                case 'Under Review': return "bg-blue-100 text-blue-800";
+                default: return "bg-gray-100 text-gray-800";
+            }
+        }
+
+        function createCandidateDetails(candidate, job) {
+            const isPastInterview = candidate.interview_date && new Date(candidate.interview_date) < new Date();
+
+            return `
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+      <div>
+        <h4 class="text-sm font-medium text-gray-500">Interview Date</h4>
+        <p class="mt-1">${formatDate(candidate.interview_date)}</p>
+      </div>
+      <div>
+        <h4 class="text-sm font-medium text-gray-500">Interview Round</h4>
+        <p class="mt-1 ${candidate.next_round === 'Yes' ? 'text-green-600' : 'text-gray-600'}">
+          ${candidate.next_round || 'Pending Interview Round'}
+        </p>
+      </div>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+      <div>
+        <h4 class="text-sm font-medium text-gray-500">Interviewer Message</h4>
+        <p class="mt-1">${candidate.interviwer_feedback || 'Not Available'}</p>
+      </div>
+      <div>
+        <h4 class="text-sm font-medium text-gray-500">Selection Status</h4>
+        <p class="mt-1">${candidate.selection_status || 'Pending'}</p>
+      </div>
+    </div>
+    <div class="flex flex-wrap gap-3">
+      <button data-action="edit" data-candidate="${candidate.candidate_id}" data-job="${job.job_id}"
+        class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition">
+        <svg class="mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+        </svg>
+        Edit Feedback
+      </button>
+      ${!candidate.interview_date || isPastInterview ? `
+        <button data-action="schedule" data-candidate="${candidate.candidate_id}" data-candidate-name="${escapeHTML(candidate.candidate_name)}" data-candidate-email="${escapeHTML(candidate.candidate_email || '')}" data-job="${job.job_id}"
+          class="inline-flex items-center px-3 py-2 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition">
+          <svg class="mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          ${!candidate.interview_date ? 'Schedule Interview' : 'Reschedule'}
+        </button>
+      ` : ''}
+    </div>
+  `;
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return "Not Scheduled";
+            const date = new Date(dateString);
+            return date.toLocaleDateString("en-US", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+            });
+        }
+
+        // Utility function to prevent XSS attacks
+        function escapeHTML(str) {
+            if (typeof str !== "string") {
+                return ""; // Return an empty string if str is not a valid string
+            }
+            return str
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        // Initialize UI with event delegation for better performance
+        function initializeUI() {
+            const jobsContainer = document.getElementById("jobsContainer");
+
+            if (!jobsContainer) return;
+
+            // Event delegation for buttons within candidate details
+            jobsContainer.addEventListener("click", (event) => {
+                const button = event.target.closest('button[data-action]');
+                if (!button) return;
+
+                event.stopPropagation();
+
+                const action = button.getAttribute('data-action');
+                const candidateId = button.getAttribute('data-candidate');
+                const jobId = button.getAttribute('data-job');
+
+                if (action === 'edit') {
+                    // Logic to edit candidate
+                    console.log(`Edit candidate ${candidateId} for job ${jobId}`);
+                    // Implement edit logic
+                } else if (action === 'schedule') {
+                    // Logic to schedule interview
+                    const candidateName = button.getAttribute('data-candidate-name');
+                    const candidateEmail = button.getAttribute('data-candidate-email');
+                    showDatePopup(event, candidateId, candidateName, candidateEmail, jobId);
+                }
+            });
+
+            // Search functionality with debounce
+            const searchInput = document.querySelector('input[x-model="searchTerm"]');
+            let searchDebounceTimer;
+
+            if (searchInput) {
+                searchInput.addEventListener("input", function () {
+                    clearTimeout(searchDebounceTimer);
+                    searchDebounceTimer = setTimeout(() => {
+                        Alpine.store('candidateSystem').searchTerm = this.value;
+                        Alpine.store('candidateSystem').performSearch();
+                    }, 300);
+                });
+            }
+        }
+
+        function showDatePopup(event, candidate_id, candidateName, candidateEmail, jobId) {
+            event.preventDefault();
+            event.stopPropagation();
+
+            // Remove any existing calendar popup
+            const existingCalendarPopup = document.querySelector(".calendar-container");
+            if (existingCalendarPopup) {
+                existingCalendarPopup.remove();
+            }
+
+            // Create a container for the calendar
+            const calendarContainer = document.createElement("div");
+            calendarContainer.id = "calendarContainer";
+            calendarContainer.classList.add("calendar-container");
+            calendarContainer.style.position = "fixed";
+            calendarContainer.style.zIndex = "1000";
+
+            // Create background overlay
+            const overlay = document.createElement("div");
+            overlay.classList.add("calendar-overlay");
+            overlay.style.position = "fixed";
+            overlay.style.top = "0";
+            overlay.style.left = "0";
+            overlay.style.width = "100%";
+            overlay.style.height = "100%";
+            overlay.style.backgroundColor = "rgba(0, 0, 0, 0.5)";
+            overlay.style.zIndex = "999";
+
+            // Close calendar when clicking outside
+            overlay.addEventListener("click", () => {
+                closeCalendar();
+            });
+
+            document.body.appendChild(overlay);
+
+            // Create a wrapper for the calendar to apply styles
+            const calendarWrapper = document.createElement("div");
+            calendarWrapper.classList.add("calendar-wrapper");
+            calendarWrapper.style.backgroundColor = "white";
+            calendarWrapper.style.borderRadius = "8px";
+            calendarWrapper.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.15)";
+            calendarWrapper.style.padding = "16px";
+            calendarWrapper.style.maxWidth = "350px";
+            calendarWrapper.style.width = "100%";
+
+            // Header with title and close button
+            const header = document.createElement("div");
+            header.style.display = "flex";
+            header.style.justifyContent = "space-between";
+            header.style.alignItems = "center";
+            header.style.marginBottom = "16px";
+
+            const title = document.createElement("h3");
+            title.textContent = "Schedule Interview";
+            title.style.fontWeight = "600";
+            title.style.fontSize = "18px";
+            header.appendChild(title);
+
+            const closeBtn = document.createElement("button");
+            closeBtn.innerHTML = "&times;";
+            closeBtn.style.background = "none";
+            closeBtn.style.border = "none";
+            closeBtn.style.fontSize = "24px";
+            closeBtn.style.cursor = "pointer";
+            closeBtn.addEventListener("click", closeCalendar);
+            header.appendChild(closeBtn);
+
+            calendarWrapper.appendChild(header);
+
+            // Candidate info
+            const candidateInfo = document.createElement("div");
+            candidateInfo.style.marginBottom = "16px";
+
+            const candidateNameEl = document.createElement("p");
+            candidateNameEl.innerHTML = `<strong>Candidate:</strong> ${escapeHTML(candidateName)}`;
+            candidateInfo.appendChild(candidateNameEl);
+
+            calendarWrapper.appendChild(candidateInfo);
+
+            // Create an input element for flatpickr
+            const flatpickrInput = document.createElement("input");
+            flatpickrInput.type = "text";
+            flatpickrInput.classList.add("date-time-input");
+            flatpickrInput.placeholder = "Select date and time";
+            flatpickrInput.style.width = "100%";
+            flatpickrInput.style.padding = "8px 12px";
+            flatpickrInput.style.border = "1px solid #e5e7eb";
+            flatpickrInput.style.borderRadius = "6px";
+            flatpickrInput.style.marginBottom = "16px";
+
+            calendarWrapper.appendChild(flatpickrInput);
+
+            // Add schedule button
+            const scheduleButton = document.createElement("button");
+            scheduleButton.textContent = "Schedule Meeting";
+            scheduleButton.classList.add("schedule-meeting-btn");
+            scheduleButton.style.width = "100%";
+            scheduleButton.style.opacity = "0.6";
+            scheduleButton.disabled = true;
+            calendarWrapper.appendChild(scheduleButton);
+
+            // Add the calendar wrapper to the container
+            calendarContainer.appendChild(calendarWrapper);
+
+            // Center the calendar
+            calendarContainer.style.top = "50%";
+            calendarContainer.style.left = "50%";
+            calendarContainer.style.transform = "translate(-50%, -50%)";
+
+            // Append the calendar container to the body
+            document.body.appendChild(calendarContainer);
+
+            function closeCalendar() {
+                if (fp) {
+                    fp.destroy();
+                    fp = null;
+                }
+                if (calendarContainer) {
+                    calendarContainer.remove();
+                }
+                if (overlay) {
+                    overlay.remove();
+                }
+            }
+
+            let fp;
+            fp = flatpickr(flatpickrInput, {
+                enableTime: true,
+                minDate: "today",
+                dateFormat: "Y-m-d H:i",
+                disableMobile: false,
+                static: true,
+                onChange: function (selectedDates) {
+                    const selectedDate = selectedDates[0];
+                    const now = new Date();
+
+                    if (selectedDate && selectedDate.getTime() < now.getTime()) {
+                        showErrorPopup("You cannot schedule a meeting in the past. Please select a valid date and time.");
+                        scheduleButton.disabled = true;
+                        scheduleButton.style.cursor = "not-allowed";
+                        scheduleButton.style.opacity = "0.6";
+                    } else if (selectedDate) {
+                        scheduleButton.disabled = false;
+                        scheduleButton.style.cursor = "pointer";
+                        scheduleButton.style.opacity = "1";
+                    }
+                }
+            });
+
+            // Set min time based on current time
+            function setMinTime() {
+                const now = new Date();
+                const currentDate = flatpickr.formatDate(now, "Y-m-d");
+                const selectedDate = fp.selectedDates[0]
+                    ? flatpickr.formatDate(fp.selectedDates[0], "Y-m-d")
+                    : null;
+
+                if (selectedDate === currentDate) {
+                    const hours = now.getHours().toString().padStart(2, "0");
+                    const minutes = now.getMinutes().toString().padStart(2, "0");
+                    fp.set("minTime", `${hours}:${minutes}`);
+                } else {
+                    fp.set("minTime", null);
+                }
+            }
+
+            fp.config.onChange.push(function () {
+                setMinTime();
+            });
+
+            // Schedule meeting handler
+            scheduleButton.addEventListener("click", async () => {
+                if (!fp.selectedDates[0]) {
+                    showErrorPopup("Please select a date and time first");
+                    return;
+                }
+
+                const selectedDate = fp.selectedDates[0];
+                const isoDateTime = selectedDate.toISOString();
+                const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+                showLoadingOverlay(true);
+
+                try {
+                    const response = await fetch("schedule_meeting", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            action: "schedule",
+                            candidate_id,
+                            candidate_name: candidateName,
+                            candidate_email: candidateEmail || "candidate@example.com",
+                            recruiter_email: "yourbestrecruiterai@gmail.com",
+                            datetime: isoDateTime,
+                            timezone: userTimezone,
+                            job_id: jobId,
+                        }),
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        showSuccessPopup("Interview is scheduled successfully!");
+                        // Update UI to reflect the scheduled interview
+                        updateScheduledInterviewUI(candidate_id, data.scheduled_datetime);
+                        closeCalendar();
+                    } else {
+                        const errorMessage = data.message || "Error: Failed to schedule the interview.";
+                        showErrorPopup(errorMessage);
+                    }
+                } catch (error) {
+                    console.error("Error scheduling interview:", error);
+                    showErrorPopup("Failed to schedule interview: " + error.message);
+                } finally {
+                    showLoadingOverlay(false);
+                }
+            });
+
+            // Open the calendar
+            fp.open();
+        }
+
+        function updateScheduledInterviewUI(candidateId, scheduledDateTime) {
+            // Format the date for display
+            const date = new Date(scheduledDateTime);
+            const formattedDate = date.toLocaleDateString("en-US", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+                hour: "2-digit",
+                minute: "2-digit"
+            });
+
+            // Find the candidate element
+            const candidateEl = document.querySelector(`[data-candidate-id="${candidateId}"]`);
+            if (!candidateEl) return;
+
+            // Update the interview date display
+            const dateEl = candidateEl.querySelector('.interview-date');
+            if (dateEl) {
+                dateEl.textContent = formattedDate;
+            }
+
+            // Update the button text from "Schedule Interview" to "Reschedule"
+            const scheduleBtn = candidateEl.querySelector('button[data-action="schedule"]');
+            if (scheduleBtn) {
+                scheduleBtn.innerHTML = `
+      <svg class="mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+      </svg>
+      Reschedule
+    `;
+            }
+        }
+
+        // Utility Functions
+        function showLoadingOverlay(show) {
+            const overlay = document.getElementById("loading-overlay");
+            if (!overlay) return;
+
+            if (show) {
+                overlay.classList.add("active");
+            } else {
+                overlay.classList.remove("active");
+            }
+        }
+
+        function showSuccessPopup(message) {
+            showNotification(message, true);
+        }
+
+        function showErrorPopup(message) {
+            showNotification(message, false);
+        }
+
+        function showNotification(message, isSuccess) {
+            // Remove any existing notifications
+            const existingNotifications = document.querySelectorAll('.notification');
+            existingNotifications.forEach(notification => {
+                notification.remove();
+            });
+
+            // Create new notification
+            const notification = document.createElement('div');
+            notification.className = `notification fixed top-4 right-4 z-50 p-4 rounded-md shadow-md max-w-md ${isSuccess ? 'bg-green-100 text-green-800 border-l-4 border-green-500' :
+                'bg-red-100 text-red-800 border-l-4 border-red-500'
+                }`;
+
+            notification.innerHTML = `
+    <div class="flex items-center">
+      <div class="flex-shrink-0">
+        ${isSuccess ?
+                    '<svg class="h-5 w-5 text-green-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>' :
+                    '<svg class="h-5 w-5 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" /></svg>'
+                }
+      </div>
+      <div class="ml-3">
+        <p class="text-sm">${escapeHTML(message)}</p>
+      </div>
+      <div class="ml-auto pl-3">
+        <div class="-mx-1.5 -my-1.5">
+          <button type="button" class="close-notification inline-flex rounded-md p-1.5 ${isSuccess ? 'text-green-500 hover:bg-green-200' : 'text-red-500 hover:bg-red-200'
+                } focus:outline-none">
+            <span class="sr-only">Dismiss</span>
+            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+
+            document.body.appendChild(notification);
+
+            // Add close handler
+            const closeButton = notification.querySelector('.close-notification');
+            if (closeButton) {
+                closeButton.addEventListener('click', () => {
+                    notification.remove();
+                });
+            }
+
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.remove();
+                }
+            }, 5000);
+        }
+
+        function getStatusClass(status) {
+            switch (status) {
+                case 'Selected': return "bg-green-100 text-green-800";
+                case 'Rejected': return "bg-red-100 text-red-800";
+                case 'On Hold': return "bg-yellow-100 text-yellow-800";
+                case 'Shortlisted':
+                case 'Under Review': return "bg-blue-100 text-blue-800";
+                default: return "bg-gray-100 text-gray-800";
+            }
+        }
+
+        function escapeHTML(str) {
+            if (!str || typeof str !== "string") {
+                return "";
+            }
+            return str
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        // Responsive calendar adjustments
+        function adjustCalendarForMobile() {
+            const isSmallScreen = window.innerWidth < 768;
+
+            // Handle Flatpickr calendar adjustments
+            const calendarContainers = document.querySelectorAll('.calendar-container');
+            calendarContainers.forEach(container => {
+                if (isSmallScreen) {
+                    container.style.width = "95%";
+                    container.style.maxWidth = "350px";
+                    container.style.left = "50%";
+                    container.style.top = "50%";
+                    container.style.transform = "translate(-50%, -50%)";
+
+                    // Make sure calendar wrapper is also responsive
+                    const wrapper = container.querySelector('.calendar-wrapper');
+                    if (wrapper) {
+                        wrapper.style.width = "100%";
+                    }
+                }
+            });
+
+            // Handle flatpickr calendar
+            const flatpickrCalendars = document.querySelectorAll('.flatpickr-calendar');
+            flatpickrCalendars.forEach(calendar => {
+                if (isSmallScreen) {
+                    calendar.style.width = "100%";
+                    calendar.style.maxWidth = "320px";
+                }
+            });
+        }
+
+        // Media query listener for responsive design
+        window.addEventListener('resize', () => {
+            adjustCalendarForMobile();
+        });
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', () => {
+            // Attach event listeners for any static elements
+            const jobsContainer = document.getElementById('jobsContainer');
+            if (jobsContainer) {
+                // Use event delegation for dynamically created elements
+                jobsContainer.addEventListener('click', (e) => {
+                    // Handle edit button clicks
+                    if (e.target.closest('button[data-action="edit"]')) {
+                        const candidateId = e.target.closest('button').getAttribute('data-candidate');
+                        const jobId = e.target.closest('button').getAttribute('data-job');
+                        // Find candidate in Alpine.js store or DOM
+                        const candidate = findCandidateById(candidateId);
+                        if (candidate) {
+                            editCandidate(candidate);
+                        }
+                    }
+
+                    // Handle schedule button clicks
+                    if (e.target.closest('button[data-action="schedule"]')) {
+                        const btn = e.target.closest('button');
+                        const candidateId = btn.getAttribute('data-candidate');
+                        const candidateName = btn.getAttribute('data-candidate-name');
+                        const candidateEmail = btn.getAttribute('data-candidate-email');
+                        const jobId = btn.getAttribute('data-job');
+
+                        showDatePopup(e, candidateId, candidateName, candidateEmail, jobId);
+                    }
+                });
+            }
+
+            // Make sure initial calendar is responsive
+            adjustCalendarForMobile();
+        });
+
+        // Helper to find candidate object by ID (either in Alpine.js store or manually)
+        function findCandidateById(candidateId) {
+            // Try Alpine.js store first if available
+            if (window.Alpine && Alpine.store('candidateSystem')) {
+                for (const job of Alpine.store('candidateSystem').jobs) {
+                    const candidate = job.selected_candidates.find(c => c.candidate_id === candidateId);
+                    if (candidate) return candidate;
+                }
+            }
+
+            // Fallback: Create a temporary object with the necessary properties
+            // This is used when Alpine.js is not available or candidate not found
+            const candidateEl = document.querySelector(`[data-candidate-id="${candidateId}"]`);
+            if (candidateEl) {
+                return {
+                    candidate_id: candidateId,
+                    candidate_name: candidateEl.getAttribute('data-candidate-name') || '',
+                    selection_status: candidateEl.querySelector('.status-badge')?.textContent || '',
+                    next_round: candidateEl.querySelector('.round-value')?.textContent || '',
+                    interviwer_feedback: candidateEl.querySelector('.feedback-value')?.textContent || '',
+                    interview_date: candidateEl.querySelector('.interview-date')?.textContent || '',
+                    isEditing: false,
+                    editData: null
+                };
+            }
+
+            return null;
+        }
+
+        // Main initialization function with lazy loading for non-critical resources
+        async function initApp() {
+            try {
+                // Fetch data before DOM is fully loaded (preloading)
+                const data = await preloadedDataPromise;
+
+                // Initialize UI when DOM is ready
+                if (document.readyState === "loading") {
+                    document.addEventListener("DOMContentLoaded", () => {
+                        const jobsContainer = document.getElementById("jobsContainer");
+                        if (jobsContainer) {
+                            jobsContainer.innerHTML = "";
+                            jobsContainer.appendChild(createJobElements(data));
+                            initializeUI();
+                        } else {
+                            console.error("Jobs container not found");
+                        }
+                    });
+                } else {
+                    // DOM already loaded
+                    const jobsContainer = document.getElementById("jobsContainer");
+                    if (jobsContainer) {
+                        jobsContainer.innerHTML = "";
+                        jobsContainer.appendChild(createJobElements(data));
+                        initializeUI();
+                    } else {
+                        console.error("Jobs container not found");
+                    }
+                }
+
+                // Initialize Alpine.js store if Alpine is available
+                if (window.Alpine) {
+                    Alpine.store('candidateSystem', candidateSystem());
+                }
+
+            } catch (error) {
+                console.error("Application initialization error:", error);
+                showErrorPopup("Failed to initialize the application.");
+            }
+        }
+
+
+        async function saveFeedback(candidate) {
+            try {
+                showLoadingOverlay(true);
+
+                const response = await fetch(`/save_feedback/${candidate.candidate_id}`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        next_round: candidate.editData.next_round,
+                        selection_status: candidate.editData.selection_status,
+                        interviwer_feedback: candidate.editData.interviwer_feedback,
+                    }),
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                // Update candidate data
+                candidate.selection_status = candidate.editData.selection_status;
+                candidate.next_round = candidate.editData.next_round;
+                candidate.interviwer_feedback = candidate.editData.interviwer_feedback;
+                candidate.isEditing = false;
+                candidate.editData = null;
+
+                showSuccessPopup("Feedback saved successfully!");
+
+                // Update display without full reload
+                updateCandidateDisplay(candidate);
+
+            } catch (error) {
+                console.error("Error saving feedback:", error);
+                showErrorPopup("Failed to save feedback: " + error.message);
+            } finally {
+                showLoadingOverlay(false);
+            }
+        }
+
+        function updateCandidateDisplay(candidate) {
+            // Find and update the relevant DOM elements for this candidate
+            const candidateEl = document.querySelector(`[data-candidate-id="${candidate.candidate_id}"]`);
+            if (!candidateEl) return;
+
+            // Update selection status badge
+            const statusBadge = candidateEl.querySelector('.status-badge');
+            if (statusBadge) {
+                statusBadge.textContent = candidate.selection_status || 'Pending';
+
+                // Update classes based on new status
+                statusBadge.className = 'px-2.5 py-0.5 rounded-full text-xs font-medium status-badge ' +
+                    getStatusClass(candidate.selection_status);
+            }
+
+            // Update details view
+            const roundEl = candidateEl.querySelector('.round-value');
+            if (roundEl) roundEl.textContent = candidate.next_round || 'Pending Interview Round';
+
+            const feedbackEl = candidateEl.querySelector('.feedback-value');
+            if (feedbackEl) feedbackEl.textContent = candidate.interviwer_feedback || 'Not Available';
+
+            const statusEl = candidateEl.querySelector('.status-value');
+            if (statusEl) statusEl.textContent = candidate.selection_status || 'Pending';
+        }
+
+
+        // Start the application
+        document.addEventListener('alpine:init', () => {
+            Alpine.store('candidateSystem', candidateSystem());
+        });
+
+        initApp();
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,190 @@
+:root {
+  --primary-color: #2563eb;
+  --secondary-color: #10b981;
+  --reject-color: #ef4444;
+  --background-light: #f3f4f6;
+  --text-dark: #1f2937;
+  --text-light: #6b7280;
+}
+
+/* * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    background-color: var(--background-light);
+    line-height: 1.6;
+    color: var(--text-dark);
+} */
+
+/* .container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+} */
+
+.page-title {
+  text-align: center;
+  margin-bottom: 30px;
+  color: var(--primary-color);
+}
+
+.candidate-accordion {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  margin: 0.2rem;
+  overflow: hidden;
+}
+
+.accordion-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  cursor: pointer;
+  background-color: #fff;
+  transition: background-color 0.3s ease;
+}
+
+.accordion-header:hover {
+  background-color: var(--background-light);
+}
+
+.candidate-info {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.candidate-name {
+  font-weight: bold;
+  font-size: 15px;
+}
+
+.candidate-job {
+  color: var(--text-light);
+  font-size: 0.9em;
+}
+
+.score-badge {
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-weight: bold;
+  font-size: 0.8em;
+}
+
+.score-high {
+  background-color: rgba(16, 185, 129, 0.2);
+  color: var(--secondary-color);
+}
+
+.score-medium {
+  background-color: rgba(245, 158, 11, 0.2);
+  color: #d97706;
+}
+
+.score-low {
+  background-color: rgba(239, 68, 68, 0.2);
+  color: var(--reject-color);
+}
+
+.status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--accent);
+}
+
+.status-selected {
+  color: var(--secondary-color);
+}
+
+/* .status-rejected {
+  color: var(--reject-color);
+} */
+
+.accordion-content {
+  max-height: 0;
+  overflow: hidden;
+  padding: 0 10px;
+  background-color: white;
+  border-top: 1px solid var(--background-light);
+  transition: max-height 0.6s ease-in-out, padding 0.4s ease-in-out;
+}
+
+.accordion-content.active {
+  max-height: 500px; /* Adjust based on your content size */
+  padding: 10px;
+}
+
+.feedback-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.feedback-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.feedback-label {
+  font-size: 0.8em;
+  color: var(--text-light);
+  margin-bottom: 5px;
+}
+
+.feedback-value {
+  font-weight: bold;
+  font-size: 0.7rem;
+}
+
+.action-buttons {
+  display: flex;
+
+  margin-top: 20px;
+  gap: 8px;
+}
+
+.btn {
+  padding: 10px 15px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-edit {
+  background-color: transparent;
+  color: var(--primary-color);
+  border: 1px solid var(--primary-color);
+}
+
+.btn-edit:hover {
+  background-color: rgba(37, 99, 235, 0.1);
+}
+
+.btn-schedule {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.btn-schedule:hover {
+  background-color: #1d4ed8;
+}
+
+.icon {
+  width: 16px;
+  height: 16px;
+  stroke: currentColor;
+}

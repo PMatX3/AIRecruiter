@@ -1,26 +1,25 @@
 toastr.options = {
-  "closeButton": false,
-  "debug": false,
-  "newestOnTop": false,
-  "progressBar": true,
-  "preventDuplicates": false,
-  "positionClass": "toast-top-right",
-  "onclick": null,
-  "showDuration": "300",
-  "hideDuration": "1000",
-  "timeOut": "3000",
-  "extendedTimeOut": "1000",
-  "showEasing": "swing",
-  "hideEasing": "linear",
-  "showMethod": "fadeIn",
-  "hideMethod": "fadeOut"
+  closeButton: false,
+  debug: false,
+  newestOnTop: false,
+  progressBar: true, // Show a progress bar
+  preventDuplicates: false,
+  positionClass: "toast-top-right", // Adjust position as needed
+  onclick: null,
+  showDuration: "300",
+  hideDuration: "1000",
+  timeOut: "3000", // Duration toast is shown
+  extendedTimeOut: "1000",
+  showEasing: "swing",
+  hideEasing: "linear",
+  showMethod: "fadeIn",
+  hideMethod: "fadeOut",
 };
-
 
 function uploadPDF() {
   var file = document.getElementById("pdfInput").files[0];
   if (!file) {
-    toastr.error('Please upload job description to proceed');
+    toastr.error("Please upload job description to proceed");
     return;
   }
   var formData = new FormData();
@@ -56,17 +55,43 @@ function ajaxCall(url, formData) {
           },
         });
       } else {
-        toastr.error(
-          "Error in conversion with status code: " + xhr.status
-        );
+        toastr.error("Error in conversion with status code: " + xhr.status);
         $("#loader").hide();
         $("#overlay").hide();
       }
     },
     error: function (xhr) {
-      toastr.error("Please upload a valid file", xhr);
       $("#loader").hide();
       $("#overlay").hide();
+
+      let errorMsg = "An error occurred while uploading the file.";
+      try {
+        const response = JSON.parse(xhr.responseText);
+
+        if (response.linkedin_required) {
+          // Show LinkedIn popup
+          document.getElementById("linkedinModal").classList.remove("hidden");
+
+          // Handle button events
+          document.getElementById("linkedinYesBtn").onclick = function () {
+            window.location.href = "/login-linkedin";
+          };
+
+          document.getElementById("linkedinNoBtn").onclick = function () {
+            document.getElementById("linkedinModal").classList.add("hidden");
+          };
+
+          return;
+        }
+
+        if (response.error) {
+          errorMsg = response.error;
+        }
+      } catch (err) {
+        console.error("Failed to parse error JSON", err);
+      }
+
+      alert(errorMsg); // Optional fallback
     },
   });
 }

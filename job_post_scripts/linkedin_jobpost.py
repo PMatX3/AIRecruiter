@@ -8,6 +8,7 @@ from mdit_py_plugins.front_matter import front_matter_plugin
 from mdit_py_plugins.footnote import footnote_plugin
 
 
+
 md = (
     MarkdownIt('commonmark' ,{'breaks':True,'html':True})
     .use(front_matter_plugin)
@@ -18,6 +19,85 @@ md = (
 load_dotenv()
 access_token = os.getenv("LINKEDIN_ACCESS_TOKEN")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+
+
+
+
+def get_user_info(access_token):
+    url = "https://api.linkedin.com/v2/userinfo"
+    headers = {
+        "Authorization": f"Bearer {access_token}"
+    }
+
+    try:
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+        return response.json()
+    except requests.exceptions.RequestException as e:
+        print(f"Error getting user info: {e}")
+        return None
+
+
+    
+
+def post_job_on_linkedin(text):
+    user = session.get("user")
+    if not user or "_id" not in user:
+        return {"error": "User not logged in or session expired"}
+
+    # Fetch user details from the database
+    user_data = users_collection.find_one({"_id": ObjectId(user["_id"])})
+    if not user_data:
+        return {"error": "User data not found in the database"}
+
+    # Retrieve LinkedIn access token
+    access_token = user_data.get("access_token")
+    if not access_token:
+        return {"error": "LinkedIn access token not found. Please reauthenticate."}
+
+    # Get LinkedIn User ID
+    profile_data = get_user_info(access_token)
+    user_id = profile_data.get("sub")  # 'sub' represents the LinkedIn User ID
+
+    if not user_id:
+        return {"error": "Unable to fetch LinkedIn User ID"}
+
+    # Retrieve job details from the database
+    job = jobs_collection.find_one({"user_id": ObjectId(user["_id"])}, sort=[("created_at", -1)])  # Get the latest job
+    if not job:
+        return {"error": "No job details found"}
+
+    url = "https://api.linkedin.com/v2/ugcPosts"
+    headers = {
+        "Authorization": f"Bearer {access_token}",
+        "Content-Type": "application/json",
+        "X-Restli-Protocol-Version": "2.0.0",
+        "LinkedIn-Version": "202503"
+    }
+
+    payload = {
+        "author": f"urn:li:person:{user_id}",
+        "lifecycleState": "PUBLISHED",
+        "specificContent": {
+            "com.linkedin.ugc.ShareContent": {
+                "shareCommentary": {
+                    "text": f"🚀 Hiring Now: {job_title}\n{job_description}\nApply Here: {job_link}"
+                },
+                "shareMediaCategory": "NONE"
+            }
+        },
+        "visibility": {"com.linkedin.ugc.MemberNetworkVisibility": "PUBLIC"}
+    }
+
+    response = requests.post(url, json=payload, headers=headers)
+
+    if response.status_code == 201:
+        return {"success": "Job posted successfully!"}
+    else:
+        return {"error": response.json()}   
+
+
+
 
 def post_job_description_to_linkedin(text):
     logging.info(f"Started posting job description to LinkedIn")

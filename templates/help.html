@@ -1,0 +1,731 @@
+{% include 'navbar.html' %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generate Ticket</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f3f4f6;
+            background-image:
+                radial-gradient(circle at 25% 25%, rgba(63, 94, 251, 0.05) 0%, transparent 30%),
+                radial-gradient(circle at 75% 75%, rgba(252, 70, 107, 0.05) 0%, transparent 40%);
+            min-height: 100vh;
+        }
+
+        /* .main-container {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.9));
+            backdrop-filter: blur(10px);
+        } */
+
+        .main-container {
+            max-width: fit-content;
+            margin: 0 auto;
+
+        }
+
+        .form-container {
+            transition: all 0.4s ease;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+        }
+
+        .form-input {
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(209, 213, 219, 0.8);
+        }
+
+        .form-input:focus {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+            background: white;
+        }
+
+        .animated-label {
+            position: absolute;
+            left: 40px;
+            top: 13px;
+            pointer-events: none;
+            transition: 0.3s ease all;
+        }
+
+        .form-input:focus~.animated-label,
+        .form-input:not(:placeholder-shown)~.animated-label {
+            transform: translateY(-24px) scale(0.85);
+            color: #4f46e5;
+            font-weight: 500;
+            left: 25px;
+            top: auto;
+        }
+
+        .input-container {
+            position: relative;
+            margin-top: 18px;
+        }
+
+        .gradient-button {
+            background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+            transition: all 0.3s ease;
+        }
+
+        .gradient-button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(99, 102, 241, 0.3);
+        }
+
+        .gradient-button:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .spinner {
+            animation: spin 0.7s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .error-message {
+            animation: shake 0.4s ease;
+            margin-top: 6px;
+        }
+
+        @keyframes shake {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            25% {
+                transform: translateX(-5px);
+            }
+
+            75% {
+                transform: translateX(5px);
+            }
+        }
+
+        .field-icon {
+            opacity: 0.6;
+            transition: opacity 0.3s ease;
+        }
+
+        .form-input:focus+.field-icon {
+            opacity: 1;
+            color: #4f46e5;
+        }
+
+        .progress-bar {
+            height: 5px;
+            background-image: linear-gradient(to right, #4f46e5, #8b5cf6, #ec4899);
+            transition: width 0.3s ease;
+            border-radius: 0 0 4px 4px;
+        }
+
+        .card-decoration {
+            position: absolute;
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, rgba(79, 70, 229, 0.1), rgba(236, 72, 153, 0.1));
+            filter: blur(40px);
+            z-index: -1;
+        }
+
+        .textarea-counter {
+            font-size: 0.75rem;
+            transition: all 0.3s ease;
+        }
+
+        .success-popup {
+            position: fixed !important;
+            top: 50% !important;
+            left: 50% !important;
+            transform: translate(-50%, -50%) !important;
+            z-index: 1000 !important;
+            animation: slideUp 0.5s ease !important;
+            backdrop-filter: blur(10px) !important;
+            background: linear-gradient(135deg, rgba(209, 250, 229, 0.95), rgba(167, 243, 208, 0.95));
+            border: 1px solid rgba(16, 185, 129, 0.3);
+
+        }
+
+        .checkbox-container {
+            position: relative;
+            padding-left: 30px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .custom-checkbox {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 20px;
+            width: 20px;
+            background-color: white;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+
+        .checkbox-container:hover .custom-checkbox {
+            border-color: #4f46e5;
+        }
+
+        .custom-checkbox:after {
+            content: "";
+            position: absolute;
+            display: none;
+            left: 6px;
+            top: 2px;
+            width: 6px;
+            height: 12px;
+            border: solid white;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+
+        .checkbox-input:checked~.custom-checkbox {
+            background-color: #4f46e5;
+            border-color: #4f46e5;
+        }
+
+        .checkbox-input:checked~.custom-checkbox:after {
+            display: block;
+        }
+
+        .form-header {
+            background: linear-gradient(135deg, #4f46e5 0%, #8b5cf6 50%, #ec4899 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .checkbox-container.err:hover .custom-checkbox {
+            border-color: red;
+            /* Change border color to red on hover when there is an error */
+        }
+    </style>
+</head>
+
+<body class="">
+    <div class="main-container w-full max-w-md rounded-3xl p-2 md:p-6">
+        <!-- Card decoration circles -->
+        <div class="card-decoration top-0 left-0 opacity-30"></div>
+        <div class="card-decoration bottom-0 right-0 opacity-20"></div>
+
+        <div class="form-container relative bg-white overflow-hidden rounded-2xl shadow-2xl w-full">
+            <!-- Header with illustration -->
+            <div class="bg-indigo-50 p-4 text-center relative overflow-hidden">
+                <svg class="absolute top-0 right-0 h-32 w-32 text-indigo-100 transform translate-x-8 -translate-y-8 opacity-50"
+                    viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                        d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V8l8 5 8-5v10zm-8-7L4 6h16l-8 5z">
+                    </path>
+                </svg>
+                <div class="relative z-10">
+                    <h1 class="form-header text-3xl md:text-4xl font-bold">Raise a Ticket</h1>
+                    <p class="text-gray-600 mt-2 max-w-xs mx-auto"> Need assistance? Submit your issue and we'll get
+                        back to you as soon as possible.</p>
+                </div>
+            </div>
+
+            <!-- Form progress bar -->
+            <div id="formProgress" class="progress-bar w-0"></div>
+
+            <!-- Form content -->
+            <form id="ticketForm" method="POST" class="p-6 pt-1">
+                <!-- Username Field -->
+                <div class="flex flex-col md:flex-row gap-6">
+                    <!-- Username Field -->
+                    <div class="input-container relative w-full md:w-1/2">
+                        <input type="text" id="username" name="username"
+                            class="form-input w-full px-4 py-3 rounded-xl border pl-10 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                            placeholder=" ">
+                        <label for="username"
+                            class="animated-label text-gray-500 absolute top-3 left-10">Username</label>
+                        <span class="field-icon absolute left-3 top-3.5 text-gray-400">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20"
+                                fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
+                                    clip-rule="evenodd" />
+                            </svg>
+                        </span>
+                        <p class="error-message username-error hidden text-red-500 text-xs font-medium ml-1 mt-1"
+                            id="username-error">Username is required
+                        </p>
+                    </div>
+
+                    <!-- Email Field -->
+                    <div class="input-container relative w-full md:w-1/2">
+                        <input type="email" id="email" name="email"
+                            class="form-input w-full px-4 py-3 rounded-xl border pl-10 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                            placeholder=" ">
+                        <label for="email" class="animated-label text-gray-500 absolute top-3 left-10">Email
+                            Address</label>
+                        <span class="field-icon absolute left-3 top-3.5 text-gray-400">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20"
+                                fill="currentColor">
+                                <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+                                <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+                            </svg>
+                        </span>
+                        <p class="error-message hidden text-red-500 text-xs font-medium ml-1 mt-1" id="email-error">
+                            Please enter a valid
+                            email address</p>
+                    </div>
+                </div>
+
+                <!-- Subject Field -->
+                <div class="input-container mb-6">
+                    <input type="text" id="subject" name="subject"
+                        class="form-input w-full px-4 py-3 rounded-xl border pl-10 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                        placeholder=" ">
+                    <label for="subject" class="animated-label text-gray-500">Subject</label>
+                    <span class="field-icon absolute left-3 top-3.5 text-gray-400">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd"
+                                d="M5 3a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2V5a2 2 0 00-2-2H5zm0 2h10v7h-2l-1 2H8l-1-2H5V5z"
+                                clip-rule="evenodd" />
+                        </svg>
+                    </span>
+                    <p class="error-message hidden text-red-500 text-xs font-medium ml-1" id="subject-error">Subject is
+                        required</p>
+                </div>
+
+                <!-- Message Field -->
+                <div class="input-container mb-2">
+                    <textarea id="message" name="message" rows="5"
+                        class="form-input w-full px-4 py-3 rounded-xl border focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none resize-none"
+                        placeholder=" "></textarea>
+                    <label for="message" class="animated-label text-gray-500">Tell us about your issue</label>
+                    <p class="error-message hidden text-red-500 text-xs font-medium ml-1" id="message-error">Message is
+                        required</p>
+                    <div class="flex justify-end">
+                        <span id="charCount" class="textarea-counter text-gray-400">0/500</span>
+                    </div>
+                </div>
+
+                <!-- Priority Selection
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Select Priority</label>
+                    <div class="flex space-x-2">
+                        <button type="button"
+                            class="priority-btn flex-1 py-2 px-3 rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-50 focus:outline-none"
+                            data-priority="low">Low</button>
+                        <button type="button"
+                            class="priority-btn flex-1 py-2 px-3 rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-50 focus:outline-none"
+                            data-priority="medium">Medium</button>
+                        <button type="button"
+                            class="priority-btn flex-1 py-2 px-3 rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-50 focus:outline-none"
+                            data-priority="high">High</button>
+                    </div>
+                    <input type="hidden" id="priority" name="priority" value="">
+                </div> -->
+
+                <!-- Category dropdown -->
+                <!-- <div class="mb-6">
+                    <label for="category" class="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                    <div class="relative">
+                        <select id="category" name="category"
+                            class="form-input appearance-none w-full px-4 py-3 rounded-xl border focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
+                            <option value="">Select a category</option>
+                            <option value="technical">Technical Issue</option>
+                            <option value="billing">Billing Question</option>
+                            <option value="account">Account Management</option>
+                            <option value="feature">Feature Request</option>
+                            <option value="other">Other</option>
+                        </select>
+                        <div
+                            class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                            <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd"
+                                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                                    clip-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div> -->
+
+                <!-- Files -->
+                <!-- <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Attach Files (optional)</label>
+                    <div class="flex justify-center px-6 pt-5 pb-6 border-2 border-dashed border-gray-300 rounded-xl">
+                        <div class="space-y-1 text-center">
+                            <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none"
+                                viewBox="0 0 48 48">
+                                <path
+                                    d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                            <div class="flex text-sm text-gray-600">
+                                <label for="file-upload"
+                                    class="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none">
+                                    <span>Upload files</span>
+                                    <input id="file-upload" name="file-upload" type="file" class="sr-only" multiple>
+                                </label>
+                                <p class="pl-1">or drag and drop</p>
+                            </div>
+                            <p class="text-xs text-gray-500">PNG, JPG, PDF up to 10MB</p>
+                        </div>
+                    </div>
+                </div> -->
+
+                <!-- Terms Checkbox -->
+                <div class="mb-6">
+                    <label class="checkbox-container text-sm text-gray-600">
+                        <input type="checkbox" id="terms" class="checkbox-input sr-only">
+                        <span class="custom-checkbox"></span>
+                        I agree to the <a href="/terms-conditions" class="text-indigo-600 hover:text-indigo-800">Terms
+                            and
+                            Conditions</a>
+                    </label>
+                </div>
+
+                <!-- Submit Button -->
+                <div>
+                    <button type="submit" id="submitBtn"
+                        class="gradient-button w-full text-white font-medium py-3.5 px-4 rounded-xl shadow-lg flex items-center justify-center focus:outline-none">
+                        <span>Submit Ticket</span>
+                        <svg id="spinnerIcon" class="spinner ml-3 w-5 h-5 hidden" viewBox="0 0 24 24" fill="none"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
+                            </circle>
+                            <path class="opacity-75" fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                            </path>
+                        </svg>
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Success Popup (Hidden by default) -->
+        <div id="successPopup" class="success-popup hidden rounded-2xl shadow-lg p-6 mt-6">
+            <div class="flex items-start">
+                <div class="flex-shrink-0 bg-green-100 rounded-full p-2">
+                    <svg class="h-8 w-8 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd"
+                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                            clip-rule="evenodd"></path>
+                    </svg>
+                </div>
+                <div class="ml-4 flex-1">
+                    <h3 class="text-lg font-semibold text-green-800">Ticket Submitted Successfully!</h3>
+                    <div class="mt-2 text-green-700">
+                        <p>Your ticket #<span id="ticketNumber">28945</span> has been received. We'll get back to you as
+                            soon as possible.</p>
+                    </div>
+                    <div class="mt-5 flex space-x-3">
+                        <button type="button" id="dismissBtn"
+                            class="px-4 py-2 text-sm font-medium text-green-700 bg-green-100 rounded-lg hover:bg-green-200">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.getElementById('ticketForm');
+            const submitBtn = document.getElementById('submitBtn');
+            const spinnerIcon = document.getElementById('spinnerIcon');
+            const successPopup = document.getElementById('successPopup');
+            const dismissBtn = document.getElementById('dismissBtn');
+
+            const messageField = document.getElementById('message');
+            const usernameError = document.getElementById('username-error');
+            const emailError = document.getElementById('email-error');
+            const messageError = document.getElementById('message-error');
+            const subjectError = document.getElementById('subject-error');
+
+            const charCount = document.getElementById('charCount');
+            const formProgress = document.getElementById('formProgress');
+            const ticketNumberSpan = document.getElementById('ticketNumber');
+            const termsCheckbox = document.getElementById('terms');
+            const checkboxInput = document.getElementById('terms');
+            // const priorityButtons = document.querySelectorAll('.priority-btn');
+            // const priorityInput = document.getElementById('priority');
+
+            // Update character count on message input
+
+            const username = "{{ username }}";
+            const email = "{{ email }}";
+
+            if (username && email) {
+                document.getElementById('username').value = username;
+                document.getElementById('email').value = email;
+            } else {
+                console.error('User details not found.');
+            }
+
+            messageField.addEventListener('input', () => {
+                const length = messageField.value.length;
+                charCount.textContent = `${length}/500`;
+
+                if (length > 400) {
+                    charCount.classList.add('text-orange-500');
+                    charCount.classList.remove('text-gray-400', 'text-red-500');
+                } else if (length > 490) {
+                    charCount.classList.add('text-red-500');
+                    charCount.classList.remove('text-gray-400', 'text-orange-500');
+                } else {
+                    charCount.classList.add('text-gray-400');
+                    charCount.classList.remove('text-orange-500', 'text-red-500');
+                }
+            });
+
+
+
+            // Update form progress based on fields filled
+            function updateFormProgress() {
+                const requiredFields = ['username', 'email', 'subject', 'message'];
+                let filledCount = 0;
+
+                requiredFields.forEach(field => {
+                    const element = document.getElementById(field);
+                    if (element && element.value.trim() !== '') {
+                        filledCount++;
+                    }
+                });
+
+
+
+                if (messageField.value.trim() !== '') {
+                    filledCount++;
+                }
+
+                if (termsCheckbox.checked) {
+                    filledCount++;
+                }
+
+                const progressPercentage = (filledCount / (requiredFields.length + 2)) * 100;
+                formProgress.style.width = `${progressPercentage}%`;
+            }
+
+            // Add event listeners to form fields for progress tracking
+            const allFields = ['username', 'email', 'subject', 'message'];
+            allFields.forEach(id => {
+                const field = document.getElementById(id);
+                if (field) {
+                    field.addEventListener('input', updateFormProgress);
+                    field.addEventListener('change', updateFormProgress);
+                }
+            });
+
+            // Form submission handler
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                const username = document.getElementById('username').value.trim();
+                const email = document.getElementById('email').value.trim();
+                const subject = document.getElementById('subject').value.trim();
+                const message = document.getElementById('message').value.trim();
+
+                if (!username) {
+                    usernameError.style.display = 'block';
+                } else {
+                    usernameError.style.display = 'none';
+                }
+
+                if (!email) {
+                    emailError.style.display = 'block';
+                } else {
+                    emailError.style.display = 'none';
+                }
+
+                if (!subject) {
+                    subjectError.style.display = 'block';
+                } else {
+                    subjectError.style.display = 'none';
+                }
+
+                if (!message) {
+                    messageError.style.display = 'block';
+                } else {
+                    messageError.style.display = 'none';
+                }
+
+
+                // Validate form
+                if (!validateForm()) {
+                    return;
+                }
+
+                // Check terms checkbox
+                if (!termsCheckbox.checked) {
+                    termsCheckbox.classList.add('err');
+                    // alert('Please agree to the Terms and Conditions');
+                    return;
+                }
+
+                // Show loading state
+                submitBtn.disabled = true;
+                spinnerIcon.classList.remove('hidden');
+
+                const ticketData = {
+                    username: username,
+                    email: email,
+                    subject: subject,
+                    message: message
+                };
+
+                try {
+                    // Send the ticket data to the backend
+                    const response = await fetch('/submit_ticket', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(ticketData)
+                    });
+
+                    const result = await response.json();
+
+                    if (response.ok) {
+                        // Show success popup
+                        ticketNumberSpan.textContent = result.ticketId; // Use the ticket ID returned from the server
+                        form.closest('.form-container').classList.add('opacity-50');
+                        successPopup.classList.remove('hidden');
+                    } else {
+                        // Handle errors
+                        alert(result.error || 'An error occurred while submitting the ticket.');
+                    }
+                } catch (error) {
+                    console.error('Error submitting ticket:', error);
+                    alert('An error occurred while submitting the ticket.');
+                } finally {
+                    // Reset form state
+                    form.reset();
+                    form.closest('.form-container').classList.remove('opacity-50');
+
+
+                    submitBtn.disabled = false;
+                    spinnerIcon.classList.add('hidden');
+                }
+            });
+
+            // Dismiss button handler
+            dismissBtn.addEventListener('click', () => {
+                successPopup.classList.add('hidden');
+            });
+
+
+
+            // Form validation
+            function validateForm() {
+                const username = document.getElementById('username').value.trim();
+                const email = document.getElementById('email').value.trim();
+                const subject = document.getElementById('subject').value.trim();
+                const message = document.getElementById('message').value.trim();
+
+
+                let isValid = true;
+
+                // Check username
+                if (document.getElementById('username').value.trim() === '') {
+                    showError('username');
+                    isValid = false;
+                }
+
+                // Check email
+                if (!email || !isValidEmail(email)) {
+                    showError('email');
+                    isValid = false;
+                }
+
+                // Check subject
+                if (!subject) {
+                    showError('subject');
+                    isValid = false;
+                }
+
+                // Check message
+                if (!message) {
+                    showError('message');
+                    isValid = false;
+                }
+
+                return isValid;
+            }
+
+            // Validate email format
+            function isValidEmail(email) {
+                const re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+                return re.test(email);
+            }
+
+            // Show error message for a field
+            function showError(fieldId) {
+                const field = document.getElementById(fieldId);
+                const errorElement = field.nextElementSibling.nextElementSibling;
+                errorElement.classList.remove('hidden');
+                if (errorElement && errorElement.classList.contains('error-message')) {
+
+                }
+
+
+
+            }
+
+            // Hide all error messages
+            function hideAllErrors() {
+                const errorMessages = document.querySelectorAll('.error-message');
+                const formInputs = document.querySelectorAll('.form-input');
+
+                errorMessages.forEach(el => el.classList.add('hidden'));
+                formInputs.forEach(input => {
+                    input.classList.remove('border-red-500', 'ring-red-500');
+                });
+
+            }
+
+            // Clear errors when user starts typing in a field
+            const formFields = ['username', 'email', 'subject', 'message'];
+            formFields.forEach(field => {
+                const input = document.getElementById(field);
+                if (input) {
+                    input.addEventListener('input', () => {
+                        const errorElement = input.nextElementSibling.nextElementSibling;
+                        if (errorElement && errorElement.classList.contains('error-message')) {
+                            errorElement.classList.add('hidden');
+                        }
+                        input.classList.remove('border-red-500', 'ring-red-500');
+                    });
+                }
+            });
+        });        
+    </script>
+</body>
+
+</html>

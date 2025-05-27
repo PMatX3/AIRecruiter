@@ -2,6 +2,7 @@ document.addEventListener("DOMContentLoaded", async function () {
   // Cache DOM elements
   const nameField = document.getElementById("name");
   const emailField = document.getElementById("email");
+  const linkedinField = document.getElementById("linkedin_email");
   const phoneField = document.getElementById("phone");
   const companyField = document.getElementById("company");
   const countryField = document.getElementById("country");
@@ -31,6 +32,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     phoneField.value = data.phone || "Not available";
     companyField.value = data.company || "Not available";
     countryField.value = data.country || "Not available";
+    linkedinField.value = data.linkedin_email || "Not available";
   }
 
   function openCity(evt, cityName) {

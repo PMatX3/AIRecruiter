@@ -1,880 +1,599 @@
-
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
-        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-
-    <!-- font -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap"
-        rel="stylesheet">
-
-    <!-- icons -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-
-    <!-- slider -->
-    <link rel="stylesheet" type="text/css" href="static/CSS/slick.css" />
-
-    <!-- css -->
-    <link rel="stylesheet" href="static/CSS/home.css">
-    
-    <meta charset="utf-8"><link rel="icon" href="./static/images/favion2.png" type="image/png" style="height:26px;width:26px">
     <title>YourBestRecruiterAI: Hiring with AI-powered Candidate Selection</title>
-    <meta name="description" content="YourBestCandidateAI streamlines hiring with AI-powered candidate selection. Find qualified talent faster, saving time and improving your recruitment process.">
-    <meta name="author" content="YourBestCandidateAI">
-    <meta name="copyright" content="YourBestCandidateAI">
-    <meta name="robots" content="follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large"/>
-    <link rel="canonical" href="https://www.yourbestcandidate.ai/" />
+    <meta name="description" content="AI-Powered Recruitment Platform">
+    <meta name="author" content="Talent Link Guru">
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@lovable_dev" />
+    <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
 
-    <!-- Open Graph -->
-    <meta property="og:type" content="website">
-    <meta property="og:title" content="YourBestCandidateAI: Hiring with AI-powered Candidate Selection">
-    <meta property="og:url" content="https://www.yourbestcandidate.ai/">
-    <meta property="og:image" content="https://www.yourbestcandidate.ai/static/images/Yourbestcandidateai.svg">
-    <meta property="og:description" content="YourBestCandidateAI streamlines hiring with AI-powered candidate selection. Find qualified talent faster, saving time and improving your recruitment process.">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 
-    <!-- Twitter Card -->
-    <meta name="twitter:card" content="summary">
-    <meta name="twitter:title" content="YourBestCandidateAI: Hiring with AI-powered Candidate Selection">
-    <meta name="twitter:site" content="@https://www.yourbestcandidate.ai/">
-    <meta name="twitter:description" content="YourBestRecruiterAI streamlines hiring with AI-powered candidate selection. Find qualified talent faster, saving time and improving your recruitment process.">
-    <meta name="twitter:image" content="https://www.yourbestcandidate.ai/static/images/Yourbestcandidateai.svg">
-    <meta name="twitter:image:alt" content="Your Best Candidate AI Logo">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="../static/CSS/home.css">
+    <link rel="stylesheet" href="../static/CSS/hero.css">
 
-    <!-- LocalBusiness Schema -->
-    <script type="application/ld+json"> { "@context": "https://schema.org", "@type": "LocalBusiness", "name": "YourBestCandidateAI", "image": "https://www.yourbestcandidate.ai/static/images/Yourbestcandidateai.svg", "@id": "", "url": "https://www.yourbestcandidate.ai/", "telephone": "", "priceRange": "$$", "address": { "@type": "PostalAddress", "streetAddress": "", "addressLocality": "", "postalCode": "", "addressCountry": "" }, "openingHoursSpecification": { "@type": "OpeningHoursSpecification", "dayOfWeek": [ "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday" ], "opens": "00:00", "closes": "23:59" } } </script>
 
-    <!-- Logo Schema -->
-    <script type="application/ld+json"> { "@context": "https://schema.org", "@type": "Organization", "name": "Your Best Candidate AI", "alternateName": "Best Candidate AI", "url": "https://www.yourbestcandidate.ai/", "logo": "https://www.yourbestcandidate.ai/static/images/Yourbestcandidateai.svg" } </script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
     <style>
         body {
-        font-family: 'Plus Jakarta Sans' !important;
+            margin: 0;
+            padding: 0;
+            border: 0;
+            font-size: 100%;
+            font: inherit;
+            vertical-align: baseline;
         }
+
+        ul,
+        li {
+            list-style: none;
+        }
+
+        body {
+            line-height: 1;
+        }
+
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;300;400;500;600;700;800&display=swap');
     </style>
+
 </head>
-<body>
-    <header class="header-wrp main-header">
-    <nav class="navbar navbar-expand-lg">
-        <div class="container">
-            <a class="navbar-brand" href="/">
-                <img class="logo-svg" src="https://www.yourbestcandidate.ai/static/images/Yourbestcandidateai.svg"
-                    style="filter: hue-rotate(66deg) saturate(150%);" alt="">
+
+<body class="min-h-screen bg-white">
+    <!-- header section -->
+    <header id="navbar"
+        class="fixed top-0 left-0 right-0 z-50 py-4 px-6 md:px-12 transition-all duration-300 bg-transparent">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <a href="/" class="flex items-center gap-2">
+                <span class="font-bold text-xl md:text-2xl text-recruiter-900">
+                    YourBestRecruiter<span class="text-recruiter-500">.AI</span>
+                </span>
             </a>
-            <!-- <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
-                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button> -->
-            <div class="collapse navbar-collapse mx-auto" id="navbarNav">
-                <ul class="navbar-nav">
-                    <!-- <li class="nav-item">
-                        <a class="nav-link active" aria-current="page" href="pricing">Pricing</a>
-                    </li> -->
-                    <!-- <li class="nav-item">
-                        <a class="nav-link" >About us</a>
-                    </li> -->
-                </ul>
-            </div>
-            <a href="/chat"
-                    style="color: white; text-decoration: none;">
-            <div class="chat_button_div" style="display: none;">
-                <button class="btn header-btn">Chat</button></a>
-            </div>
-            <a href="/login"
-                    style="color: white; text-decoration: none;">
-                <div class="login_button_div"  id="loginButtonDiv">
-                    <button class="btn header-btn">Login</button>
-                </div>
-            </a>
+
+            <!-- Desktop navigation -->
+            <nav class="hidden md:flex space-x-8">
+                <a href="#features"
+                    class="text-gray-700 hover:text-recruiter-600 transition-colors duration-200 font-medium">Features</a>
+                <a href="#process"
+                    class="text-gray-700 hover:text-recruiter-600 transition-colors duration-200 font-medium">Process</a>
+                <a href="#pricing"
+                    class="text-gray-700 hover:text-recruiter-600 transition-colors duration-200 font-medium">Pricing</a>
+                <a href="#contact"
+                    class="text-gray-700 hover:text-recruiter-600 transition-colors duration-200 font-medium">Contact</a>
+                <a href="/register"
+                    class="bg-recruiter-500 hover:bg-recruiter-600 text-white px-5 py-2 rounded-full transition-all duration-200 font-medium">Free
+                    Trial</a>
+            </nav>
+
+            <!-- Mobile menu button -->
+            <button id="mobile-menu-button" class="md:hidden text-gray-700 focus:outline-none" aria-label="Toggle menu">
+                <svg id="menuIcon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16">
+                    </path>
+                </svg>
+                <svg id="closeIcon" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                    </path>
+                </svg>
+            </button>
         </div>
-    </nav>
-</header>
-    
-<section class="hero-section">
-    <div class="container">
-        <div class="row">
-            <div class="col-md-12">
-                <div class="hero-text-box">
-                    <h1>Find Top Talent Fast. YourBestRecruiterAI.</h1>
-                    <p class="hero-para-text">YourBestRecruiterAI streamlines hiring with AI-powered candidate
-                        selection.</p>
-                    <button class="btn hero-btn starting_btn" data-bs-toggle="modal" data-bs-target="#demoModal">
-                        Book a Demo
-                    </button>
-                    <ul class="banifit-list">
-                        <li>
-                            <span class="icon"><i class="bi bi-check text-success"></i></span>
-                            <b>14 Day Free Trial</b>
-                        </li>
-                        <li>
-                            <span class="icon"><i class="bi bi-check text-success"></i></span>
-                            <b>Instant Access</b>
-                        </li>
-                        <li>
-                            <span class="icon"><i class="bi bi-check text-success"></i></span>
-                            <b>Cancel Anytime</b>
-                        </li>
-                    </ul>
-                </div>
-            </div>
+
+        <!-- Mobile menu -->
+        <div id="mobileMenu"
+            class="md:hidden hidden absolute top-full left-0 right-0 bg-white/95 backdrop-blur-md p-6 shadow-md border-t border-gray-100 animate-fade-in">
+            <nav class="flex flex-col space-y-4">
+                <a href="#features"
+                    class="text-gray-700 hover:text-recruiter-600 transition-colors duration-200 font-medium py-2">Features</a>
+                <a href="#process"
+                    class="text-gray-700 hover:text-recruiter-600 transition-colors duration-200 font-medium py-2">Process</a>
+                <a href="#pricing"
+                    class="text-gray-700 hover:text-recruiter-600 transition-colors duration-200 font-medium py-2">Pricing</a>
+                <a href="#contact"
+                    class="text-gray-700 hover:text-recruiter-600 transition-colors duration-200 font-medium py-2">Contact</a>
+                <a href="/register"
+                    class="bg-recruiter-500 hover:bg-recruiter-600 text-white px-5 py-3 rounded-full transition-all duration-200 font-medium text-center mt-2">Free
+                    Trial</a>
+            </nav>
         </div>
-    </div>
-</section>
+    </header>
 
-
-<!-- Modal -->
-<div class="modal fade" id="demoModal" tabindex="-1" aria-labelledby="demoModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="demoModalLabel">Book a Demo</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form id="demoForm">
-                    <div class="mb-3">
-                        <label for="name" class="form-label">Name<span style="color: red;">*</span></label>
-                        <input type="text" class="form-control" autocomplete="nope" id="name" name="name" required pattern="\S.*">
-                        <p id="name_error" style="color: red; display: none; font-size: 12px;">Name cannot be empty or just spaces.</p>
-                    </div>
-                    <div class="mb-3">
-                        <label for="email" class="form-label">Email address<span style="color: red;">*</span></label>
-                        <input type="email" class="form-control" id="email" required pattern="\S.*">
-                        <p id="email_error" style="color: red; display: none; font-size: 12px;">Email cannot be empty or just spaces.</p>
-                    </div>
-                    <div class="mb-3">
-                        <label for="phone" class="form-label">Phone Number<span style="color: red;">*</span></label>
-                        <input type="tel" class="form-control" id="phone" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);"  required pattern="\d+"  title="Please enter a valid phone number without spaces.">
-                        <p id="phone_error" style="color: red; display: none; font-size: 12px;">Phone number cannot be empty or just spaces and must be 10 to 13 digits.</p>
-                    </div>
-                    <div class="mb-3">
-                        <label for="date" class="form-label">Select Date<span style="color: red;">*</span></label>
-                        <input type="date" class="form-control" id="date" name="appointment_date" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="message" class="form-label">Message</label>
-                        <textarea class="form-control" id="message" name="message" pattern="\S.*"></textarea>
-                    </div>
-                    <div class="mb-3">
-                        <label for="timeslot" class="form-label">Select Time Slot<span style="color: red;">*</span></label>
-                        <select class="form-control" id="timeslot" required>
-                            <option value="">Choose a time slot</option>
-                        </select>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" onclick="validateAndSubmitForm()">Submit</button>
-            </div>
+    <!-- Hero Section -->
+    <section id="hero" class="relative min-h-screen flex items-center justify-center pt-20 overflow-hidden">
+        <!-- Background effects -->
+        <div class="absolute inset-0 bg-gradient-to-b from-blue-50 to-white z-0"></div>
+        <div
+            class="absolute top-1/4 -right-64 w-96 h-96 bg-recruiter-100 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-float parallax">
         </div>
-    </div>
-</div>
-
-<script>
-    // date range
-    document.addEventListener('DOMContentLoaded', function() {
-        const dateInput = document.getElementById('date');
-        const today = new Date();
-        const tomorrow = new Date(today);
-        tomorrow.setDate(today.getDate() + 1); // Set to tomorrow
-
-        const threeWeeksFromNow = new Date();
-        threeWeeksFromNow.setDate(today.getDate() + 4);
-
-        // Format the date to YYYY-MM-DD
-        const formatDate = (date) => {
-            const d = new Date(date);
-            let month = '' + (d.getMonth() + 1);
-            let day = '' + d.getDate();
-            const year = d.getFullYear();
-
-            if (month.length < 2) month = '0' + month;
-            if (day.length < 2) day = '0' + day;
-
-            return [year, month, day].join('-');
-        };
-
-        dateInput.setAttribute('min', formatDate(tomorrow)); // Set min to tomorrow
-        dateInput.setAttribute('max', formatDate(threeWeeksFromNow));
-    });
-    // date range
-
-    // time slot
-    document.getElementById('date').addEventListener('input', function() {
-        const date = this.value; // Get the date value from the input field
-        fetch(`/available_time_slots?date=${date}`)
-            .then(response => response.json())
-            .then(data => {
-                const timeSlotsSelect = document.getElementById('timeslot'); // Corrected ID
-                timeSlotsSelect.innerHTML = ''; // Clear existing options
-                console.log("data.available_time_slots ==> ", data.available_time_slots);
-                if (data.available_time_slots && data.available_time_slots.length > 0) {
-                    data.available_time_slots.forEach(slot => {
-                        const option = document.createElement('option');
-                        option.value = slot;
-                        option.textContent = slot;
-                        timeSlotsSelect.appendChild(option);
-                    });
-                } else {
-                    const option = document.createElement('option');
-                    option.textContent = 'No available slots';
-                    timeSlotsSelect.appendChild(option);
-                }
-            })
-            .catch(error => console.error('Error fetching time slots:', error));
-    });
-
-
-    document.getElementById('date').addEventListener('input', function() {
-        const input = this;
-        const currentDate = new Date();
-        const inputDate = new Date(input.value);
-
-        if (inputDate < currentDate) {
-            input.setCustomValidity("Please select a future date.");
-        } else {
-            input.setCustomValidity("");
-        }
-    });
-    function validate_form(){
-        const nameInput = document.getElementById('name');
-        const nameValue = nameInput.value;
-
-        if (nameValue.trim() === '') {
-            document.getElementById('name_error').style.display = 'block';
-            return false;
-        } else {
-            document.getElementById('name_error').style.display = 'none';
-        }
-        
-        const phoneInput = document.getElementById('phone');
-        const phoneValue = phoneInput.value;
-
-        if (!/^\d+$/.test(phoneValue)) {
-            document.getElementById('phone_error').style.display = 'block';
-            return false;
-        } else {
-            document.getElementById('phone_error').style.display = 'none';
-        }
-        if (phoneValue.length < 10 || phoneValue.length > 13) {
-            document.getElementById('phone_error').style.display = 'block';
-            return false;
-        } else {
-            document.getElementById('phone_error').style.display = 'none';
-        }
-        return true;
-    }
-
-    function validateAndSubmitForm() {
-
-        res = validate_form();
-        console.log("res ==> ", res);
-        if(!res){
-            return;
-        }
-        console.log("res 123123");
-        const form = document.getElementById('demoForm');
-        if (form.checkValidity()) {
-            const formData = {
-                name: document.getElementById('name').value,
-                email: document.getElementById('email').value,
-                phone: document.getElementById('phone').value,
-                date: document.getElementById('date').value,
-                timeslot: document.getElementById('timeslot').value,
-                message: document.getElementById('message').value,
-            };
-            fetch('/check_slot_is_booked?date=' + formData.date + '&timeslot=' + formData.timeslot)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.is_booked) {
-                        alert('This time slot is already booked. Please select another time.');
-                    } else {
-                        fetch('/book_demo', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify(formData),
-                        })
-                        .then(response => response.json())
-                        .then(data => {
-                            alert(data.message);
-                            location.reload();
-                            const modal = bootstrap.Modal.getInstance(document.getElementById('demoModal'));
-                            modal.hide();
-                        })
-                        .catch(error => {
-                            console.error('Error:', error);
-                            alert('There was an error booking your demo. Please try again.');
-                        });
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('There was an error checking the slot. Please try again.');
-                });
-        } else {
-            form.reportValidity();
-        }
-    }
-    
-    </script>
-
-
-<!-- <section class="video-section">
-        <div class="video-wrp">
-            <div class="ratio ratio-4x3">
-                <iframe
-                    src="https://cdn.embedly.com/widgets/media.html?src=https%3A%2F%2Ffast.wistia.net%2Fembed%2Fiframe%2F15az7uebfw&display_name=Wistia%2C+Inc.&url=https%3A%2F%2Fslaterdigitalgroup.wistia.com%2Fmedias%2F15az7uebfw&image=https%3A%2F%2Fembed-ssl.wistia.com%2Fdeliveries%2Fa25f0e7fc90001c11173d7829034e562.jpg%3Fimage_crop_resized%3D960x540&key=96f1f04c5f4143bcb0f2e68c87d65feb&type=text%2Fhtml&schema=wistia"
-                    title="YouTube video" allowfullscreen></iframe>
-            </div>
+        <div
+            class="absolute bottom-1/4 -left-64 w-96 h-96 bg-recruiter-200 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-float delay-700 parallax">
         </div>
-    </section> -->
-<section class="video-section"></section>
-<div class="video-wrp">
-    <div class="ratio ratio-4x3">
-        <iframe width="560" height="315" src="https://www.youtube.com/embed/QivRb-QOSkQ?si=2KDlutqnRqMy_Bge" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen>
 
-        </iframe>
-    </div>
-</div>
-</section>
-
-<!-- <video width="500px" 
-           height="400px" 
-           controls="controls">
-        <source src="./static/video/invideo-ai-1080 Revolutionize Your Recruitment Process w 2024-09-18.mp4" 
-                                    type="video/mp4" />
-    </video> -->
-
-<section class="generator-work" id="main-blog" style="padding-top: 55px;">
-    <div class="container">
-        <div class="row">
-            <div class="col-lg-6">
-                <div class="generator-wrp">
-                    <h2 class="generator-title">BestRecruiter.AI</h2>
-                    <p>Revolutionizing Talent Selection for Businesses
-                        In an era where finding the right talent is critical to business success, the recruitment
-                        process can often feel overwhelming and inefficient. For companies that want to stay ahead,
-                        leveraging technology to streamline candidate selection is not just an option—it's a necessity.
-                        BestRecruiter.AI is a cutting-edge solution designed to take the guesswork out of recruitment,
-                        providing businesses with a powerful tool to identify the best candidates with precision and
-                        speed.
+        <div class="container mx-auto px-6 md:px-12 relative z-10">
+            <div class="flex flex-col lg:flex-row items-center justify-between gap-12">
+                <div class="lg:w-1/2 stagger-animation">
+                    <div
+                        class="inline-block px-3 py-1 mb-6 rounded-full bg-recruiter-100 text-recruiter-800 font-medium text-sm">
+                        Revolutionizing Recruitment
+                    </div>
+                    <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6 text-gray-900">
+                        AI-Powered <br>
+                        <span class="text-recruiter-600">Recruitment</span> Assistant
+                    </h1>
+                    <p class="text-xl text-gray-700 mb-8 max-w-lg">
+                        Transform your hiring process with AI. Post jobs, collect applications, and find the perfect
+                        candidates—all in one platform.
                     </p>
+                    <div class="flex flex-col sm:flex-row gap-4">
+                        <a href="/register"
+                            class="bg-recruiter-600 hover:bg-recruiter-700 text-white px-8 py-4 rounded-full font-medium text-center transition-all duration-200 flex items-center justify-center gap-2 shadow-lg shadow-recruiter-500/20">
+                            Free Trial <i data-lucide="chevron-right" class="w-5 h-5"></i>
+                        </a>
+                        <a href="#process"
+                            class="bg-white hover:bg-gray-50 text-gray-800 px-8 py-4 rounded-full font-medium text-center transition-all duration-200 border border-gray-200">
+                            How It Works
+                        </a>
+                    </div>
                 </div>
+
+                <div class="lg:w-1/2 relative">
+                    <div class="relative w-full aspect-square max-w-md mx-auto">
+                        <!-- Main floating card -->
+                        <div class="absolute inset-0 card-glass shadow-soft p-8 stagger-animation">
+                            <div class="w-full h-full bg-white rounded-xl p-6 flex flex-col">
+                                <div class="bg-recruiter-50 rounded-lg p-4 mb-6">
+                                    <h3 class="font-semibold text-gray-900 mb-2">Senior Software Engineer</h3>
+                                    <div class="flex flex-wrap gap-2">
+                                        <span
+                                            class="text-xs bg-white px-2 py-1 rounded-full text-gray-600">Full-time</span>
+                                        <span
+                                            class="text-xs bg-white px-2 py-1 rounded-full text-gray-600">Remote</span>
+                                        <span
+                                            class="text-xs bg-white px-2 py-1 rounded-full text-gray-600">$120-150k</span>
+                                    </div>
+                                </div>
+
+                                <div class="space-y-3 flex-grow">
+                                    <div class="h-2 bg-gray-100 rounded-full w-full"></div>
+                                    <div class="h-2 bg-gray-100 rounded-full w-5/6"></div>
+                                    <div class="h-2 bg-gray-100 rounded-full w-4/6"></div>
+                                </div>
+
+                                <div class="mt-6 flex gap-2">
+                                    <div class="h-10 bg-recruiter-100 rounded-md w-1/2"></div>
+                                    <div class="h-10 bg-recruiter-500 rounded-md w-1/2"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Floating elements -->
+                        <div
+                            class="card-glass absolute -top-10 -right-10 w-40 h-32 p-4 shadow-soft rotate-6 stagger-animation">
+                            <div class="flex items-center justify-between mb-2">
+                                <div class="w-8 h-8 rounded-full bg-recruiter-500"></div>
+                                <div class="w-16 h-2 bg-gray-200 rounded-full"></div>
+                            </div>
+                            <div class="space-y-2">
+                                <div class="h-2 bg-gray-200 rounded-full w-full"></div>
+                                <div class="h-2 bg-gray-200 rounded-full w-2/3"></div>
+                                <div class="h-2 bg-gray-200 rounded-full w-5/6"></div>
+                            </div>
+                            <div
+                                class="absolute bottom-2 right-2 w-6 h-6 rounded-full bg-green-500 flex items-center justify-center">
+                                <div class="w-3 h-3 bg-white rounded-sm rotate-45"></div>
+                            </div>
+                        </div>
+
+                        <div
+                            class="card-glass absolute -bottom-12 -left-12 w-40 h-32 p-4 shadow-soft -rotate-6 stagger-animation">
+                            <div class="flex justify-between items-center mb-3">
+                                <div class="w-12 h-3 bg-recruiter-300 rounded-full"></div>
+                                <div class="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center">
+                                    <div class="w-3 h-3 rounded-full bg-recruiter-500"></div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2 mb-3">
+                                <div class="w-8 h-8 rounded-full bg-gray-200"></div>
+                                <div class="space-y-1">
+                                    <div class="h-2 bg-gray-200 rounded-full w-16"></div>
+                                    <div class="h-2 bg-gray-200 rounded-full w-12"></div>
+                                </div>
+                            </div>
+                            <div class="h-3 w-full bg-recruiter-100 rounded-full relative">
+                                <div class="absolute left-0 top-0 h-full w-2/3 bg-recruiter-500 rounded-full"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Scroll indicator -->
+            <!-- <div class="absolute bottom-10 left-1/2 transform -translate-x-1/2 flex flex-col items-center">
+                <span class="text-sm text-gray-500 mb-2">Scroll to explore</span>
+                <div class="w-6 h-10 border-2 border-gray-300 rounded-full flex justify-center p-1">
+                    <div class="w-1 h-2 bg-gray-300 rounded-full animate-bounce"></div>
+                </div>
+            </div> -->
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="py-24 bg-gray-50 ">
+        <div class="container mx-auto px-6 md:px-12 relative z-10">
+            <div class="text-center max-w-3xl mx-auto mb-16 reveal-element animate-fade-in-up">
+                <h2 class="text-3xl md:text-4xl font-bold mb-6 text-gray-900">
+                    Features Designed for Modern Recruiters
+                </h2>
+                <p class="text-xl text-gray-700">
+                    Our AI-powered platform offers everything you need to streamline your hiring process.
+                </p>
             </div>
 
-            <div class="col-lg-6">
-                <div class="generator-wrp">
-                    
-                    <video class="demo-video" autoplay loop muted>
-                        <source src="https://www.yourbestcandidate.ai/static/assets/video/demo_video.mp4" type="video/mp4" />
-                      </video>
-                </div>
-            </div>
-
-
-            <div class="col-lg-12">
-                <div class="generator-wrp">
-                    <h2 class="generator-title">What is BestRecruiter.AI?</h2>
-                    <p>BestRecruiter.AI is an advanced AI-powered platform that transforms the recruitment process by
-                        efficiently sifting through candidate data to find the top matches for any job description. The
-                        platform integrates seamlessly with existing recruitment databases and job descriptions, using
-                        sophisticated algorithms to analyze, rank, and recommend candidates that best fit the role. This
-                        tool is designed to support businesses of all sizes, ensuring that they can quickly and
-                        effectively identify top talent without the need for extensive manual screening.</p>
-                </div>
-            </div>
-            <div class="">
-                <div class="AIContent">
-                    <div class="firstSlide">
-                        <div class="sliderdetails">
-                            <div class="slidercontant">
-                                <div class="slidercontantHeading">
-                                    <h3>Key Features and Benefits</h3>
-                                </div>
-                                <div class="slidercontantdetails">
-                                    <p class="slidersubtitle">Seamless Data Integration:</p>
-                                    <!-- <div class="slidercontantmaindetailsBox">
-                                        <div class="slidercontantmaindetails">
-                                            <div class="slidercontantmaindetailsIcon">
-                                                <img src="./static/assets/images/rightIcon.svg" alt="Right Icon">
-                                            </div>
-                                            <p>Efficiently review and rank resumes with our batch analysis tool</p>
-                                        </div>
-                                        <div class="slidercontantmaindetails">
-                                            <div class="slidercontantmaindetailsIcon">
-                                                <img src="./static/assets/images/rightIcon.svg" alt="Right Icon">
-                                            </div>
-                                            <p>Generate candidate profiles from resumes in minutes with our
-                                                AI-powered profile builder</p>
-                                        </div>
-                                    </div> -->
-                                    <p>BestRecruiter.AI integrates effortlessly with your existing candidate data
-                                        sources, such as CV databases and recruitment platforms like Recruitly. This
-                                        seamless integration allows for a streamlined workflow, ensuring that you can
-                                        continue using your preferred tools while benefiting from the added power of AI.
-                                    </p>
-                                </div>
-                            </div>
-                            <div class="sliderVideo">
-                                <img src="https://www.yourbestcandidate.ai/static/assets/images/Research.gif" alt="Research">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="slide">
-                        <div class="sliderdetails">
-                            <div class="slidercontant">
-                                <div class="slidercontantHeading">
-                                    <h3>AI-Powered Candidate Matching</h3>
-                                </div>
-                                <div class="slidercontantdetails">
-                                    <p>The platform’s core strength lies in its AI-driven candidate matching engine. By
-                                        analyzing both structured and unstructured data from CVs and job descriptions,
-                                        BestRecruiter.AI identifies the most relevant candidates based on skills,
-                                        experience, and other critical factors. This process significantly reduces the
-                                        time spent on manual screening and ensures that only the most suitable
-                                        candidates are brought to your attention.</p>
-                                    <!-- <div class="slidercontantmaindetailsBox">
-                                        <div class="slidercontantmaindetails">
-                                            <img src="./static/assets/images/rightIcon.svg">
-                                            <p>Analyze resumes with a user-friendly interface</p>
-                                        </div>
-                                        <div class="slidercontantmaindetails">
-                                            <img src="./static/assets/images/rightIcon.svg">
-                                            <p>Export selected candidates in multiple formats</p>
-                                        </div>
-                                    </div> -->
-                                </div>
-                            </div>
-                            <div class="sliderVideo besttimeImg">
-                                <img src="https://www.yourbestcandidate.ai/static/assets/images/besttime.png" alt="Best Time">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="slide">
-                        <div class="sliderdetails">
-                            <div class="slidercontant">
-                                <div class="slidercontantHeading">
-                                    <h3>Ranking and Recommendation System:</h3>
-                                </div>
-                                <div class="slidercontantdetails">
-                                    <p>BestRecruiter.AI doesn’t just find candidates—it ranks them. The platform
-                                        provides a ranked list of the top candidates for any given role, allowing
-                                        recruiters to focus on the best matches first. This ranking is based on a
-                                        combination of semantic search, embeddings, and machine learning algorithms,
-                                        ensuring accuracy and relevance in candidate selection.</p>
-                                    <!-- <div class="slidercontantmaindetailsBox">
-                                        <div class="slidercontantmaindetails">
-                                            <img src="./static/assets/images/rightIcon.svg" alt="Right Icon">
-                                            <p>Identify key skills and experiences for optimal candidate matches</p>
-                                        </div>
-                                        <div class="slidercontantmaindetails">
-                                            <img src="./static/assets/images/rightIcon.svg" alt="Right Icon">
-                                            <p>Customize search parameters to fit your hiring needs</p>
-                                        </div>
-                                    </div> -->
-                                </div>
-                            </div>
-                            <div class="sliderVideo DescribeGif">
-                                <img src="https://www.yourbestcandidate.ai/static/assets/images/Describe.gif" alt="Describe">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="slide">
-                        <div class="sliderdetails">
-                            <div class="slidercontant">
-                                <div class="slidercontantHeading">
-                                    <h3>Knowledge Base Integration</h3>
-                                </div>
-                                <div class="slidercontantdetails">
-                                    <p>The platform includes a comprehensive knowledge base that enhances its candidate
-                                        matching capabilities. This feature allows BestRecruiter.AI to learn and adapt
-                                        over time, improving its ability to recommend candidates that align closely with
-                                        specific job descriptions and company requirements.</p>
-                                    <!-- <div class="slidercontantmaindetailsBox">
-                                        <div class="slidercontantmaindetails">
-                                            <img src="./static/assets/images/rightIcon.svg">
-                                            <p>Analyze resumes with a user-friendly interface</p>
-                                        </div>
-                                        <div class="slidercontantmaindetails">
-                                            <img src="./static/assets/images/rightIcon.svg">
-                                            <p>Export selected candidates in multiple formats</p>
-                                        </div>
-                                    </div> -->
-                                </div>
-                            </div>
-                            <div class="sliderVideo besttimeImg">
-                                <img src="https://www.yourbestcandidate.ai/static/assets/images/besttime.png" alt="Best Time">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="slide">
-                        <div class="sliderdetails">
-                            <div class="slidercontant">
-                                <div class="slidercontantHeading">
-                                    <h3>LLM-Enhanced Search</h3>
-                                </div>
-                                <div class="slidercontantdetails">
-                                    <p>Leveraging the power of large language models (LLMs), BestRecruiter.AI offers a
-                                        search experience that goes beyond traditional keyword matching. Recruiters can
-                                        input natural language queries or specific job descriptions, and the platform
-                                        will return a list of candidates ranked by their suitability for the role. This
-                                        advanced search capability enables more nuanced and context-aware candidate
-                                        selection.</p>
-                                    <!-- <div class="slidercontantmaindetailsBox">
-                                        <div class="slidercontantmaindetails">
-                                            <img src="./static/assets/images/rightIcon.svg" alt="Right Icon">
-                                            <p>Identify key skills and experiences for optimal candidate matches</p>
-                                        </div>
-                                        <div class="slidercontantmaindetails">
-                                            <img src="./static/assets/images/rightIcon.svg" alt="Right Icon">
-                                            <p>Customize search parameters to fit your hiring needs</p>
-                                        </div>
-                                    </div> -->
-                                </div>
-                            </div>
-                            <div class="sliderVideo DescribeGif">
-                                <img src="https://www.yourbestcandidate.ai/static/assets/images/Describe.gif" alt="Describe">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="slide">
-                        <div class="sliderdetails">
-                            <div class="slidercontant">
-                                <div class="slidercontantHeading">
-                                    <h3>Scalable and Flexible</h3>
-                                </div>
-                                <div class="slidercontantdetails">
-                                    <p>BestRecruiter.AI is designed to grow with your business. Whether you’re hiring
-                                        for one position or managing multiple openings across various departments, the
-                                        platform scales effortlessly to meet your needs. It’s flexible enough to adapt
-                                        to different industries and roles, making it a versatile tool for any
-                                        recruitment strategy.</p>
-                                    <!-- <div class="slidercontantmaindetailsBox">
-                                        <div class="slidercontantmaindetails">
-                                            <img src="./static/assets/images/rightIcon.svg">
-                                            <p>Analyze resumes with a user-friendly interface</p>
-                                        </div>
-                                        <div class="slidercontantmaindetails">
-                                            <img src="./static/assets/images/rightIcon.svg">
-                                            <p>Export selected candidates in multiple formats</p>
-                                        </div>
-                                    </div> -->
-                                </div>
-                            </div>
-                            <div class="sliderVideo besttimeImg">
-                                <img src="https://www.yourbestcandidate.ai/static/assets/images/besttime.png" alt="Best Time">
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" id="features-grid">
+                <!-- Feature cards will be dynamically inserted here -->
             </div>
         </div>
-    </div>
-</section>
+    </section>
 
-<section class="Create-Content">
-    <div class="container">
-        <div class="row">
-            <div class="col-lg-12">
-                <div class="generator-wrp">
-                    <h2 class="generator-title" style="max-width: 713px;">Why Choose BestRecruiter.AI?</h2>
-                </div>
+    <!-- Process Flow Section -->
+    <section id="process" class="py-24 bg-white relative overflow-hidden">
+        <!-- Background pattern -->
+        <div class="absolute inset-0 dots-bg opacity-50"></div>
+
+        <div class="container mx-auto px-6 md:px-12 relative z-10">
+            <div class="text-center max-w-3xl mx-auto mb-16">
+                <h2 class="text-3xl md:text-4xl font-bold mb-6 text-gray-900">
+                    How YourBestRecruiter.AI Works
+                </h2>
+                <p class="text-xl text-gray-700">
+                    Our AI-powered 10-steps recruitment process streamlines hiring from job posting to interview
+                    scheduling.
+                </p>
             </div>
-            <div class="col-lg-6">
-                <div class="CreateContentimg">
-                    <img src="https://www.yourbestcandidate.ai/static/assets/images/ai_girl.png">
-                </div>
+
+            <div id="process-flow" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Process steps will be dynamically inserted here -->
             </div>
-            <div class="col-lg-6">
-                <div class="CreateContent">
-                    <!-- <h3>Never Miss a Potential Hire</h3>
-                    <p>Every candidate is unique, just like your brand's voice. YourBestCandidateAI ensures you
-                        maintain consistency in your hiring process while accommodating diverse candidate profiles.
-                    </p> -->
-                    <div class="CreateContentDetails">
-                        <img src="https://www.yourbestcandidate.ai/static/assets/images/brand.svg">
+        </div>
+
+        <!-- Connecting lines for desktop -->
+        <div
+            class="hidden lg:block absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[90%] h-[80%] pointer-events-none">
+            <svg class="w-full h-full" viewBox="0 0 1200 600" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path
+                    d="M100,150 C150,150 150,150 200,150 L400,150 C450,150 450,300 500,300 L700,300 C750,300 750,450 800,450 L1000,450 C1050,450 1050,300 1100,300"
+                    stroke="#E0EFFE" stroke-width="4" stroke-dasharray="8 8" stroke-linecap="round" class="path" />
+            </svg>
+        </div>
+    </section>
+
+    <!-- Demo/CTA Section -->
+    <section id="demo" class="py-24 bg-recruiter-900 text-white relative overflow-hidden">
+        <!-- Background decoration -->
+        <div class="absolute top-0 right-0 w-full h-full overflow-hidden pointer-events-none opacity-10">
+            <div class="absolute -top-24 -right-24 w-96 h-96 bg-white rounded-full"></div>
+            <div class="absolute bottom-0 left-0 w-full h-1/3 bg-gradient-to-t from-black to-transparent"></div>
+        </div>
+
+        <div class="container mx-auto px-6 md:px-12 relative z-10">
+            <div class="max-w-3xl mx-auto text-center mb-12 reveal-element opacity-0">
+                <h2 class="text-3xl md:text-4xl font-bold mb-6">
+                    Ready to Transform Your Recruitment Process?
+                </h2>
+                <p class="text-xl text-recruiter-100">
+                    Start finding better candidates faster with YourBestRecruiter.AI.
+                </p>
+            </div>
+
+            <div class="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                <div
+                    class="p-6 rounded-2xl border border-recruiter-700 bg-recruiter-800/50 backdrop-blur-md reveal-element opacity-0">
+                    <h3 class="text-2xl font-semibold mb-6">Request a Demo</h3>
+                    <form id="demo-form" method="POST" class="space-y-4">
                         <div>
-                            <h5>Enhanced Efficiency</h5>
-                            <p>By automating the initial stages of candidate screening, BestRecruiter.AI allows
-                                recruiters to focus their time and resources on interviewing and selecting the best
-                                candidates. This not only speeds up the hiring process but also reduces the risk of
-                                missing out on top talent.</p>
+                            <label for="name" class="block text-sm font-medium mb-1">Full Name</label>
+                            <input type="text" id="name"
+                                class="w-full px-4 py-3 bg-recruiter-700/50 border border-recruiter-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-recruiter-500 text-white"
+                                placeholder="Your name" />
+                            <div id="demo-name-error" class="text-red-500 text-sm mt-1 hidden">Name must be at least 4
+                                characters long</div>
                         </div>
-                    </div>
-                    <div class="CreateContentDetails">
-                        <img src="https://www.yourbestcandidate.ai/static/assets/images/consistency.svg">
                         <div>
-                            <h5>Cost Savings</h5>
-                            <p>With BestRecruiter.AI, businesses can significantly cut down on the costs associated with
-                                lengthy recruitment processes and reliance on external recruitment agencies. The
-                                platform offers a cost-effective solution that delivers high-quality results without the
-                                need for expensive third-party services.
+                            <label for="email" class="block text-sm font-medium mb-1">Email Address</label>
+                            <input type="text" id="email"
+                                class="w-full px-4 py-3 bg-recruiter-700/50 border border-recruiter-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-recruiter-500 text-white"
+                                placeholder="you@company.com" />
+                            <div id="demo-email-error" class="text-red-400 text-sm mt-1 hidden">Please enter a valid
+                                email address</div>
+
+                        </div>
+                        <div>
+                            <label for="company" class="block text-sm font-medium mb-1">Company</label>
+                            <input type="text" id="company"
+                                class="w-full px-4 py-3 bg-recruiter-700/50 border border-recruiter-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-recruiter-500 text-white"
+                                placeholder="Your company" />
+                            <div id="demo-company-error" class="text-red-400 text-sm mt-1 hidden">Company name cannot be
+                                empty</div>
+
+                        </div>
+                        <button type="submit"
+                            class="w-full bg-recruiter-500 hover:bg-recruiter-400 text-white font-medium py-3 px-6 rounded-lg transition-colors duration-300">
+                            Schedule Demo
+                        </button>
+                    </form>
+                </div>
+
+                <div class="flex flex-col space-y-6 reveal-element opacity-0">
+                    <div class="flex items-start gap-4">
+                        <div class="bg-recruiter-500 p-3 rounded-full flex-shrink-0">
+                            <i data-lucide="message-square" class="w-5 h-5 text-white"></i>
+                        </div>
+                        <div>
+                            <h4 class="text-xl font-semibold mb-2">24/7 Support</h4>
+                            <p class="text-recruiter-100">
+                                Our team is always available to help you optimize your recruitment process.
                             </p>
                         </div>
                     </div>
-                    <div class="CreateContentDetails">
-                        <img src="https://www.yourbestcandidate.ai/static/assets/images/creation.svg">
+
+                    <div class="flex items-start gap-4">
+                        <div class="bg-recruiter-500 p-3 rounded-full flex-shrink-0">
+                            <i data-lucide="mail" class="w-5 h-5 text-white"></i>
+                        </div>
                         <div>
-                            <h5>Improved Decision-Making</h5>
-                            <p>The AI-driven insights provided by BestRecruiter.AI empower recruiters to make better,
-                                more informed hiring decisions. By leveraging data and machine learning, the platform
-                                reduces bias and improves the overall quality of hires.</p>
+                            <h4 class="text-xl font-semibold mb-2">Free Consultation</h4>
+                            <p class="text-recruiter-100">
+                                Get a personalized analysis of your current recruitment workflow.
+                            </p>
                         </div>
                     </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
 
-<section class="Create-Content">
-    <div class="container">
-        <div class="row">
-            <div class="col-lg-6">
-                <div class="CreateContent modelsBox">
-                    <h3>AI-Powered Candidate Matching</h3>
-                    <p>YourBestRecruiterAI harnesses the power of cutting-edge AI models, including proprietary
-                        algorithms and industry-leading technologies, to revolutionize your candidate selection
-                        process. By integrating advanced models like GPT-4 and Anthropic, we ensure unparalleled
-                        accuracy and efficiency in candidate evaluation.</p>
-                    <p>Our AI seamlessly adapts to your hiring needs, providing reliable insights and
-                        recommendations even in the most challenging scenarios. Experience the future of recruitment
-                        today!</p>
-                </div>
-            </div>
-            <div class="col-lg-6">
-                <div class="CreateContentimg modelsBoxImg">
-                    <img src="https://www.yourbestcandidate.ai/static/assets/images/models.png">
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
+                    <div class="mt-6 w-full h-auto">
+                        <svg viewBox="0 0 400 200" xmlns="http://www.w3.org/2000/svg">
 
-<section class="Create-Content">
-    <div class="container">
-        <div class="row aligns-center">
-            <div class="col-lg-6">
-                <div class="CreateContentimg SecurityImg">
-                    <img src="https://www.yourbestcandidate.ai/static/assets/images/Security.png">
-                </div>
-            </div>
-            <div class="col-lg-6">
-                <div class="CreateContent modelsBox">
-                    <h3>Security and Confidentiality</h3>
-                    <p>YourBestRecruiterAI prioritizes the protection of your data with state-of-the-art security
-                        features that continuously evolve to meet the latest standards. Our data centers are located
-                        in secure facilities within the United States, ensuring the highest level of data integrity
-                        and privacy.</p>
-                    <p>We never retain ownership of your candidate data, guaranteeing complete confidentiality
-                        throughout the recruitment process. Trust YourBestRecruiterAI for a secure and reliable
-                        candidate selection experience.</p>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
 
-<section class="testimonial_wrp">
-    <div class="container">
-        <div class="row">
-            <div class="col-lg-12">
-                <div class="single_item">
-                    <div class="first_testimonial">
-                        <div class="quote_data">
-                            <img src="https://www.yourbestcandidate.ai/static/assets/images/Quote.svg" alt="">
-                        </div>
-                        <div class="our_clients_dats">
-                            <h3>"Efficient and Effective."</h3>
-                            <p>"YourBestRecruiterAI has transformed our hiring process, allowing us to identify top
-                                talent swiftly and accurately. With its intuitive interface and powerful AI models,
-                                we can now make informed decisions with confidence."</p>
-                        </div>
-                        <div class="personal_info">
-                            <div class="personal_profile">
-                                <img src="https://www.yourbestcandidate.ai/static/assets/images/client.png" alt="">
-                            </div>
-                            <div class="profile_name">
-                                <p>Sophia Thompson</p>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- other testimonials -->
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
+                            {/* Connection line */}
+                            <path className="line-path" d="M40,100 C100,40 150,160 210,100 C270,40 320,160 380,100"
+                                fill="none" stroke="#0c87e8" strokeWidth="3" strokeLinecap="round" />
 
-<section class="writing_tools">
-    <div class="container">
-        <div class="tools_wrp">
-            <h2>Unlock the Power of AI Recruitment Tools</h2>
-        </div>
-        <div class="row tool_cards">
-            <div class="col-lg-6">
-                <div class="blog_writer">
-                    <div class="tool_data">
-                        <img src="https://www.yourbestcandidate.ai/static/assets/images/tool.svg" alt="">
-                    </div>
-                    <div class="blog_details">
-                        <h6>AI Resume Screening</h6>
-                        <p>Leverage AI-powered tools to screen resumes and identify top candidates effortlessly.</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-6">
-                <div class="blog_writer">
-                    <div class="tool_data">
-                        <img src="https://www.yourbestcandidate.ai/static/assets/images/tool.svg" alt="">
-                    </div>
-                    <div class="blog_details">
-                        <h6>Interview Scheduling </h6>
-                        <p>Streamline the interview process with AI-powered scheduling tools, ensuring a smooth and
-                            efficient experience for both candidates and recruiters.</p>
+                            {/* Connection points */}
+                            <circle className="circle-path" cx="40" cy="100" r="12" fill="#0c87e8" />
+                            <circle className="circle-path" cx="210" cy="100" r="12" fill="#0c87e8" />
+                            <circle className="circle-path" cx="380" cy="100" r="12" fill="#0c87e8" />
+
+                            {/* Smaller decorative circles */}
+                            <circle className="circle-path" cx="100" cy="70" r="5" fill="#bae0fd" />
+                            <circle className="circle-path" cx="150" cy="130" r="5" fill="#bae0fd" />
+                            <circle className="circle-path" cx="270" cy="70" r="5" fill="#bae0fd" />
+                            <circle className="circle-path" cx="320" cy="130" r="5" fill="#bae0fd" />
+                        </svg>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-</section>
+    </section>
 
+    <!-- Testimonials Section -->
+    <section class="py-24 bg-white">
+        <div class="container mx-auto px-6">
+            <div class="text-center max-w-3xl mx-auto mb-16">
+                <h2 class="text-3xl md:text-4xl font-bold mb-6 text-gray-900">
+                    Trusted by Recruiters Worldwide
+                </h2>
+                <p class="text-xl text-gray-700">
+                    See what our customers are saying about YourBestRecruiterAI.
+                </p>
+            </div>
 
-<section class="transformation_section">
-    <div class="container">
-        <div class="row">
-            <div class="col-lg-12">
-                <div class="transform_details" style="display: flex; flex-direction: column;">
-                    <h2>Transform Your Hiring Process Today!</h2>
-                    <p>BestRecruiter.AI offers a sophisticated, AI-driven solution that modernizes the recruitment
-                        process, making it faster, more efficient, and more effective. By harnessing the power of AI,
-                        businesses can ensure they are not only attracting top talent but also making smarter,
-                        data-driven hiring decisions.</p>
-                    <button class="btn hero-btn starting_btn" data-bs-toggle="modal" data-bs-target="#demoModal">
-                        Book a Demo
-                    </button>
-                </div>
-                
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8" id="testimonials-grid">
+                <!-- Testimonials will be dynamically inserted here -->
             </div>
         </div>
-    </div>
-</section>
+    </section>
 
-    <section class="footer_wrp">
-    <div class="container">
-        <div class="row">
-            <div class="col-lg-4 col-md-6 col-sm-6">
-                <div class="footer_social_data">
-                    <div class="footer_logo">
-                        <a href="/">
-                            <img src="https://www.yourbestcandidate.ai/static/images/Yourbestcandidateai.svg"
-                                style="filter: hue-rotate(66deg) saturate(150%);" alt="">
+    <!-- Pricing Section -->
+    <section id="pricing" class="py-24 bg-gray-50">
+        <div class="container mx-auto px-6">
+            <div class="text-center max-w-3xl mx-auto mb-16">
+                <h2 class="text-3xl md:text-4xl font-bold mb-6 text-gray-900">
+                    Simple, Transparent Pricing
+                </h2>
+                <p class="text-xl text-gray-700">
+                    Choose the plan that works best for your recruitment needs.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto" id="pricing-grid">
+                <!-- Pricing plans will be dynamically inserted here -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="py-24 bg-white">
+        <div class="container mx-auto px-6">
+            <div class="text-center max-w-3xl mx-auto mb-16">
+                <h2 class="text-3xl md:text-4xl font-bold mb-6 text-gray-900">
+                    Get in Touch
+                </h2>
+                <p class="text-xl text-gray-700">
+                    Have questions? Our team is here to help you get started.
+                </p>
+            </div>
+
+            <div class="max-w-3xl mx-auto card-glass p-8">
+                <form id="contact-form" method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="contact-name" class="block text-sm font-medium text-gray-700 mb-1">Full
+                            Name*</label>
+                        <input type="text" id="contact-name"
+                            class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-recruiter-500"
+                            placeholder="Your name" />
+                        <div id="name-error" class="text-red-500 text-sm mt-1 hidden">Name must be at least 4 characters
+                            long</div>
+                    </div>
+                    <div>
+                        <label for="contact-email" class="block text-sm font-medium text-gray-700 mb-1">Email
+                            Address*</label>
+                        <input type="text" id="contact-email"
+                            class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-recruiter-500"
+                            placeholder="you@company.com" />
+                        <div id="email-error" class="text-red-500 text-sm mt-1 hidden">Please enter a valid email
+                            address</div>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label for="contact-subject"
+                            class="block text-sm font-medium text-gray-700 mb-1">Subject*</label>
+                        <input type="text" id="contact-subject"
+                            class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-recruiter-500"
+                            placeholder="How can we help?" />
+                        <div id="subject-error" class="text-red-500 text-sm mt-1 hidden">Subject cannot be empty</div>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label for="contact-message"
+                            class="block text-sm font-medium text-gray-700 mb-1">Message*</label>
+                        <textarea id="contact-message" rows="6"
+                            class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-recruiter-500"
+                            placeholder="Your message..."></textarea>
+                        <div id="message-error" class="text-red-500 text-sm mt-1 hidden">Message cannot be empty</div>
+                    </div>
+                    <div class="md:col-span-2">
+                        <button type="submit"
+                            class="bg-recruiter-500 hover:bg-recruiter-600 text-white font-medium py-3 px-6 rounded-lg transition-colors duration-300">
+                            Send Message
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-50 py-12 md:py-20 relative overflow-hidden">
+        <div class="container mx-auto px-6 md:px-12 relative z-10">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 mb-10">
+                <div>
+                    <h3 class="font-bold text-xl mb-4 text-gray-900">
+                        YourBestRecruiter<span class="text-recruiter-500">.AI</span>
+                    </h3>
+                    <p class="text-gray-600 mb-6">
+                        Transforming recruitment with AI. Find the perfect candidates faster and more efficiently.
+                    </p>
+                    <div class="flex space-x-4">
+                        <a href="#"
+                            class="w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-recruiter-500 hover:border-recruiter-500 hover:text-white transition-colors duration-300">
+                            <i data-lucide="facebook" class="w-5 h-5"></i>
+                        </a>
+                        <a href="#"
+                            class="w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-recruiter-500 hover:border-recruiter-500 hover:text-white transition-colors duration-300">
+                            <i data-lucide="twitter" class="w-5 h-5"></i>
+                        </a>
+                        <a href="#"
+                            class="w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-recruiter-500 hover:border-recruiter-500 hover:text-white transition-colors duration-300">
+                            <i data-lucide="linkedin" class="w-5 h-5"></i>
                         </a>
                     </div>
-                    <div class="footer_text">
-                        <p>
-                            <a href="mailto:yourbestrecruiterai@gmail.com">support@yourbestrecruiter.ai</a>
-                        </p>
-                    </div>
-                    <div class="footer_icon">
-                        <ul>
-                            <li>
-                                <a href="/" rel="noopener noreferrer">
-                                    <i class="bi bi-facebook"></i>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="/"  rel="noopener noreferrer">
-                                    <i class="bi bi-twitter"></i>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="/"  rel="noopener noreferrer">
-                                    <i class="bi bi-linkedin"></i>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="/"  rel="noopener noreferrer">
-                                    <i class="bi bi-instagram"></i>
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
                 </div>
-            </div>
-            <div class="col-lg-4 col-md-4 col-sm-4">
-                <div class="company_data">
-                    <h6> Company </h6>
-                    <ul>
-                        <!-- <li>
-                                <a href="#">
-                                    About
-                                </a>
-                            </li> -->
+
+                <div>
+                    <h4 class="font-semibold text-gray-900 mb-4">Company</h4>
+                    <ul class="space-y-3">
                         <li>
-                            <a data-bs-toggle="modal" data-bs-target="#demoModal" href="javascript:void(0);"> Contact </a>
+                            <a href="#"
+                                class="text-gray-600 hover:text-recruiter-600 transition-colors duration-200">About
+                                Us</a>
                         </li>
                         <li>
-                            <a href="/terms_of_services"> Terms of Services </a>
+                            <a href="#"
+                                class="text-gray-600 hover:text-recruiter-600 transition-colors duration-200">Careers</a>
                         </li>
                         <li>
-                            <a href="/privacy_policy"> Privacy Policy </a>
+                            <a href="#"
+                                class="text-gray-600 hover:text-recruiter-600 transition-colors duration-200">Blog</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                                class="text-gray-600 hover:text-recruiter-600 transition-colors duration-200">Press</a>
+                        </li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 class="font-semibold text-gray-900 mb-4">Resources</h4>
+                    <ul class="space-y-3">
+                        <li>
+                            <a href="#"
+                                class="text-gray-600 hover:text-recruiter-600 transition-colors duration-200">Documentation</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                                class="text-gray-600 hover:text-recruiter-600 transition-colors duration-200">Help
+                                Center</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                                class="text-gray-600 hover:text-recruiter-600 transition-colors duration-200">Pricing</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                                class="text-gray-600 hover:text-recruiter-600 transition-colors duration-200">API</a>
+                        </li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 class="font-semibold text-gray-900 mb-4">Contact</h4>
+                    <ul class="space-y-3">
+                        <li class="flex items-center gap-3">
+                            <i data-lucide="mail" class="w-5 h-5 text-recruiter-500"></i>
+                            <a href="https://mail.google.com/mail/?view=cm&fs=1&to=yourbestrecruiterai@gmail.com"
+                                class="text-gray-600 hover:text-recruiter-600 transition-colors duration-200"
+                                target="_blank" rel="noopener noreferrer">
+                                yourbestrecruiterai@gmail.com
+                            </a>
+                        </li>
+                        <li class="flex items-center gap-3">
+                            <i data-lucide="phone" class="w-5 h-5 text-recruiter-500"></i>
+                            <a href="tel:+1234567890"
+                                class="text-gray-600 hover:text-recruiter-600 transition-colors duration-200">
+                                +1 (234) 567-890
+                            </a>
                         </li>
                     </ul>
                 </div>
             </div>
-            <div class="col-lg-4 col-md-4 col-sm-4">
-                <div class="company_data">
-                    <h6> Get Started </h6>
-                    <ul>
-                        <li>
-                            <a href="/register"> Sign Up </a>
-                        </li>
-                        <li>
-                            <a href="/login"> Log In </a>
-                        </li>
-                    </ul>
+
+            <div class="pt-8 mt-8 border-t border-gray-200 flex flex-col md:flex-row justify-between items-center">
+                <p class="text-gray-600 mb-4 md:mb-0">
+                    &copy; <span id="current-year"></span> YourBestRecruiter.AI. All rights reserved.
+                </p>
+                <div class="flex space-x-6">
+                    <a href="/privacy-policy"
+                        class="text-gray-600 hover:text-recruiter-600 transition-colors duration-200 text-sm">
+                        Privacy Policy
+                    </a>
+                    <a href="/terms-conditions"
+                        class="text-gray-600 hover:text-recruiter-600 transition-colors duration-200 text-sm">
+                        Terms of Service
+                    </a>
+                    <a href="#" class="text-gray-600 hover:text-recruiter-600 transition-colors duration-200 text-sm">
+                        Cookie Policy
+                    </a>
                 </div>
             </div>
         </div>
-        <div class="row">
-            <div class="col-lg-12">
-                <div class="copyright_data">
-                    <p> © 2025 All rights reserved. YourBestRecruiterAI, LLC </p>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-    <script>
-        console.log("")
-        let user_id = ""
-        if (user_id === null || user_id === undefined || user_id === '') {
-            document.querySelector('.login_button_div').style.display = 'block';
-        }else{
-            document.querySelector('.chat_button_div').style.display = 'block';
-        }
-    </script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"
-        integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r"
-        crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js"
-        integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy"
-        crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-    <script type="text/javascript" src="https://www.yourbestcandidate.ai/static/assets/js/slick.min.js"></script>
-    <script src="https://www.yourbestcandidate.ai/static/assets/js/custom.js"></script>
+    </footer>
+
+    <!-- Custom JavaScript -->
+    <script src="../static/js/main.js"></script>
 </body>
+
 </html>
