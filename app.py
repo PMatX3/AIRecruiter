@@ -89,9 +89,9 @@ SCOPES = [
 ]
 
 #  Linkedin Client
-CLIENT_ID = "78sqp6ad5vx02s"
-CLIENT_SECRET = "WPL_AP1.5M5XItSYHSCTpVUg.bXZYvQ=="
-REDIRECT_URI = "https://www.yourbestrecruiter.ai/auth/callback"
+CLIENT_ID = os.getenv('CLIENT_ID')
+CLIENT_SECRET = os.getenv('CLIENT_SECRET')
+REDIRECT_URI = os.getenv('REDIRECT_URI')
 
 
 
