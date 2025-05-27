@@ -126,8 +126,8 @@ function createCandidateCard(candidate, job) {
       `;
   } else if (isPastInterview) {
     schedulingButton = `
-          <button class="btn btn-schedule">
-              <svg xmlns="http://www.w3.org/2000/svg" class="icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <button class="btn btn-schedule" data-candidate-id="${candidate.candidate_id}"  onclick="showDatePopup(event, '${candidate.candidate_id}', '${candidate.candidate_name}', '${candidate.candidate_email}', '${job.job_id}')">
+              <svg xmlns="http://www.w3.org/2000/svg" class="icon"  fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 11h14a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2z" />
               </svg>
               Reschedule
